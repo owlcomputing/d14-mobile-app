@@ -1,0 +1,26 @@
+<!-- Main Container -->
+<div
+  class="w-screen h-screen flex"
+  [ngClass]="{
+    'flex-row': isViewingAsAdmin && !isMobile,
+    'flex-col': !isViewingAsAdmin || isMobile
+  }"
+>
+  <!-- Sidebar - Fixed only for Admin on Desktop -->
+  <app-header
+    *ngIf="!isLoginRoute()"
+    class="bg-black text-white transition-all duration-300"
+    style="z-index: 50"
+    (adminViewToggle)="onAdminViewToggle()"
+    (authAdminViewToggle)="onAdminViewToggle()"
+  ></app-header>
+
+  <!-- Main Content Area with conditional scroll -->
+  <div
+    class="flex-1"
+    [style.height]="isViewingAsAdmin && !isMobile ? '100vh' : 'auto'"
+    [style.overflowY]="isViewingAsAdmin && !isMobile ? 'auto' : 'visible'"
+  >
+    <router-outlet></router-outlet>
+  </div>
+</div>

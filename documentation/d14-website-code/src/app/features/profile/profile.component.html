@@ -1,0 +1,1279 @@
+<div class="min-h-screen text-white py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Loading state with skeleton and spinner -->
+    <div *ngIf="profileLoading" class="space-y-6">
+      <!-- Spinner -->
+      <div class="flex justify-center items-center mb-6">
+        <div class="loading loading-spinner loading-lg text-primary"></div>
+      </div>
+
+      <!-- Skeleton for avatar and name -->
+      <div class="flex items-center space-x-4">
+        <div class="avatar">
+          <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full skeleton"></div>
+        </div>
+        <div class="flex flex-col space-y-2 w-full">
+          <div class="h-6 w-3/4 bg-neutral skeleton"></div>
+          <div class="h-4 w-1/2 bg-neutral skeleton"></div>
+        </div>
+      </div>
+
+      <!-- Skeleton for personal information -->
+      <div class="card bg-base-200 shadow-md">
+        <div class="card-body">
+          <div class="h-6 w-1/3 bg-neutral skeleton mb-4"></div>
+          <div class="space-y-2">
+            <div class="h-4 w-3/4 bg-neutral skeleton"></div>
+            <div class="h-4 w-2/3 bg-neutral skeleton"></div>
+            <div class="h-4 w-1/2 bg-neutral skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton for membership details -->
+      <div class="card bg-base-200 shadow-md">
+        <div class="card-body">
+          <div class="h-6 w-1/3 bg-neutral skeleton mb-4"></div>
+          <div class="space-y-2">
+            <div class="h-4 w-3/4 bg-neutral skeleton"></div>
+            <div class="h-4 w-2/3 bg-neutral skeleton"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-300 shadow-xl">
+      <div class="card-body p-6 sm:p-8">
+        <div class="flex justify-end mb-6">
+          <button class="btn btn-outline btn-sm" (click)="logout()">
+            Logout
+          </button>
+        </div>
+        <ng-container *ngIf="!profileLoading">
+          <div
+            class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8"
+          >
+            <div class="avatar">
+              <div
+                class="w-24 h-24 sm:w-32 sm:h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
+              >
+                <img
+                  *ngIf="profile?.profile?.profile_picture; else avatarFallback"
+                  [src]="profile?.profile?.profile_picture"
+                  [alt]="
+                    profile?.profile?.first_name +
+                    ' ' +
+                    profile?.profile?.last_name
+                  "
+                />
+                <ng-template #avatarFallback>
+                  <div
+                    class="bg-neutral-focus text-neutral-content rounded-full w-full h-full flex items-center justify-center text-3xl font-bold"
+                  >
+                    {{ (profile?.profile?.first_name?.[0] || '') + (profile?.profile?.last_name?.[0] || '') }}
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+            <div class="text-center sm:text-left space-y-2">
+              <h2 class="text-3xl sm:text-4xl font-bold">
+                {{ profile?.profile?.first_name }}
+                {{
+                  profile?.profile?.middle_initial
+                    ? profile?.profile?.middle_initial + "."
+                    : ""
+                }}
+                {{ profile?.profile?.last_name }}
+              </h2>
+              <p class="text-xl opacity-70">{{ profile?.profile?.email }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body">
+                <h3 class="card-title text-xl font-semibold text-primary mb-4">
+                  Personal Information
+                </h3>
+                <div class="space-y-4">
+                  <!-- Phone -->
+                  <div class="flex flex-col space-y-1">
+                    <span class="font-semibold text-gray-300">Phone:</span>
+                    <span *ngIf="!isEditing">{{
+                      profile?.profile?.home_phone
+                        ? (profile!.profile.home_phone | phoneFormat)
+                        : (profile!.profile.cell_phone | phoneFormat)
+                    }}</span>
+                    <input
+                      *ngIf="isEditing"
+                      type="text"
+                      [(ngModel)]="profile!.profile.home_phone"
+                      class="input input-bordered w-full"
+                    />
+                  </div>
+                  <!-- Cell -->
+                  <div class="flex flex-col space-y-1">
+                    <ng-container
+                      *ngIf="
+                        isEditing || (profile && profile.profile.home_phone)
+                      "
+                    >
+                      <span class="font-semibold text-gray-300">Cell:</span>
+                      <span *ngIf="!isEditing">{{
+                        profile
+                          ? (profile.profile.cell_phone | phoneFormat)
+                          : ""
+                      }}</span>
+                    </ng-container>
+                    <input
+                      *ngIf="isEditing"
+                      type="text"
+                      [(ngModel)]="profile!.profile.cell_phone"
+                      class="input input-bordered w-full"
+                    />
+                  </div>
+                  <!-- Emergency Contact -->
+                  <div class="flex flex-col space-y-1">
+                    <span class="font-semibold text-gray-300"
+                      >Emergency Contact:</span
+                    >
+                    <span *ngIf="!isEditing">
+                      {{ profile?.profile?.emergency_contact_name }} -
+                      {{
+                        profile
+                          ? (profile.profile.emergency_contact_phone
+                            | phoneFormat)
+                          : ""
+                      }}
+                    </span>
+                    <div *ngIf="isEditing" class="space-y-2">
+                      <input
+                        type="text"
+                        [(ngModel)]="profile!.profile.emergency_contact_name"
+                        class="input input-bordered w-full"
+                        placeholder="Contact Name"
+                      />
+                      <input
+                        type="text"
+                        [(ngModel)]="profile!.profile.emergency_contact_phone"
+                        class="input input-bordered w-full"
+                        placeholder="Contact Phone"
+                      />
+                    </div>
+                  </div>
+                  <!-- Address -->
+                  <div class="flex flex-col space-y-1">
+                    <span class="font-semibold text-gray-300">Address:</span>
+                    <span *ngIf="!isEditing">{{
+                      profile?.profile?.address_line1
+                    }}</span>
+                    <input
+                      *ngIf="isEditing"
+                      type="text"
+                      [(ngModel)]="profile!.profile.address_line1"
+                      class="input input-bordered w-full"
+                      placeholder="Address Line 1"
+                    />
+                  </div>
+                  <!-- Address Line 2 -->
+                  <div
+                    *ngIf="profile?.profile?.address_line2 || isEditing"
+                    class="flex flex-col space-y-1"
+                  >
+                    <span *ngIf="!isEditing">{{
+                      profile?.profile?.address_line2
+                    }}</span>
+                    <input
+                      *ngIf="isEditing"
+                      type="text"
+                      [(ngModel)]="profile!.profile.address_line2"
+                      class="input input-bordered w-full"
+                      placeholder="Address Line 2"
+                    />
+                  </div>
+                  <!-- City, State, Zip -->
+                  <div class="flex flex-col space-y-1">
+                    <span *ngIf="!isEditing">
+                      {{ profile?.profile?.city }},
+                      {{ profile?.profile?.state }}
+                      {{ profile?.profile?.zip }}
+                    </span>
+                    <div *ngIf="isEditing" class="grid grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        [(ngModel)]="profile!.profile.city"
+                        class="input input-bordered"
+                        placeholder="City"
+                      />
+                      <input
+                        type="text"
+                        [(ngModel)]="profile!.profile.state"
+                        class="input input-bordered"
+                        placeholder="State"
+                      />
+                      <input
+                        type="text"
+                        [(ngModel)]="profile!.profile.zip"
+                        class="input input-bordered"
+                        placeholder="ZIP"
+                      />
+                    </div>
+                  </div>
+                  <!-- Country -->
+                  <div class="flex flex-col space-y-1">
+                    <span *ngIf="!isEditing">{{
+                      profile?.profile?.country
+                    }}</span>
+                    <input
+                      *ngIf="isEditing"
+                      type="text"
+                      [(ngModel)]="profile!.profile.country"
+                      class="input input-bordered w-full"
+                      placeholder="Country"
+                    />
+                  </div>
+                </div>
+                <div class="flex justify-start mt-6">
+                  <button
+                    *ngIf="!isEditing"
+                    class="btn btn-primary"
+                    (click)="toggleEditing()"
+                  >
+                    Edit Profile
+                  </button>
+                  <div *ngIf="isEditing" class="flex space-x-2">
+                    <button
+                      class="btn btn-success"
+                      (click)="saveProfileChanges()"
+                    >
+                      Save
+                    </button>
+                    <button class="btn btn-error" (click)="toggleEditing()">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body">
+                <h3 class="card-title text-xl font-semibold text-primary mb-4">
+                  Membership Details
+                </h3>
+                <div *ngIf="profile?.membership" class="space-y-4">
+                  <p>
+                    <span class="font-medium opacity-70"
+                      >Membership Option: </span
+                    >{{ profile?.profile?.member_type }}
+                  </p>
+                  <div>
+                    <h4 class="font-semibold text-lg mb-2">Disciplines</h4>
+                    <div *ngIf="!isEditing" class="flex flex-wrap gap-2">
+                      <span
+                        *ngFor="let discipline of profile?.profile?.disciplines"
+                        class="badge badge-secondary"
+                      >
+                        {{ discipline }}
+                      </span>
+                    </div>
+                    <div *ngIf="isEditing" class="grid grid-cols-2 gap-2">
+                      <div
+                        *ngFor="let discipline of divisions"
+                        class="flex items-center space-x-2 bg-base-300 p-2 rounded-md"
+                      >
+                        <input
+                          type="checkbox"
+                          [id]="discipline.name"
+                          class="checkbox checkbox-xs"
+                          [checked]="
+                            profile?.profile?.disciplines?.includes(
+                              discipline.name
+                            )
+                          "
+                          (change)="toggleDisciplineChange(discipline.name)"
+                        />
+                        <label
+                          [for]="discipline.name"
+                          class="text-xs cursor-pointer select-none truncate"
+                          >{{ discipline.name }}</label
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <p>
+                    <span class="font-medium opacity-70">AMA Number: </span
+                    >{{ profile?.profile?.ama_number }}
+                  </p>
+                  <p
+                    [ngClass]="{
+                      'text-red-500': isMembershipExpired(
+                        profile?.membership?.expiration!
+                      )
+                    }"
+                  >
+                    <span class="font-medium opacity-70"
+                      >Expiration Date:
+                    </span>
+                    {{ profile?.membership?.expiration | date : "longDate" }}
+                  </p>
+                </div>
+                <div
+                  *ngIf="
+                    !profile?.membership &&
+                    profile?.profile?.member_type !== 'Family' &&
+                    profile?.profile?.role !== 'admin'
+                  "
+                >
+                  <p class="text-red-500">
+                    You do not have an active membership. Please sign up for a
+                    membership to continue.
+                  </p>
+                </div>
+                <div
+                  *ngIf="
+                    !profile?.membership &&
+                    profile?.profile?.member_type !== 'Family' &&
+                    profile?.profile?.role === 'admin'
+                  "
+                >
+                  <p>
+                    Admin Users are not set up to have a membership. If you
+                    would like to create an account with a membership, please
+                    create a new member for yourself via the 'Add New Member'
+                    feature in user management.
+                  </p>
+                </div>
+                <div *ngIf="profile?.profile?.member_type === 'Family'">
+                  <p>
+                    <span class="font-medium opacity-70"
+                      >Family Memberships: </span
+                    >{{ children.length }}
+                  </p>
+                </div>
+                <div class="space-y-4 mt-6">
+                  <ng-container
+                    *ngIf="
+                      profile?.membership &&
+                      !isMembershipExpired(profile?.membership?.expiration) &&
+                      profile?.profile?.member_type !== 'Family'
+                    "
+                  >
+                    <div class="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="card-print"
+                        class="checkbox checkbox-primary"
+                        [checked]="profile?.profile?.card_status ? true : false"
+                        (change)="toggleCardPrint()"
+                      />
+                      <label for="card-print" class="text-sm">
+                        Select to indicate that you need your card printed. If
+                        you already have a card, or plan to print your own, you
+                        can leave this unchecked.
+                      </label>
+                    </div>
+                  </ng-container>
+                  <div
+                    [matTooltip]="
+                      isMembershipExpired(profile?.membership?.expiration)
+                        ? 'Please renew Membership'
+                        : ''
+                    "
+                  >
+                    <button
+                      *ngIf="profile?.membership"
+                      class="btn btn-primary w-full"
+                      (click)="profile && openMembershipCardModal(profile)"
+                      [disabled]="
+                        isMembershipExpired(profile?.membership?.expiration)
+                      "
+                    >
+                      View Membership Card
+                    </button>
+                  </div>
+                  <button
+                    *ngIf="
+                      profile?.membership ||
+                      profile?.profile?.member_type === 'Family'
+                    "
+                    class="btn btn-primary w-full"
+                    (click)="openRenewalModal()"
+                  >
+                    {{
+                      profile?.profile?.member_type === "Family"
+                        ? "Renew Family Memberships"
+                        : "Renew Membership"
+                    }}
+                  </button>
+                  <button
+                    *ngIf="profile?.profile?.member_type === 'Family'"
+                    class="btn btn-primary w-full"
+                    (click)="openFullMembershipModal()"
+                  >
+                    Become a full member
+                  </button>
+                  <button
+                    *ngIf="
+                      !profile?.membership &&
+                      profile?.profile?.role !== 'admin' &&
+                      profile?.profile?.member_type !== 'Family'
+                    "
+                    class="btn btn-primary w-full"
+                    (click)="pushToSignUp()"
+                  >
+                    Sign Up For Membership
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="children && children.length > 0" class="mt-8">
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body">
+                <h3 class="card-title text-xl font-semibold text-primary mb-4">
+                  Family Members
+                </h3>
+                <div class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                  <div
+                    *ngFor="let child of children"
+                    class="bg-base-300 rounded-lg p-4"
+                  >
+                    <div
+                      class="flex justify-between items-center cursor-pointer"
+                      (click)="toggleChildInfo(child.profile)"
+                    >
+                      <p class="font-semibold">
+                        {{ child.profile.first_name }}
+                        {{
+                          child.profile.middle_initial
+                            ? child.profile.middle_initial + "."
+                            : ""
+                        }}
+                        {{ child.profile.last_name }}
+                      </p>
+                      <div
+                        class="text-lg font-bold pr-2 cursor-pointer select-none"
+                      >
+                        {{ ChildInfoToShow === child.profile ? "-" : "+" }}
+                      </div>
+                    </div>
+                    <div
+                      class="overflow-hidden transition-all duration-300 ease-in-out"
+                      [style.maxHeight]="
+                        ChildInfoToShow === child.profile ? '150px' : '0'
+                      "
+                    >
+                      <div class="pl-4 mt-2 space-y-2">
+                        <p class="text-sm">
+                          AMA Number: {{ child.profile.ama_number }}
+                        </p>
+                        <p
+                          class="text-sm"
+                          [ngClass]="{
+                            'text-red-500': isMembershipExpired(
+                              child?.membership?.expiration!
+                            )
+                          }"
+                        >
+                          Expiration Date:
+                          {{
+                            child?.membership?.expiration | date : "longDate"
+                          }}
+                        </p>
+                        <p class="text-sm">
+                          Birthdate: {{ child.profile.birthdate }}
+                        </p>
+                        <button
+                          class="btn btn-primary btn-sm mt-4 mr-2"
+                          (click)="openMembershipCardModal(child)"
+                          [disabled]="
+                            isMembershipExpired(child?.membership?.expiration)
+                          "
+                        >
+                          View Membership Card
+                        </button>
+                        <button
+                          class="btn btn-outline btn-sm mt-4"
+                          (click)="convertToSeparateUser(child.profile)"
+                        >
+                          Convert to non-linked account
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  [matTooltip]="
+                    isMembershipExpired(profile?.membership?.expiration)
+                      ? 'Renew your membership first, then you can add a family member.'
+                      : ''
+                  "
+                >
+                  <button
+                    *ngIf="profile?.profile?.member_type !== 'Charter'"
+                    class="btn btn-primary mt-4"
+                    (click)="openAddFamilyMemberModal()"
+                    [disabled]="
+                      isMembershipExpired(profile?.membership?.expiration) &&
+                      profile?.profile?.member_type !== 'Family'
+                    "
+                  >
+                    Add a New Family Member
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            *ngIf="
+              (!children || children.length === 0) &&
+              profile?.profile?.member_type !== 'Charter' &&
+              profile?.profile?.member_type !== null
+            "
+            class="mt-8"
+          >
+            <div class="card bg-base-200 shadow-md">
+              <div
+                class="card-body"
+                [matTooltip]="
+                  isMembershipExpired(profile?.membership?.expiration)
+                    ? 'Renew your membership first, then you can add a family member.'
+                    : ''
+                "
+              >
+                <button
+                  class="btn btn-primary"
+                  (click)="openAddFamilyMemberModal()"
+                  [disabled]="
+                    isMembershipExpired(profile?.membership?.expiration)
+                  "
+                >
+                  Add a Family Member
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Organization Details Section -->
+          <div *ngIf="profile?.profile?.member_type === 'Charter'" class="mt-8">
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body">
+                <h3 class="card-title text-xl font-semibold text-primary mb-4">
+                  Organization Details
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Basic Organization Info -->
+                  <div>
+                    <p class="font-semibold">Organization Name</p>
+                    <p>{{ organization?.name }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Website</p>
+                    <p>{{ organization?.website || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Email</p>
+                    <p>{{ organization?.email || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Phone</p>
+                    <p>{{ organization?.phone || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Address</p>
+                    <p>{{ organization?.address || "N/A" }}</p>
+                    <p *ngIf="organization?.address_line2">
+                      {{ organization?.address_line2 }}
+                    </p>
+                    <p>
+                      {{ organization?.city }}, {{ organization?.state }}
+                      {{ organization?.zip }}
+                    </p>
+                    <p>{{ organization?.country }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">AMA Number</p>
+                    <p>{{ organization?.ama_number || "N/A" }}</p>
+                  </div>
+                </div>
+
+                <!-- Primary Contact Details -->
+                <h2 class="text-xl font-semibold text-primary mt-6 mb-4">
+                  Primary Contact Details
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p class="font-semibold">Name</p>
+                    <p>{{ organization?.primary_contact_name || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Email</p>
+                    <p>{{ organization?.primary_contact_email || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Phone</p>
+                    <p>{{ organization?.primary_contact_phone || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">D14 Number</p>
+                    <p>{{ organization?.primary_contact_d14 || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Address</p>
+                    <p>{{ organization?.primary_contact_address || "N/A" }}</p>
+                    <p>
+                      {{ organization?.primary_contact_city }},
+                      {{ organization?.primary_contact_state }}
+                      {{ organization?.primary_contact_zip }}
+                    </p>
+                    <p>{{ organization?.primary_contact_country }}</p>
+                  </div>
+                </div>
+
+                <!-- President Details -->
+                <h2 class="text-xl font-semibold text-primary mt-6 mb-4">
+                  President Details
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p class="font-semibold">Name</p>
+                    <p>{{ organization?.president_name || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Email</p>
+                    <p>{{ organization?.president_email || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Phone</p>
+                    <p>{{ organization?.president_phone || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">D14 Number</p>
+                    <p>{{ organization?.president_d14 || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Address</p>
+                    <p>{{ organization?.president_address || "N/A" }}</p>
+                    <p>
+                      {{ organization?.president_city }},
+                      {{ organization?.president_state }}
+                      {{ organization?.president_zip }}
+                    </p>
+                    <p>{{ organization?.president_country }}</p>
+                  </div>
+                </div>
+
+                <!-- Referee Details -->
+                <h2 class="text-xl font-semibold text-primary mt-6 mb-4">
+                  Referee Details
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p class="font-semibold">Name</p>
+                    <p>{{ organization?.referee_name || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Email</p>
+                    <p>{{ organization?.referee_email || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Phone</p>
+                    <p>{{ organization?.referee_phone || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">D14 Number</p>
+                    <p>{{ organization?.referee_d14 || "N/A" }}</p>
+                  </div>
+                  <div>
+                    <p class="font-semibold">Address</p>
+                    <p>{{ organization?.referee_address || "N/A" }}</p>
+                    <p>
+                      {{ organization?.referee_city }},
+                      {{ organization?.referee_state }}
+                      {{ organization?.referee_zip }}
+                    </p>
+                    <p>{{ organization?.referee_country }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Convert to Independent User Modal -->
+<dialog id="convert_to_independent_modal" class="modal">
+  <div
+    *ngIf="convertedMember"
+    class="modal-box bg-base-100 rounded-md w-11/12 max-w-5xl"
+  >
+    <form method="dialog">
+      <button
+        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+        (click)="toggleConversionModal()"
+      >
+        ✕
+      </button>
+    </form>
+    <h2 class="font-bold text-xl sm:text-2xl mb-4 sm:mb-6">
+      Convert to Independent User
+    </h2>
+
+    <div class="alert alert-warning mb-6">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="stroke-current shrink-0 h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+      <span
+        >Warning: This action cannot be undone. You will no longer control this
+        account.</span
+      >
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <!-- New Account Information -->
+      <div class="space-y-4">
+        <h3 class="font-semibold text-lg">New Account Information</h3>
+        <input
+          type="email"
+          placeholder="New Email"
+          class="input input-bordered w-full"
+          [(ngModel)]="newEmail"
+          required
+        />
+        <input
+          type="password"
+          placeholder="New Password"
+          class="input input-bordered w-full"
+          [(ngModel)]="newPassword"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          class="input input-bordered w-full"
+          [(ngModel)]="confirmPassword"
+          required
+        />
+      </div>
+
+      <!-- Personal Information -->
+      <div class="space-y-4">
+        <h3 class="font-semibold text-lg">Personal Information</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="First Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.first_name"
+          />
+          <input
+            type="text"
+            placeholder="Last Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.last_name"
+          />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Home Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.home_phone"
+          />
+          <input
+            type="text"
+            placeholder="Cell Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.cell_phone"
+          />
+        </div>
+        <input
+          type="date"
+          placeholder="Birthdate"
+          class="input input-bordered w-full"
+          [(ngModel)]="convertedMember!.birthdate"
+        />
+      </div>
+
+      <!-- Address -->
+      <div class="space-y-4">
+        <h3 class="font-semibold text-lg">Address</h3>
+        <input
+          type="text"
+          placeholder="Address Line 1"
+          class="input input-bordered w-full"
+          [(ngModel)]="convertedMember!.address_line1"
+        />
+        <input
+          type="text"
+          placeholder="Address Line 2"
+          class="input input-bordered w-full"
+          [(ngModel)]="convertedMember!.address_line2"
+        />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="City"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.city"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.state"
+          />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="ZIP"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.zip"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            class="input input-bordered w-full"
+            [(ngModel)]="convertedMember!.country"
+          />
+        </div>
+      </div>
+
+      <!-- Membership Information -->
+      <div class="space-y-4">
+        <h3 class="font-semibold text-lg">AMA Number</h3>
+        <input
+          type="text"
+          placeholder="AMA Number"
+          disabled
+          class="input input-bordered w-full"
+          [(ngModel)]="convertedMember!.ama_number"
+        />
+
+        <h3 class="font-semibold text-lg">Disciplines</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngFor="let discipline of convertedMember.disciplines">
+            <div>{{ discipline }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-action mt-6 sm:mt-8">
+      <button
+        class="btn btn-primary w-full sm:w-auto"
+        (click)="completeConversion()"
+      >
+        Convert to Independent User
+      </button>
+      <button
+        class="btn btn-outline w-full sm:w-auto mt-2 sm:mt-0"
+        (click)="toggleConversionModal()"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Renewal modal -->
+<div
+  *ngIf="showRenewalModal"
+  class="fixed inset-0 bg-base-200 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+>
+  <div
+    class="relative bg-base-200 rounded-lg shadow-xl p-8 m-4 max-w-xl w-full"
+  >
+    <h2 class="text-2xl font-bold mb-4">Renew Your Membership</h2>
+
+    <!-- Main member renewal -->
+    <div class="mb-6">
+      <h3 class="text-xl font-semibold mb-2">Your Membership</h3>
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <span class="font-medium"
+            >{{ profile?.profile?.first_name }}
+            {{ profile?.profile?.last_name }} (You)</span
+          >
+          <p
+            [ngClass]="{
+              'text-red-500': isMembershipExpired(
+                profile?.membership?.expiration!
+              )
+            }"
+          >
+            <span
+              *ngIf="profile?.profile?.member_type !== 'Family'"
+              class="opacity-70"
+              >Current Expiration:</span
+            >
+            {{ profile?.membership?.expiration | date : "longDate" }}
+          </p>
+        </div>
+        <div class="flex items-center">
+          <span *ngIf="profile?.membership" class="mr-2"
+            >${{
+              profile?.profile?.member_type === "Charter" ? "25" : "15"
+            }}/year</span
+          >
+          <input
+            *ngIf="profile?.membership"
+            type="checkbox"
+            class="checkbox checkbox-primary"
+            id="main-member"
+            [checked]="isProfileSelected(profile!)"
+            (change)="toggleRenewalList(profile!)"
+          />
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-sm">Membership Type:</span>
+        <span class="text-sm">{{ profile?.profile?.member_type }}</span>
+      </div>
+    </div>
+
+    <!-- Family members section -->
+    <div *ngIf="children.length > 0" class="mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-xl font-semibold">Family Members</h3>
+      </div>
+      <div class="space-y-4">
+        <div *ngFor="let child of children">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="font-medium"
+                >{{ child.profile.first_name }}
+                {{ child.profile.last_name }}</span
+              >
+              <p
+                [ngClass]="{
+                  'text-red-500': isMembershipExpired(
+                    child?.membership?.expiration!
+                  )
+                }"
+              >
+                <span class="opacity-70">Current Expiration:</span>
+                {{ child?.membership?.expiration | date : "longDate" }}
+              </p>
+            </div>
+            <div class="flex items-center">
+              <ng-container *ngIf="child.membership; else nonRenewableChild">
+                <span class="mr-2">$15/year</span>
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-primary"
+                  id="family-member-1"
+                  [checked]="isProfileSelected(child)"
+                  (change)="toggleRenewalList(child)"
+                />
+              </ng-container>
+              <ng-template #nonRenewableChild>
+                <span class="text-sm opacity-70">No membership to renew</span>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total and action buttons -->
+    <div class="mt-8">
+      <div class="text-xl font-bold mb-4 flex justify-between">
+        <span>Total:</span>
+        <span
+          >${{
+            selectedForRenewal && selectedForRenewal.length > 0
+              ? profile?.profile?.member_type === "Charter"
+                ? 25 + (selectedForRenewal.length - 1) * 15
+                : selectedForRenewal.length * 15
+              : 0
+          }}.00</span
+        >
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button class="btn btn-outline" (click)="closeRenewalModal()">
+          Cancel
+        </button>
+        <button class="btn btn-primary" (click)="renewSelectedMemberships()">
+          Renew Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Close button -->
+    <button
+      class="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
+      (click)="closeRenewalModal()"
+    >
+      <svg
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- Membership Card Modal -->
+<div class="modal" [ngClass]="{ 'modal-open': isModalOpen }">
+  <div class="modal-box relative bg-base-200">
+    <button
+      class="btn btn-sm btn-circle absolute right-2 top-2"
+      (click)="closeMembershipCardModal()"
+    >
+      ✕
+    </button>
+    <h3 class="text-lg font-bold mb-4">Your Membership Card</h3>
+    <div class="flex justify-center">
+      <div
+        class="bg-white text-black p-4 rounded-lg shadow-md border border-gray-300 w-[350px] h-[200px] relative"
+        #membershipCard
+      >
+        <!-- Logo and Header Section -->
+        <div class="absolute top-4 left-4 w-24">
+          <img
+            src="assets/images/d14_logo.png"
+            alt="D14 District Logo"
+            class="w-full h-auto"
+          />
+        </div>
+
+        <!-- Member Info Section - Right Side -->
+        <div class="absolute top-4 right-4 text-right max-w-[180px]">
+          <div class="text-lg font-bold text-black truncate">
+            {{ membershipCardUser?.profile?.first_name }}
+            {{ membershipCardUser?.profile?.last_name }}
+          </div>
+          <div class="text-sm text-black truncate">
+            {{ membershipCardUser?.profile?.address_line1 }}
+          </div>
+          <div class="text-sm text-black truncate">
+            {{ membershipCardUser?.profile?.city }},
+            {{ membershipCardUser?.profile?.state }}
+            {{ membershipCardUser?.profile?.zip }}
+          </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="absolute bottom-4 left-4 right-4">
+          <div class="text-sm mb-1 text-black">
+            D.O.B.
+            {{ membershipCardUser?.profile?.birthdate | date : "MM/dd/yyyy" }}
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <div class="text-sm text-black">
+              D14# {{ membershipCardUser?.profile?.d14_number }}
+            </div>
+            <div class="text-sm text-black">
+              EXP
+              {{
+                membershipCardUser?.membership?.expiration | date : "MM/dd/yyyy"
+              }}
+            </div>
+          </div>
+          <div *ngIf="onCardNotes" class="max-h-[40px] overflow-hidden">
+            <div
+              *ngFor="let note of onCardNotes"
+              class="font-bold text-black text-sm truncate"
+            >
+              {{ note.note_content }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-action">
+      <button class="btn btn-primary" (click)="printMembershipCard()">
+        Print Card
+      </button>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal"
+  *ngIf="addFamilyMember"
+  [ngClass]="{ 'modal-open': addFamilyMember }"
+>
+  <div class="modal-box relative bg-base-200 w-11/12 max-w-md mx-auto">
+    <h3 class="text-xl font-bold mb-6 text-center">Add a New Family Member</h3>
+    <div class="space-y-4">
+      <input
+        type="text"
+        placeholder="First Name"
+        class="input input-bordered w-full text-base"
+        [(ngModel)]="newFamilyMember!.first_name"
+      />
+      <input
+        type="text"
+        placeholder="Last Name"
+        class="input input-bordered w-full text-base"
+        [(ngModel)]="newFamilyMember!.last_name"
+      />
+      <input
+        type="text"
+        placeholder="AMA Number"
+        class="input input-bordered w-full text-base"
+        [(ngModel)]="newFamilyMember!.ama_number"
+      />
+      <div class="flex flex-col">
+        <label for="birthdate" class="text-sm mb-1">Birthdate</label>
+        <input
+          id="birthdate"
+          type="date"
+          class="input input-bordered w-full text-base"
+          [(ngModel)]="newFamilyMember!.birthdate"
+        />
+      </div>
+      <div class="mt-6">
+        <h4 class="font-semibold text-lg mb-3">Disciplines</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div
+            *ngFor="let discipline of divisions"
+            class="flex items-center space-x-3 bg-base-300 p-3 rounded-md"
+          >
+            <input
+              type="checkbox"
+              [id]="'discipline-' + discipline.name"
+              class="checkbox checkbox-sm"
+              [checked]="
+                newFamilyMember?.disciplines?.includes(discipline.name)
+              "
+              (change)="toggleNewFamilyMemberDiscipline(discipline.name)"
+            />
+            <label
+              [for]="'discipline-' + discipline.name"
+              class="text-sm cursor-pointer select-none"
+              >{{ discipline.name }}</label
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-8 flex flex-col space-y-3">
+      <button class="btn btn-primary w-full" (click)="addNewFamilyMember()" [disabled]="isAddingFamilyMember">
+        {{ isAddingFamilyMember ? 'Adding...' : 'Add Family Member' }}
+      </button>
+      <button
+        class="btn btn-outline w-full"
+        (click)="closeAddFamilyMemberModal()"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- convert to full membership modal -->
+<div
+  class="modal"
+  *ngIf="fullMembershipModal"
+  [ngClass]="{ 'modal-open': fullMembershipModal }"
+>
+  <div class="modal-box relative bg-base-200 w-11/12 max-w-md mx-auto">
+    <h3 class="text-xl font-bold mb-6 text-center">Activate Full Membership</h3>
+    <p class="mb-4">
+      By activating a full membership, you will pay $15 to gain a D14 membership
+      for yourself. You will still be in control of family member accounts.
+    </p>
+    <div class="space-y-4">
+      <label for="amaNumber">Please Enter your AMA number</label>
+      <button
+        type="button"
+        class="ml-1 cursor-pointer inline-flex items-center p-1 rounded-full"
+        (click)="toggleTooltip(amaTooltip)"
+        (blur)="hideTooltip(amaTooltip)"
+        tabindex="0"
+        matTooltip="Find your AMA number on your AMA card or in your AMA account"
+        matTooltipPosition="above"
+        #amaTooltip="matTooltip"
+        aria-label="AMA Number Tooltip"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-5 h-5"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+          />
+          <text
+            x="12"
+            y="16"
+            text-anchor="middle"
+            font-size="12"
+            fill="currentColor"
+          >
+            ?
+          </text>
+        </svg>
+      </button>
+      <input
+        id="amaNumber"
+        type="text"
+        placeholder="AMA Number"
+        class="input input-bordered w-full text-base"
+        [(ngModel)]="amaNumber"
+      />
+    </div>
+    <h4 class="font-semibold text-lg mb-3 mt-2">Disciplines</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div
+        *ngFor="let discipline of divisions"
+        class="flex items-center space-x-3 bg-base-300 p-3 rounded-md"
+      >
+        <input
+          type="checkbox"
+          [id]="'full-discipline-' + discipline.name"
+          class="checkbox checkbox-sm"
+          [checked]="fullMembershipDisciplines.includes(discipline.name)"
+          (change)="toggleNewFullMemberDiscipline(discipline.name)"
+        />
+        <label
+          [for]="'full-discipline-' + discipline.name"
+          class="text-sm cursor-pointer select-none"
+          >{{ discipline.name }}</label
+        >
+      </div>
+    </div>
+    <div class="mt-8 flex flex-col space-y-3">
+      <button class="btn btn-primary w-full" (click)="activateFullMembership()">
+        Activate Membership
+      </button>
+      <button
+        class="btn btn-outline w-full"
+        (click)="closeFullMembershipModal()"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>

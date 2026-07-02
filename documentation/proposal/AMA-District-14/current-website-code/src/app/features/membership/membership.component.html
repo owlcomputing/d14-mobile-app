@@ -1,0 +1,1454 @@
+<div class="w-full h-full p-3 sm:p-6 lg:p-10 overflow-y-auto">
+  <div *ngIf="!isAlreadyMember">
+    <div class="flex flex-col items-center sm:mt-7 h-full">
+      <h2 class="text-xl sm:text-2xl text-center lg:self-center">
+        Ways to join District 14
+      </h2>
+      <div class="flex flex-col lg:flex-row gap-6 mt-5 w-full h-full">
+        <div
+          class="w-full h-full flex flex-col bg-[RGBA(255,255,255,0.20)] rounded p-4"
+        >
+          <h3 class="self-center text-xl sm:text-2xl">Join Online</h3>
+          <div
+            *ngIf="!authService.session"
+            class="flex flex-col items-center text-center p-4"
+          >
+            <h4 class="text-lg mt-4 mb-6">
+              To get started with online registration, please sign in or create
+              an account
+            </h4>
+            <button
+              class="w-full sm:w-[50%] h-[42px] text-black bg-white rounded-[4px] text-sm font-bold"
+              (click)="navigateToLogin()"
+            >
+              SIGN IN / REGISTER
+            </button>
+          </div>
+          <div *ngIf="authService.session" class="flex flex-col mt-3">
+            <div class="mt-4">
+              <form
+                [formGroup]="membershipForm"
+                (ngSubmit)="submitForm()"
+                class="flex flex-col justify-center"
+              >
+                <div
+                  class="flex flex-col sm:flex-row justify-center items-center"
+                >
+                  <div
+                    class="card shadow-lg p-6 mb-6 bg-base-100 bg-opacity-60"
+                  >
+                    <h2
+                      class="text-3xl font-bold text-center mb-6 text-primary"
+                    >
+                      Membership Options
+                    </h2>
+                    <div class="text-center mb-6">
+                      <h3 class="text-xl font-semibold text-secondary">
+                        Membership Length
+                      </h3>
+                      <p class="text-4xl font-bold text-primary mt-2">1 Year</p>
+                      <p class="text-sm mt-2">(Please Select One)</p>
+                    </div>
+                    <div class="max-w-4xl mx-auto p-6">
+                      <h2 class="text-3xl font-bold text-center mb-8">
+                        Choose Your Membership
+                      </h2>
+                      <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8"
+                      >
+                        <div
+                          class="relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 ease-in-out border-white border-2 cursor-pointer bg-base-100"
+                          [ngClass]="{
+                            'ring-4 ring-primary ring-offset-4':
+                              memberType === 'Regular'
+                          }"
+                          (click)="setMembershipType('Regular')"
+                        >
+                          <div class="p-6 md:p-8 text-white">
+                            <div class="flex items-start gap-4">
+                              <div class="flex-grow">
+                                <h4
+                                  class="text-xl md:text-2xl font-semibold mb-2 md:mb-4 pt-2"
+                                >
+                                  Regular Membership
+                                </h4>
+                                <p
+                                  class="text-4xl md:text-5xl font-bold mb-2 md:mb-4"
+                                >
+                                  $15
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            class="absolute top-2 left-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center"
+                            [ngClass]="{
+                              'bg-primary': memberType === 'Regular',
+                              'bg-transparent': memberType !== 'Regular'
+                            }"
+                          >
+                            <i class="fas fa-check text-black text-xs"></i>
+                          </div>
+                        </div>
+                        <div
+                          class="relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 ease-in-out border-white border-2 cursor-pointer bg-base-100"
+                          [ngClass]="{
+                            'ring-4 ring-primary ring-offset-4':
+                              memberType === 'Charter'
+                          }"
+                          (click)="setMembershipType('Charter')"
+                        >
+                          <div class="p-6 md:p-8 text-white">
+                            <div class="flex items-start gap-4">
+                              <div class="flex-grow">
+                                <h4
+                                  class="text-xl md:text-2xl font-semibold mb-2 md:mb-4 pt-2"
+                                >
+                                  Charter Membership
+                                </h4>
+                                <p
+                                  class="text-4xl md:text-5xl font-bold mb-2 md:mb-4"
+                                >
+                                  $25
+                                </p>
+                                <p
+                                  class="text-base md:text-lg italic mb-2 md:mb-4"
+                                >
+                                  (Clubs/Promoters)
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            class="absolute top-2 left-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center"
+                            [ngClass]="{
+                              'bg-primary': memberType === 'Charter',
+                              'bg-transparent': memberType !== 'Charter'
+                            }"
+                          >
+                            <i class="fas fa-check text-black text-xs"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Family Only Toggle and AMA Confirmation -->
+                <div
+                  class="space-y-6 bg-base-100 bg-opacity-60 p-6 rounded-xl shadow-lg border-white border-2 mt-6"
+                >
+                  <!-- AMA Membership Confirmation Toggle -->
+                  <div class="flex items-center mt-4">
+                    <input
+                      type="checkbox"
+                      id="amaConfirmation"
+                      [checked]="confirmedAMAMembership"
+                      (change)="toggleConfirmAMA()"
+                      class="w-5 h-5 rounded text-primary bg-base-200 border-white focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100"
+                    />
+                    <label
+                      for="amaConfirmation"
+                      class="ml-3 text-sm sm:text-base text-white font-semibold"
+                      >{{
+                        memberType !== "Charter"
+                          ? "I confirm that I and/or the family members I am signing up have a valid AMA membership."
+                          : "I confirm that the promoter/club has a valid AMA membership"
+                      }}
+                    </label>
+                  </div>
+                  <div
+                    class="flex flex-col space-y-2"
+                    *ngIf="memberType !== 'Charter'"
+                  >
+                    <label
+                      for="membershipType"
+                      class="text-lg font-semibold text-white"
+                    >
+                      Who is this membership for?
+                    </label>
+                    <select
+                      [(ngModel)]="membershipSelection"
+                      [ngModelOptions]="{ standalone: true }"
+                      (change)="checkMembershipSelection()"
+                      class="w-full px-4 py-2 text-black bg-white border-2 border-primary rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      [style]="{
+                        padding: '0.5rem 1rem !important',
+                        'background-color': 'white',
+                        color: 'black'
+                      }"
+                    >
+                      <option value="" disabled>Select an option</option>
+                      <option value="self">I'm signing up myself</option>
+                      <option value="selfAndFamily">
+                        I'm signing up myself AND family members
+                      </option>
+                      <option value="familyOnly">
+                        I am signing up only my family members, and do not need
+                        a membership for myself.
+                      </option>
+                    </select>
+                  </div>
+
+                  <div
+                    *ngIf="familyOnly"
+                    class="text-sm text-base-content mt-2 bg-white bg-opacity-20 p-4 rounded-md"
+                  >
+                    <p>
+                      Please enter your information in the fields below. This
+                      information is for managing the online account and will
+                      not be used for membership registration or billing. Once
+                      your details are complete, add AMA information for each
+                      family member you wish to register.
+                    </p>
+                    <p class="font-bold mt-2 text-primary">
+                      You will only be billed for the family members you add,
+                      not for yourself.
+                    </p>
+                  </div>
+                </div>
+
+                <ng-container
+                  *ngIf="(confirmedAMAMembership && membershipSelection) || (confirmedAMAMembership && memberType === 'Charter')"
+                >
+                  <ng-container *ngIf="memberType === 'Regular'">
+                    <div class="flex justify-center items-center mt-4">
+                      <div
+                        formGroupName="individualName"
+                        class="space-y-2 w-full max-w-4xl"
+                      >
+                        <label for="firstName" class="block text-sm font-medium"
+                          >Individual Name<span class="text-red-500"
+                            >*</span
+                          ></label
+                        >
+                        <div
+                          class="flex flex-col sm:flex-row justify-between gap-2"
+                        >
+                          <div class="flex-grow">
+                            <input
+                              id="firstName"
+                              formControlName="firstName"
+                              placeholder="First Name"
+                              aria-label="Individual First Name"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                              [ngClass]="{
+                                'border-red-500':
+                                  membershipForm.get('individualName.firstName')
+                                    ?.touched &&
+                                  membershipForm.get('individualName.firstName')
+                                    ?.invalid
+                              }"
+                            />
+                          </div>
+
+                          <div class="w-full sm:w-20">
+                            <input
+                              formControlName="middleInitial"
+                              placeholder="M.I."
+                              aria-label="Individual Middle Initial"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                            />
+                          </div>
+
+                          <div class="flex-grow">
+                            <input
+                              formControlName="lastName"
+                              placeholder="Last Name"
+                              aria-label="Individual Last Name"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                              [ngClass]="{
+                                'border-red-500':
+                                  membershipForm.get('individualName.lastName')
+                                    ?.touched &&
+                                  membershipForm.get('individualName.lastName')
+                                    ?.invalid
+                              }"
+                            />
+                          </div>
+
+                          <div class="w-full sm:w-24">
+                            <input
+                              formControlName="suffix"
+                              placeholder="Suffix"
+                              aria-label="Individual Name Suffix"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col mt-4" formGroupName="address">
+                      <label for="line1" class="mb-1"
+                        >Address - Main Address<span class="text-red-500"
+                          >*</span
+                        ></label
+                      >
+                      <input
+                        id="line1"
+                        formControlName="line1"
+                        placeholder="Line 1"
+                        class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] mb-2"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('address.line1')?.touched &&
+                            membershipForm.get('address.line1')?.invalid
+                        }"
+                      />
+                      <div
+                        *ngIf="
+                          membershipForm.get('address.line1')?.touched &&
+                          membershipForm.get('address.line1')?.invalid
+                        "
+                        class="text-red-500 text-sm mb-2"
+                      >
+                        Line 1 is required
+                      </div>
+                      <input
+                        formControlName="line2"
+                        placeholder="Line 2"
+                        class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] mb-2"
+                      />
+                      <div
+                        class="flex flex-col sm:flex-row justify-between gap-2 sm:gap-0"
+                      >
+                        <input
+                          formControlName="city"
+                          placeholder="City"
+                          class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full sm:w-1/3 mb-2 sm:mb-0 sm:mr-2"
+                          [ngClass]="{
+                            'border-red-500':
+                              membershipForm.get('address.city')?.touched &&
+                              membershipForm.get('address.city')?.invalid
+                          }"
+                        />
+                        <select
+                          formControlName="state"
+                          class="border-white border-2 rounded text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full sm:w-1/3 mb-2 sm:mb-0 sm:mr-2"
+                          [ngClass]="{
+                            'border-red-500':
+                              membershipForm.get('address.state')?.touched &&
+                              membershipForm.get('address.state')?.invalid
+                          }"
+                          style="
+                            padding: 0.5rem 1rem !important;
+                            background-color: rgb(153, 153, 154);
+                            color: black;
+                          "
+                          (input)="onStateChange($event, membershipForm)"
+                        >
+                          <option value="" disabled>
+                            Select State/Province
+                          </option>
+                          <option
+                            *ngFor="let state of usStates"
+                            [value]="state"
+                          >
+                            {{ state }}
+                          </option>
+                          <option
+                            *ngFor="let province of canadianProvinces"
+                            [value]="province"
+                          >
+                            {{ province }}
+                          </option>
+                        </select>
+                        <input
+                          formControlName="zip"
+                          placeholder="Zip/Postal Code"
+                          class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full sm:w-1/3"
+                          [ngClass]="{
+                            'border-red-500':
+                              membershipForm.get('address.zip')?.touched &&
+                              membershipForm.get('address.zip')?.invalid
+                          }"
+                        />
+                      </div>
+                      <select
+                        formControlName="country"
+                        class="border-white border-2 rounded p-2 text-gray-800 bg-[RGBA(255,255,255,0.5)] mt-2"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('address.country')?.touched &&
+                            membershipForm.get('address.country')?.invalid
+                        }"
+                        [style]="{
+                          padding: '0.5rem 1rem !important',
+                          'background-color': 'rgb(153, 153, 154)',
+                          color: 'black'
+                        }"
+                      >
+                        <option value="" disabled>Select Country</option>
+                        <option
+                          *ngFor="let country of countries"
+                          [value]="country"
+                        >
+                          {{ country }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <div class="flex flex-col mt-4">
+                      <label for="email" class="mb-1"
+                        >Primary Email<span class="text-red-500">*</span></label
+                      >
+                      <input
+                        id="email"
+                        formControlName="email"
+                        placeholder="Primary Email"
+                        class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('email')?.touched &&
+                            membershipForm.get('email')?.invalid
+                        }"
+                      />
+                    </div>
+
+                    <div *ngIf="!familyOnly" class="flex flex-col mt-4">
+                      <label for="disciplines" class="mb-1"
+                        >Disciplines
+                        <small
+                          >(Select all disciplines you are interested in
+                          receiving notifications for)</small
+                        ><span class="text-red-500">*</span></label
+                      >
+                      <app-multi-select
+                        [options]="disciplines"
+                        formControlName="disciplines"
+                        aria-placeholder="Select Discipline"
+                      ></app-multi-select>
+                    </div>
+
+                    <div *ngIf="!familyOnly" class="flex flex-col mt-4">
+                      <label for="amaNumber" class="mb-1">
+                        AMA Number<span class="text-red-500">*</span>
+                        <button
+                          type="button"
+                          class="ml-1 cursor-pointer inline-flex items-center p-1 rounded-full"
+                          (click)="toggleTooltip(amaTooltip)"
+                          (blur)="hideTooltip(amaTooltip)"
+                          tabindex="0"
+                          matTooltip="Find your AMA number on your AMA card or in your AMA account"
+                          matTooltipPosition="above"
+                          #amaTooltip="matTooltip"
+                          aria-label="AMA Number Tooltip"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-5 h-5"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              fill="none"
+                            />
+                            <text
+                              x="12"
+                              y="16"
+                              text-anchor="middle"
+                              font-size="12"
+                              fill="currentColor"
+                            >
+                              ?
+                            </text>
+                          </svg>
+                        </button>
+                      </label>
+                      <input
+                        type="tel"
+                        id="amaNumber"
+                        formControlName="amaNumber"
+                        placeholder="AMA Number"
+                        class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('amaNumber')?.touched &&
+                            membershipForm.get('amaNumber')?.invalid
+                        }"
+                      />
+                    </div>
+
+                    <div class="flex w-full flex-col mt-4">
+                      <label for="birthdate" class="mb-1">
+                        Birthdate <span class="text-red-500">*</span>
+                      </label>
+
+                      <input
+                        *ngIf="!isMobile"
+                        id="birthdate"
+                        type="date"
+                        dateFormat="MM/DD/YYYY"
+                        formControlName="birthdate"
+                        class="border-white border-2 rounded p-2 w-full text-gray-800 bg-[rgba(255,255,255,0.5)] placeholder:text-black"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('birthdate')?.touched &&
+                            membershipForm.get('birthdate')?.invalid
+                        }"
+                        style="
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          appearance: none;
+                        "
+                      />
+
+                      <input
+                        *ngIf="isMobile"
+                        id="birthdate"
+                        type="tel"
+                        formControlName="birthdate"
+                        placeholder="MM/DD/YYYY"
+                        class="border-white border-2 rounded p-2 w-full text-gray-800 bg-[rgba(255,255,255,0.5)] placeholder:text-black"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('birthdate')?.touched &&
+                            membershipForm.get('birthdate')?.invalid
+                        }"
+                        (input)="onBirthdateInput($event, 'member')"
+                        style="
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          appearance: none;
+                        "
+                      />
+
+                      <div
+                        *ngIf="
+                          membershipForm.get('birthdate')?.touched &&
+                          membershipForm.get('birthdate')?.invalid
+                        "
+                        class="text-red-500 text-sm"
+                      >
+                        Birthdate is required and must be formatted MM/DD/YYYY
+                      </div>
+                    </div>
+
+                    <div
+                      class="flex flex-col sm:flex-row mt-4 justify-between gap-4 sm:gap-2"
+                    >
+                      <div class="flex flex-col w-full sm:w-1/2">
+                        <label for="cellPhone" class="mb-1"
+                          >Phone<span class="text-red-500">*</span>
+                          <button
+                            type="button"
+                            class="ml-1 cursor-pointer inline-flex items-center p-1 rounded-full"
+                            (click)="toggleTooltip(amaTooltipCell)"
+                            (blur)="hideTooltip(amaTooltipCell)"
+                            tabindex="0"
+                            matTooltip="Accepted formats: (xxx) xxx-xxxx, xxx-xxx-xxxx, xxx.xxx.xxxx, xxx xxx xxxx"
+                            matTooltipPosition="above"
+                            #amaTooltipCell="matTooltip"
+                            aria-label="Cell Phone Tooltip"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              class="w-5 h-5"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                fill="none"
+                              />
+                              <text
+                                x="12"
+                                y="16"
+                                text-anchor="middle"
+                                font-size="12"
+                                fill="currentColor"
+                              >
+                                ?
+                              </text>
+                            </svg>
+                          </button>
+                        </label>
+                        <input
+                          type="tel"
+                          id="cellPhone"
+                          formControlName="cellPhone"
+                          placeholder="Phone"
+                          class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                          [ngClass]="{
+                            'border-red-500':
+                              membershipForm.get('cellPhone')?.touched &&
+                              membershipForm.get('cellPhone')?.invalid
+                          }"
+                        />
+                        <div
+                          *ngIf="
+                            membershipForm.get('cellPhone')?.touched &&
+                            membershipForm.get('cellPhone')?.invalid
+                          "
+                          class="text-red-500 text-sm"
+                        >
+                          Phone is required
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="flex flex-col sm:flex-row mt-4 justify-between gap-4 sm:gap-2"
+                    >
+                      <div class="flex flex-col w-full sm:w-1/2">
+                        <label for="emergencyContactName" class="mb-1"
+                          >Emergency Contact Name</label
+                        >
+                        <input
+                          id="emergencyContactName"
+                          formControlName="emergencyContactName"
+                          placeholder="Emergency Contact Name"
+                          class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                        />
+                      </div>
+
+                      <div class="flex flex-col w-full sm:w-1/2">
+                        <label for="emergencyContactPhone" class="mb-1"
+                          >Emergency Contact Phone Number</label
+                        >
+                        <input
+                          id="emergencyContactPhone"
+                          formControlName="emergencyContactPhone"
+                          placeholder="Emergency Contact Phone Number"
+                          class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Existing Children Section -->
+                    <div *ngIf="existingChildren.length > 0">
+                      <h3 class="pt-5">Existing Family Members</h3>
+                      <div
+                        *ngFor="let child of existingChildren"
+                        class="mt-4 border p-4 rounded"
+                      >
+                        <div class="flex flex-row justify-between">
+                          <h4 class="text-lg font-semibold mb-2">
+                            {{ child.first_name + " " + child.last_name }}
+                          </h4>
+                          <!-- button to delete -->
+                          <button
+                            type="button"
+                            class="bg-red-500 text-white p-2 rounded"
+                            (click)="removeExistingChild(child.id)"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div class="mb-2">
+                          <span class="font-semibold">Birthdate:</span>
+                          {{ child.birthdate }}
+                        </div>
+                        <div class="mb-2">
+                          <span class="font-semibold">AMA Number:</span>
+                          {{ child.ama_number }}
+                        </div>
+                        <div>
+                          <span class="font-semibold">Disciplines: </span>
+                          {{ child.disciplines.join(", ") }}
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+
+                  <ng-container *ngIf="memberType === 'Charter'">
+                    <form
+                      [formGroup]="charterMemberForm"
+                      (ngSubmit)="submitForm()"
+                    >
+                      <!-- Organization Details -->
+                      <div
+                        formGroupName="organizationDetails"
+                        class="space-y-4"
+                      >
+                        <h2 class="text-2xl font-semibold">
+                          Organization Details
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            formControlName="name"
+                            placeholder="Organization Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="ama_number"
+                            placeholder="AMA Charter Number"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="email"
+                            formControlName="email"
+                            placeholder="Organization Email"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="tel"
+                            formControlName="phone"
+                            placeholder="Organization Phone"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="url"
+                            formControlName="website"
+                            placeholder="Website (Optional)"
+                            class="input input-bordered w-full"
+                          />
+                        </div>
+
+                        <!-- Organization Address -->
+                        <div class="space-y-4">
+                          <input
+                            type="text"
+                            formControlName="address"
+                            placeholder="Address"
+                            class="input input-bordered w-full"
+                          />
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="city"
+                              placeholder="City"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="state"
+                              class="select select-bordered w-full"
+                              (change)="
+                                onStateChange(
+                                  $event,
+                                  charterMemberForm,
+                                  'organizationDetails'
+                                )
+                              "
+                            >
+                              <option value="" disabled>
+                                Select State/Province
+                              </option>
+                              <option
+                                *ngFor="let state of usStates"
+                                [value]="state"
+                              >
+                                {{ state }}
+                              </option>
+                              <option
+                                *ngFor="let province of canadianProvinces"
+                                [value]="province"
+                              >
+                                {{ province }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="zip"
+                              placeholder="ZIP/Postal Code"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="country"
+                              class="select select-bordered w-full"
+                            >
+                              <option value="" disabled>Select Country</option>
+                              <option value="United States">
+                                United States
+                              </option>
+                              <option value="Canada">Canada</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Primary Contact Information -->
+                      <div
+                        formGroupName="primaryContact"
+                        class="space-y-4 mt-8"
+                      >
+                        <h2 class="text-2xl font-semibold">
+                          Primary Contact Information
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            formControlName="firstName"
+                            placeholder="First Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="lastName"
+                            placeholder="Last Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="email"
+                            formControlName="email"
+                            placeholder="Email"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="tel"
+                            formControlName="phone"
+                            placeholder="Phone"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="d14"
+                            placeholder="D14 Number (Optional)"
+                            class="input input-bordered w-full"
+                          />
+                        </div>
+
+                        <!-- Primary Contact Address -->
+                        <div class="space-y-4">
+                          <input
+                            type="text"
+                            formControlName="address"
+                            placeholder="Address"
+                            class="input input-bordered w-full"
+                          />
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="city"
+                              placeholder="City"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="state"
+                              class="select select-bordered w-full"
+                              (change)="
+                                onStateChange(
+                                  $event,
+                                  charterMemberForm,
+                                  'primaryContact'
+                                )
+                              "
+                            >
+                              <option value="" disabled>
+                                Select State/Province
+                              </option>
+                              <option
+                                *ngFor="let state of usStates"
+                                [value]="state"
+                              >
+                                {{ state }}
+                              </option>
+                              <option
+                                *ngFor="let province of canadianProvinces"
+                                [value]="province"
+                              >
+                                {{ province }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="zip"
+                              placeholder="ZIP/Postal Code"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="country"
+                              class="select select-bordered w-full"
+                            >
+                              <option value="" disabled>Select Country</option>
+                              <option value="United States">
+                                United States
+                              </option>
+                              <option value="Canada">Canada</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- President Information -->
+                      <div formGroupName="president" class="space-y-4 mt-8">
+                        <h2 class="text-2xl font-semibold">
+                          President Information
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            formControlName="firstName"
+                            placeholder="First Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="lastName"
+                            placeholder="Last Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="email"
+                            formControlName="email"
+                            placeholder="Email"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="tel"
+                            formControlName="phone"
+                            placeholder="Phone"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="d14"
+                            placeholder="D14 Number (Optional)"
+                            class="input input-bordered w-full"
+                          />
+                        </div>
+
+                        <!-- President Address -->
+                        <div class="space-y-4">
+                          <input
+                            type="text"
+                            formControlName="address"
+                            placeholder="Address"
+                            class="input input-bordered w-full"
+                          />
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="city"
+                              placeholder="City"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="state"
+                              class="select select-bordered w-full"
+                              (change)="
+                                onStateChange(
+                                  $event,
+                                  charterMemberForm,
+                                  'president'
+                                )
+                              "
+                            >
+                              <option value="" disabled>
+                                Select State/Province
+                              </option>
+                              <option
+                                *ngFor="let state of usStates"
+                                [value]="state"
+                              >
+                                {{ state }}
+                              </option>
+                              <option
+                                *ngFor="let province of canadianProvinces"
+                                [value]="province"
+                              >
+                                {{ province }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="zip"
+                              placeholder="ZIP/Postal Code"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="country"
+                              class="select select-bordered w-full"
+                            >
+                              <option value="" disabled>Select Country</option>
+                              <option value="United States">
+                                United States
+                              </option>
+                              <option value="Canada">Canada</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Referee Information -->
+                      <div formGroupName="referee" class="space-y-4 mt-8">
+                        <h2 class="text-2xl font-semibold">
+                          Referee Information (Optional)
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            formControlName="firstName"
+                            placeholder="First Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="lastName"
+                            placeholder="Last Name"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="email"
+                            formControlName="email"
+                            placeholder="Email"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="tel"
+                            formControlName="phone"
+                            placeholder="Phone"
+                            class="input input-bordered w-full"
+                          />
+                          <input
+                            type="text"
+                            formControlName="d14"
+                            placeholder="D14 Number"
+                            class="input input-bordered w-full"
+                          />
+                        </div>
+
+                        <!-- Referee Address -->
+                        <div class="space-y-4">
+                          <input
+                            type="text"
+                            formControlName="address"
+                            placeholder="Address"
+                            class="input input-bordered w-full"
+                          />
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="city"
+                              placeholder="City"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="state"
+                              class="select select-bordered w-full"
+                              (change)="
+                                onStateChange(
+                                  $event,
+                                  charterMemberForm,
+                                  'referee'
+                                )
+                              "
+                            >
+                              <option value="" disabled>
+                                Select State/Province
+                              </option>
+                              <option
+                                *ngFor="let state of usStates"
+                                [value]="state"
+                              >
+                                {{ state }}
+                              </option>
+                              <option
+                                *ngFor="let province of canadianProvinces"
+                                [value]="province"
+                              >
+                                {{ province }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              formControlName="zip"
+                              placeholder="ZIP/Postal Code"
+                              class="input input-bordered w-full"
+                            />
+                            <select
+                              formControlName="country"
+                              class="select select-bordered w-full"
+                            >
+                              <option value="" disabled>Select Country</option>
+                              <option value="United States">
+                                United States
+                              </option>
+                              <option value="Canada">Canada</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </ng-container>
+
+                  <!-- Child forms section -->
+                  <div
+                    *ngFor="let form of childForms; let i = index"
+                    [formGroup]="form"
+                    class="mt-4 border p-4 rounded"
+                  >
+                    <div class="flex flex-row justify-between">
+                      <h4 class="text-lg font-semibold">
+                        Family Member {{ i + 1 + existingChildren.length }}
+                      </h4>
+                      <button
+                        type="button"
+                        class="bg-red-500 text-white p-2 rounded"
+                        (click)="removeChildFormGroup(i)"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <!-- Individual Name Fields -->
+                    <div class="flex justify-center items-center mt-4">
+                      <div
+                        formGroupName="individualName"
+                        class="space-y-2 w-full max-w-4xl"
+                      >
+                        <label for="firstName" class="block text-sm font-medium"
+                          >Individual Name<span class="text-red-500"
+                            >*</span
+                          ></label
+                        >
+                        <div
+                          class="flex flex-col sm:flex-row justify-between gap-2"
+                        >
+                          <div class="flex-grow">
+                            <input
+                              id="firstName"
+                              formControlName="firstName"
+                              placeholder="First Name"
+                              aria-label="Individual First Name"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                              [ngClass]="{
+                                'border-red-500':
+                                  form.get('individualName.firstName')
+                                    ?.touched &&
+                                  form.get('individualName.firstName')?.invalid
+                              }"
+                            />
+                          </div>
+
+                          <div class="sm:w-20 w-full">
+                            <input
+                              formControlName="middleInitial"
+                              placeholder="M.I."
+                              aria-label="Individual Middle Initial"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                            />
+                          </div>
+
+                          <div class="flex-grow">
+                            <input
+                              formControlName="lastName"
+                              placeholder="Last Name"
+                              aria-label="Individual Last Name"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                              [ngClass]="{
+                                'border-red-500':
+                                  form.get('individualName.lastName')
+                                    ?.touched &&
+                                  form.get('individualName.lastName')?.invalid
+                              }"
+                            />
+                          </div>
+
+                          <div class="sm:w-20 w-full">
+                            <input
+                              formControlName="suffix"
+                              placeholder="Suffix"
+                              aria-label="Individual Name Suffix"
+                              class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)] w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Birthdate Field -->
+                    <div class="flex w-full flex-col mt-4">
+                      <label for="birthdate" class="mb-1">
+                        Birthdate <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        *ngIf="!isMobile"
+                        id="birthdate"
+                        type="date"
+                        dateFormat="MM/DD/YYYY"
+                        formControlName="birthdate"
+                        class="border-white border-2 rounded p-2 w-full text-gray-800 bg-[rgba(255,255,255,0.5)] placeholder:text-black"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('birthdate')?.touched &&
+                            membershipForm.get('birthdate')?.invalid
+                        }"
+                        style="
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          appearance: none;
+                        "
+                      />
+
+                      <input
+                        *ngIf="isMobile"
+                        id="birthdate"
+                        type="tel"
+                        formControlName="birthdate"
+                        class="border-white border-2 rounded p-2 w-full text-gray-800 bg-[rgba(255,255,255,0.5)] placeholder:text-black"
+                        [ngClass]="{
+                          'border-red-500':
+                            membershipForm.get('birthdate')?.touched &&
+                            membershipForm.get('birthdate')?.invalid
+                        }"
+                        (input)="onBirthdateInput($event, 'child', i)"
+                        style="
+                          -webkit-appearance: none;
+                          -moz-appearance: none;
+                          appearance: none;
+                        "
+                      />
+                      <div
+                        *ngIf="
+                          form.get('birthdate')?.touched &&
+                          form.get('birthdate')?.invalid
+                        "
+                        class="text-red-500 text-sm"
+                      >
+                        Birthdate is required and must be formatted MM/DD/YYYY
+                      </div>
+                    </div>
+
+                    <!-- AMA Number Field -->
+                    <div class="flex flex-col mt-4">
+                      <label for="amaNumber" class="mb-1"
+                        >AMA Number<span class="text-red-500">*</span>
+                        <button
+                          type="button"
+                          class="ml-1 cursor-pointer inline-flex items-center p-1 rounded-full"
+                          (click)="toggleTooltip(amaTooltip)"
+                          (blur)="hideTooltip(amaTooltip)"
+                          tabindex="0"
+                          matTooltip="Find your AMA number on your AMA card or in your AMA account"
+                          matTooltipPosition="above"
+                          #amaTooltip="matTooltip"
+                          aria-label="AMA Number Tooltip"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-5 h-5"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              fill="none"
+                            />
+                            <text
+                              x="12"
+                              y="16"
+                              text-anchor="middle"
+                              font-size="12"
+                              fill="currentColor"
+                            >
+                              ?
+                            </text>
+                          </svg>
+                        </button>
+                      </label>
+                      <input
+                        type="tel"
+                        id="amaNumber"
+                        formControlName="amaNumber"
+                        placeholder="AMA Number"
+                        class="border-white border-2 rounded p-2 text-gray-800 placeholder:text-gray-800 bg-[RGBA(255,255,255,0.5)]"
+                        [ngClass]="{
+                          'border-red-500':
+                            form.get('amaNumber')?.touched &&
+                            form.get('amaNumber')?.invalid
+                        }"
+                      />
+                      <div
+                        *ngIf="
+                          form.get('amaNumber')?.invalid &&
+                          (form.get('amaNumber')?.touched ||
+                            form.get('amaNumber')?.dirty)
+                        "
+                        class="text-red-600"
+                      >
+                        AMA number is required.
+                      </div>
+                    </div>
+
+                    <!-- Disciplines Field -->
+                    <div class="flex flex-col mt-4">
+                      <label for="disciplines" class="mb-1"
+                        >Disciplines<span class="text-red-500">*</span></label
+                      >
+                      <app-multi-select
+                        [options]="disciplines"
+                        formControlName="disciplines"
+                        aria-placeholder="Select Discipline"
+                      ></app-multi-select>
+                      <div
+                        *ngIf="
+                          form.get('disciplines')?.invalid &&
+                          (form.get('disciplines')?.touched ||
+                            form.get('disciplines')?.dirty)
+                        "
+                        class="text-red-600"
+                      >
+                        At least one discipline is required.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section to Add More Child Members -->
+                  <div class="flex flex-col mt-4">
+                    <label class="mb-1">Add Family Members</label>
+
+                    <!-- Button to add a new child -->
+                    <button
+                      type="button"
+                      class="bg-blue-500 text-white p-2 rounded"
+                      (click)="addChildFormGroup()"
+                      [disabled]="memberType === 'Charter'"
+                      [matTooltip]="
+                        memberType === 'Charter'
+                          ? 'Charter Memberships cannot include family members at this time'
+                          : ''
+                      "
+                      [ngClass]="{
+                        'bg-gray-500': memberType === 'Charter'
+                      }"
+                    >
+                      Add Family Member
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="mt-6 p-3 rounded w-full sm:w-auto"
+                    [ngClass]="{
+                      'bg-blue-500 text-white hover:bg-blue-700': !isAdmin && !isSubmitting,
+                      'bg-gray-500 text-gray-300 cursor-not-allowed': isAdmin || isSubmitting
+                    }"
+                    [matTooltip]="
+                      isAdmin ? 'Admin users cannot sign up this way!' : ''
+                    "
+                    [disabled]="isAdmin || isSubmitting"
+                  >
+                    {{ isSubmitting ? 'Submitting...' : 'Next Step' }}
+                  </button>
+                </ng-container>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div
+          class="w-full h-full flex flex-col bg-[RGBA(255,255,255,0.20)] rounded p-4"
+        >
+          <h3 class="self-center text-xl sm:text-2xl">Join by Mail</h3>
+          <div class="self-center flex flex-col w-full mt-4">
+            <h4 class="text-center text-lg sm:text-xl">Members</h4>
+            <ol class="list-decimal ml-5 self-center mt-4">
+              <li class="mb-2">
+                Download and print the application for individual membership
+                <a
+                  href="/assets/images/D14-Membership-App.pdf"
+                  class="underline hover:cursor-pointer"
+                  aria-label="Download the membership application"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  here </a
+                >. For charter forms for clubs, see below.
+              </li>
+              <li class="mb-2">Complete and sign the application</li>
+              <li class="mb-2">
+                Mail a <span class="font-semibold">copy</span> of the
+                application along with your check/money order (made out to
+                District 14)
+              </li>
+            </ol>
+            <div class="mt-4">
+              <p class="text-center font-semibold">
+                District 14 Membership Administrator
+              </p>
+              <p class="text-center">Molly Kidner</p>
+              <p class="text-center">13785 Spring Creek Rd SW</p>
+              <p class="text-center">Fife Lake, MI 49633</p>
+              <p class="text-center">(text/email preferred)</p>
+              <p class="text-center mt-3">
+                <a
+                  href="mailto:secretary@ama-d14.org"
+                  class="underline hover:cursor-pointer"
+                  >secretary&#64;ama-d14.org</a
+                >
+              </p>
+              <p class="text-center mt-3">
+                <a
+                  href="tel:+12316705450"
+                  class="underline hover:cursor-pointer"
+                  >(231) 670-5450</a
+                >
+              </p>
+            </div>
+            <hr
+              class="border-b-[1.5px] border-white w-[90%] self-center mt-4"
+            />
+            <h4 class="text-center text-lg sm:text-xl mt-4">
+              Charters / Clubs
+            </h4>
+            <ol class="list-decimal ml-5 self-center mt-4">
+              <li class="mb-2">
+                Download and print the charter application
+                <a
+                  href="/assets/images/Charter-Application.pdf"
+                  target="_blank"
+                  class="underline hover:cursor-pointer"
+                  >here</a
+                >
+              </li>
+              <li class="mb-2">Complete and sign the application</li>
+              <li class="mb-2">
+                Mail a <span class="font-semibold">copy</span> of the
+                application along with your check/money order (made out to
+                District 14)
+              </li>
+            </ol>
+            <div class="mt-4">
+              <p class="text-center font-semibold">District 14 Secretary</p>
+              <p class="text-center">Molly Kidner</p>
+              <p class="text-center">13785 Spring Creek Rd SW</p>
+              <p class="text-center">Fife Lake, MI 49633</p>
+              <p class="text-center mt-3">
+                <a
+                  href="mailto:secretary@ama-d14.org"
+                  class="underline hover:cursor-pointer"
+                  >secretary&#64;ama-d14.org</a
+                >
+              </p>
+            </div>
+            <span class="text-center mt-4 text-sm sm:text-base">
+              We ask that you allow 21 to 30 days from the date you mailed your
+              application for processing. Until you receive your new card, your
+              copy of this application may be used to sign up and ride in AMA
+              District 14 events for 60 days following the date of application.
+            </span>
+            <span class="text-center mt-4 text-sm sm:text-base">
+              If you have not received you D-14 membership card in 30 days
+              contact D-14 Membership with information on where and whom you
+              applied for membership.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

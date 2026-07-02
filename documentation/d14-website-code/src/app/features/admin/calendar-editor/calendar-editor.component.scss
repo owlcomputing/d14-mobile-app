@@ -1,0 +1,37 @@
+::ng-deep .pac-item {
+    color: black !important;
+}
+
+::ng-deep .pac-item-query {
+    color: black !important;
+}
+
+::ng-deep .pac-matched {
+    color: black !important;
+    font-weight: bold;
+}
+
+::ng-deep .numInputWrapper {
+    color: black;
+  }
+
+  ::ng-deep .pac-container {
+    font-family: Arial, sans-serif !important; /* Ensure consistent font */
+  }
+
+  ::ng-deep .pac-container span {
+    color: black !important; /* Ensure text is always black */
+  }
+  
+  ::ng-deep .pac-item {
+    color: black !important; /* Ensure text is always black */
+    background-color: white !important; /* Ensure background is always white */
+  }
+  
+  ::ng-deep .pac-item:hover {
+    background-color: #f0f0f0 !important; /* Slight hover effect */
+  }
+  
+  ::ng-deep .pac-icon {
+    color: black !important; /* Ensure icons are also styled */
+  }

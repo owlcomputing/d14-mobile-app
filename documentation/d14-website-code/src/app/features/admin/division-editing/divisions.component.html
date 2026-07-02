@@ -1,0 +1,83 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden">
+    <div class="p-6 lg:p-10">
+      <h2 class="text-3xl font-bold text-base-content mb-8">DIVISIONS</h2>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg mb-8">
+        <div class="flex w-full gap-3 mb-6">
+          <input
+            [(ngModel)]="newDivisionName"
+            placeholder="New Division Name"
+            class="input input-bordered w-full bg-base-100"
+          />
+          <button
+            (click)="addDivision()"
+            class="btn btn-primary"
+          >
+            +
+          </button>
+        </div>
+
+        <div class="space-y-4">
+            <div
+            *ngFor="let division of divisions; trackBy: trackById"
+            class="bg-base-100 p-4 rounded-lg shadow flex justify-between items-center hover:cursor-pointer hover:bg-base-200 transition-colors duration-200"
+            (click)="editDivision(division.id)"
+            >
+            <h3
+              class="text-lg font-semibold cursor-pointer"
+            >
+              {{ division.name }}
+            </h3>
+            <div class="flex gap-2">
+              <button (click)="openDeleteConfirmModal(division.id); $event.stopPropagation()" class="btn btn-ghost btn-sm z-50">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-5 h-5 text-error"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <button [routerLink]="['/secure/admin/cms', division.id]" class="btn btn-ghost btn-sm" (click)="$event.stopPropagation()">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
+                  />
+                </svg>
+              </button>
+            </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- delete division confirm modal -->
+<dialog id="deleteDivisionModal" class="modal">
+  <div class="modal-box bg-base-300">
+    <h3 class="font-bold text-lg">Confirm Deletion</h3>
+    <p class="py-4">Are you sure you want to delete this division?</p>
+    <div class="modal-action">
+      <button class="btn btn-error" (click)="deleteDivision()">Yes</button>
+      <button class="btn btn-outline" (click)="closeDeleteConfirmModal()">No</button>
+    </div>
+  </div>
+</dialog>

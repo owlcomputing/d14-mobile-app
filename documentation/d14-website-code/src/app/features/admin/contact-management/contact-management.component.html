@@ -1,0 +1,147 @@
+<div class="container mx-auto p-6">
+  <!-- Content Container -->
+  <div class="bg-base-200 rounded-lg shadow-lg">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center p-6 border-b border-base-300">
+      <h1 class="text-2xl font-bold">Contact Management</h1>
+      <button class="btn btn-primary" (click)="openAddContactModal()">
+        Add Contact
+      </button>
+    </div>
+
+    <!-- Table Section -->
+    <div class="p-6">
+      <div class="text-sm text-gray-400 mb-4">
+        Results: {{ contacts.length }} Contacts
+      </div>
+      <table class="table w-full">
+        <thead>
+          <tr class="bg-base-300">
+            <th class="p-2">Name</th>
+            <th class="p-2">Title</th>
+            <th class="p-2">Email</th>
+            <th class="p-2">Phone</th>
+            <th class="p-2">Address</th>
+            <th class="p-2">Type</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let contact of contacts" class="hover:bg-base-200">
+            <td class="p-2">{{ contact.name }}</td>
+            <td class="p-2">{{ contact.title }}</td>
+            <td class="p-2">{{ contact.email }}</td>
+            <td class="p-2">{{ contact.phone }}</td>
+            <td class="p-2">{{ contact.address }}</td>
+            <td class="p-2">
+              <span
+                [class]="
+                  contact.type === 'officer' ? 'text-success' : 'text-info'
+                "
+                class="font-semibold"
+              >
+                {{ contact.type | titlecase }}
+              </span>
+            </td>
+            <td class="p-2">
+              <button
+                class="btn btn-sm btn-primary mr-2"
+                (click)="openEditModal(contact)"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-sm btn-error"
+                (click)="openDeleteModal(contact)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add/Edit Contact Modal -->
+    <dialog id="contact_modal" class="modal">
+      <div class="modal-box bg-base-100 rounded-lg w-11/12 max-w-4xl p-6">
+        <form method="dialog">
+          <button
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            (click)="closeModal()"
+          >
+            ✕
+          </button>
+        </form>
+
+        <h2 class="text-2xl font-bold mb-6">
+          {{ isEditing ? "Edit" : "Add" }} Contact
+        </h2>
+
+        <div class="space-y-4">
+          <input
+            type="text"
+            placeholder="Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedContact.name"
+          />
+          <input
+            type="text"
+            placeholder="Title"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedContact.title"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedContact.email"
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedContact.phone"
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedContact.address"
+          />
+          <select
+            class="select select-bordered w-full"
+            [(ngModel)]="editedContact.type"
+          >
+            <option value="officer">Officer</option>
+            <option value="contact">Contact</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end space-x-2 mt-6">
+          <button class="btn btn-primary" (click)="saveContact()">
+            {{ isEditing ? "Save Changes" : "Add Contact" }}
+          </button>
+          <button class="btn btn-outline" (click)="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Delete Confirmation Modal -->
+    <dialog id="delete_confirm_modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Confirm Delete</h3>
+        <p>
+          Are you sure you want to delete this contact? This action cannot be
+          undone.
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-error" (click)="confirmDelete()">
+            Delete
+          </button>
+          <button class="btn" (click)="closeDeleteModal()">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+  </div>
+</div>

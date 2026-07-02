@@ -1,0 +1,175 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div
+    class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden"
+  >
+    <div class="p-6 lg:p-10">
+      <h2 class="text-3xl font-bold text-base-content mb-8">
+        Transactions Report
+      </h2>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg mb-8">
+        <form
+          (submit)="fetchReport($event)"
+          class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+        >
+          <div class="form-control">
+            <label for="startDate" class="label">
+              <span class="label-text">Start Date</span>
+            </label>
+            <input
+              type="text"
+              id="startDate"
+              class="input input-bordered w-full bg-base-100"
+              [(ngModel)]="startDate"
+              (input)="disablePreset()"
+              name="startDate"
+            />
+          </div>
+
+          <div class="form-control">
+            <label for="endDate" class="label">
+              <span class="label-text">End Date</span>
+            </label>
+            <input
+              type="text"
+              id="endDate"
+              class="input input-bordered w-full bg-base-100"
+              [(ngModel)]="endDate"
+              (input)="disablePreset()"
+              name="endDate"
+            />
+          </div>
+
+          <div class="form-control">
+            <label for="filter" class="label">
+              <span class="label-text">Predefined Filter</span>
+            </label>
+            <select
+              id="filter"
+              class="select select-bordered w-full bg-base-100"
+              [(ngModel)]="selectedFilter"
+              name="filter"
+            >
+              <option value="" disabled selected>Select Filter</option>
+              <option value="lastWeek">Last Week</option>
+              <option value="last2Weeks">Last 2 Weeks</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="allTime">All Time</option>
+            </select>
+          </div>
+
+          <div class="col-span-full flex justify-end">
+            <button type="submit" class="btn btn-primary">Fetch Report</button>
+          </div>
+        </form>
+
+        <div class="flex justify-center space-x-4 mb-6">
+          <button
+            class="btn btn-outline"
+            [class.btn-active]="viewMode === 'table'"
+            (click)="setViewMode('table')"
+          >
+            Table View
+          </button>
+          <button
+            class="btn btn-outline"
+            [class.btn-active]="viewMode === 'moneyChart'"
+            (click)="setViewMode('moneyChart')"
+          >
+            Money Chart
+          </button>
+        </div>
+
+        <div [ngSwitch]="viewMode">
+          <div *ngSwitchCase="'table'">
+            <div
+              *ngIf="paginatedTransactions.length > 0"
+              class="overflow-x-auto"
+            >
+              <table class="table w-full">
+                <thead class="bg-base-300">
+                  <tr>
+                    <th class="p-2">ID</th>
+                    <th class="p-2">Name</th>
+                    <th class="p-2">Amount</th>
+                    <th class="p-2">Date</th>
+                    <th class="p-2">Expiration</th>
+                    <th class="p-2">Payment Method</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let transaction of paginatedTransactions"
+                    class="hover:bg-base-300"
+                  >
+                    <td class="p-2">{{ transaction?.id }}</td>
+                    <td class="p-2">{{ transaction?.profile_name }}</td>
+                    <td class="p-2">
+                      {{ transaction?.amount_paid | currency }}
+                    </td>
+                    <td class="p-2">{{ transaction?.date_created | date }}</td>
+                    <td class="p-2">
+                      {{
+                        transaction?.expiration
+                          ? (transaction?.expiration | date)
+                          : transaction.profile_id
+                          ? "Family Sign Up"
+                          : "--/--/----"
+                      }}
+                    </td>
+                    <td class="p-2">
+                      {{
+                        transaction?.transaction_id ? "Stripe" : "Cash/Check"
+                      }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Totals -->
+              <div class="mt-4 p-4 bg-base-100 rounded-lg">
+                <div class="text-xl font-bold text-green-600">
+                  Total Revenue: {{ totalRevenue | currency }}
+                </div>
+                <div class="text-xl font-bold">
+                  Total Transactions: {{ totalTransactions }}
+                </div>
+              </div>
+
+              <!-- Pagination Controls -->
+              <div class="mt-6 flex items-center justify-center space-x-4">
+                <button
+                  class="btn btn-outline"
+                  (click)="prevPage()"
+                  [disabled]="currentPage === 1"
+                >
+                  &laquo;
+                </button>
+                <span>Page {{ currentPage }} of {{ totalPages }}</span>
+                <button
+                  class="btn btn-outline"
+                  (click)="nextPage()"
+                  [disabled]="currentPage === totalPages"
+                >
+                  &raquo;
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="transactions.length === 0" class="text-center py-10">
+              <p class="text-lg text-base-content">
+                No transactions found for the selected date range.
+              </p>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'moneyChart'" class="flex justify-center">
+            <div class="w-full max-w-3xl h-96">
+              <canvas #moneyChartCanvas></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

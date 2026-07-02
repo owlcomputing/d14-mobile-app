@@ -1,0 +1,17 @@
+<div class="custom-multi-select">
+    <div class="select-box" (click)="toggleDropdown()">
+      <div class="selected-values">
+        <span *ngFor="let option of selectedOptions" class="selected-option">
+          {{ option }}
+        </span>
+      </div>
+      <div class="dropdown-icon">&#9662;</div>
+    </div>
+    <div class="dropdown-list" *ngIf="isOpen">
+      <label *ngFor="let option of options" class="dropdown-option">
+        <input type="checkbox" [checked]="isSelected(option)" (change)="toggleOption(option)" />
+        {{ option }}
+      </label>
+    </div>
+  </div>
+  

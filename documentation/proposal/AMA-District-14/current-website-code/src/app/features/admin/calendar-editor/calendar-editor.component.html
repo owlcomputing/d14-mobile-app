@@ -1,0 +1,264 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div
+    class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden"
+  >
+    <div class="p-6 lg:p-10">
+      <div class="flex justify-between items-center">
+        <h2 class="text-3xl font-bold text-base-content mb-8">
+          Calendar Editor
+        </h2>
+        <button
+          class="btn btn-secondary hover:btn-accent transition-colors duration-300 flex items-center gap-2 px-4 py-2 rounded-lg shadow-md mb-8"
+          (click)="openHelpModal()"
+          *ngIf="currentUserChairmanStatus"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="black"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M12 21a9 9 0 100-18 9 9 0 000 18z"
+            />
+          </svg>
+          Help
+        </button>
+      </div>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg mb-8">
+        <form
+          (submit)="onSubmit()"
+          class="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          <div class="form-control">
+            <label for="division" class="label">
+              <span class="label-text">Division</span>
+            </label>
+            <select
+              id="division"
+              [(ngModel)]="selectedDivisionId"
+              name="division"
+              class="select select-bordered w-full bg-base-100"
+            >
+              <option *ngFor="let division of divisions" [value]="division.id">
+                {{ division.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label for="eventName" class="label">
+              <span class="label-text">Event Name</span>
+            </label>
+            <input
+              type="text"
+              id="eventName"
+              [(ngModel)]="eventName"
+              name="eventName"
+              class="input input-bordered w-full bg-base-100"
+              required
+            />
+          </div>
+
+          <div class="form-control">
+            <label for="startDate" class="label">
+              <span class="label-text">Start Date</span>
+            </label>
+            <input
+              type="text"
+              id="startDate"
+              [(ngModel)]="startDate"
+              name="startDate"
+              class="input input-bordered w-full bg-base-100 flatpickr"
+              required
+            />
+          </div>
+
+          <div class="form-control">
+            <label for="endDate" class="label">
+              <span class="label-text">End Date</span>
+            </label>
+            <input
+              type="text"
+              id="endDate"
+              [(ngModel)]="endDate"
+              name="endDate"
+              class="input input-bordered w-full bg-base-100 flatpickr"
+              required
+            />
+          </div>
+
+          <div class="form-control lg:col-span-2">
+            <label for="address" class="label">
+              <span class="label-text">Address</span>
+            </label>
+            <input
+              type="text"
+              id="address"
+              #addressInput
+              [(ngModel)]="address"
+              name="address"
+              class="input input-bordered w-full bg-base-100"
+            />
+          </div>
+
+          <div class="form-control lg:col-span-2">
+            <label for="description" class="label">
+              <span class="label-text">Description</span>
+            </label>
+            <textarea
+              id="description"
+              [(ngModel)]="description"
+              name="description"
+              class="textarea textarea-bordered w-full bg-base-100"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="form-control lg:col-span-2">
+            <label class="label">
+              <span class="label-text">Add a link to the event</span>
+            </label>
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <label class="label">
+                  <span class="label-text">Link Text</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="linkText"
+                  name="linkText"
+                  class="input input-bordered w-full bg-base-100"
+                  placeholder="Enter button text"
+                />
+              </div>
+              <div class="flex-1">
+                <label class="label">
+                  <span class="label-text">URL</span>
+                </label>
+                <input
+                  type="url"
+                  [(ngModel)]="linkUrl"
+                  name="linkUrl"
+                  class="input input-bordered w-full bg-base-100"
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2 flex justify-end mt-4">
+            <button type="submit" class="btn btn-primary w-full lg:w-auto">
+              {{ editMode ? "Update Event" : "Add Event" }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg">
+        <h3 class="text-xl font-bold mb-4 text-base-content">Events</h3>
+        <div class="overflow-x-auto">
+          <table class="table w-full">
+            <thead>
+              <tr>
+                <th class="bg-base-300">Event Name</th>
+                <th class="bg-base-300 hidden lg:table-cell">Division</th>
+                <th class="bg-base-300 hidden lg:table-cell">Start Date</th>
+                <th class="bg-base-300 hidden lg:table-cell">End Date</th>
+                <th class="bg-base-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let event of events" class="hover:bg-base-300">
+                <td>
+                  {{ event.name }}
+                  <div
+                    class="lg:hidden text-xs text-base-content text-opacity-60"
+                  >
+                    <div>{{ getDivisionName(event.division_id) }}</div>
+                    <div>{{ event.date | date }}</div>
+                    <div>{{ event.end_date | date }}</div>
+                  </div>
+                </td>
+                <td class="hidden lg:table-cell">
+                  {{ getDivisionName(event.division_id) }}
+                </td>
+                <td class="hidden lg:table-cell">{{ event.date | date }}</td>
+                <td class="hidden lg:table-cell">
+                  {{ event.end_date | date }}
+                </td>
+                <td>
+                  <div class="flex space-x-2">
+                    <button
+                      (click)="editEvent(event)"
+                      class="btn btn-ghost btn-sm"
+                      aria-label="Edit event"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        class="w-5 h-5"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536M4 16v4h4l11.536-11.536a1.5 1.5 0 00-2.121-2.121L6 17.879H4z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      (click)="deleteEvent(event.id)"
+                      class="btn btn-ghost btn-sm text-error"
+                      aria-label="Delete event"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        class="w-5 h-5"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- add a help modal -->
+<div class="modal" id="helpModal">
+  <div class="modal-box max-w-4xl w-11/12">
+    <h3 class="font-bold text-lg">Help</h3>
+    <p>Use the video below to learn how to edit the CMS for your division.</p>
+    <video controls class="w-full mt-4 rounded-lg">
+      <source
+        src="https://qxoroicvatularpyltbx.supabase.co/storage/v1/object/public/Images/D14-Demo-Chairman.mp4"
+        type="video/mp4"
+      />
+      Your browser does not support the video tag.
+    </video>
+    <div class="modal-action">
+      <button class="btn btn-primary" (click)="closeHelpModal()">Close</button>
+    </div>
+  </div>
+</div>
