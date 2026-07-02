@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -82,10 +83,17 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          <Text style={styles.hint}>
-            New to District 14? Memberships are available at ama-d14.org — in-app signup is coming
-            soon.
-          </Text>
+          <Pressable
+            onPress={() =>
+              WebBrowser.openBrowserAsync(
+                process.env.EXPO_PUBLIC_WEBSITE_URL ?? 'https://ama-d14.org',
+              )
+            }>
+            <Text style={styles.hint}>
+              New to District 14? Tap here to sign up for a membership on the D14 website — in-app
+              signup is coming soon.
+            </Text>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
