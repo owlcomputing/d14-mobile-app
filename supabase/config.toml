@@ -1,0 +1,12 @@
+project_id = "d14-mobile-app"
+
+# send-push verifies the caller's JWT inside the function (admin role check),
+# so platform-level verification stays on.
+[functions.send-push]
+verify_jwt = true
+
+# checkout-return is hit by a plain browser redirect from Stripe (no JWT).
+# It only echoes the session_id into the app's deep link; fulfillment still
+# requires the user's JWT via fulfill-checkout.
+[functions.checkout-return]
+verify_jwt = false

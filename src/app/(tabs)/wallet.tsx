@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,10 +18,15 @@ function formatDate(iso: string | null | undefined) {
 }
 
 export default function WalletScreen() {
+  const router = useRouter();
   const { profile, membership } = useAuth();
   const family = useFamilyMembers(profile?.id);
 
   const active = membership ? new Date(membership.expiration) >= new Date() : false;
+  const expiringSoon =
+    active &&
+    membership != null &&
+    new Date(membership.expiration).getTime() - Date.now() < 90 * 24 * 60 * 60 * 1000;
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
   // QR payload for gate verification — verified by the lookup/scanner screen
   const qrValue = JSON.stringify({ v: 1, t: 'd14-member', id: profile?.id, d14: profile?.d14_number });
@@ -75,6 +81,17 @@ export default function WalletScreen() {
           <DetailRow label="D14 Number" value={profile?.d14_number?.toString() ?? '—'} />
           <DetailRow label="AMA Number" value={profile?.ama_number?.toString() ?? '—'} last />
         </Widget>
+
+        {/* Renew */}
+        {!active || expiringSoon ? (
+          <Pressable
+            style={({ pressed }) => [styles.renewButton, pressed && { opacity: 0.85 }]}
+            onPress={() => router.push('/renew')}>
+            <Text style={styles.renewButtonText}>
+              {active ? 'Renew Membership — Expiring Soon' : 'Renew Membership'}
+            </Text>
+          </Pressable>
+        ) : null}
 
         {/* Family members */}
         {family.data?.length ? (
@@ -191,6 +208,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   detailRowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
+  renewButton: {
+    backgroundColor: D14Colors.red,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    paddingVertical: 15,
+    marginBottom: Spacing.three,
+  },
+  renewButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
   detailLabel: { color: D14Colors.textSecondary, fontSize: 13 },
   detailValue: { color: D14Colors.white, fontSize: 13, fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
 });

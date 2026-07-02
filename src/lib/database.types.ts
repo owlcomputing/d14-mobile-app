@@ -908,6 +908,38 @@ export type Database = {
         }
         Relationships: []
       }
+      push_tokens: {
+        Row: {
+          divisions: string[] | null
+          platform: string | null
+          profile_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          divisions?: string[] | null
+          platform?: string | null
+          profile_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          divisions?: string[] | null
+          platform?: string | null
+          profile_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       renewals: {
         Row: {
           id: string

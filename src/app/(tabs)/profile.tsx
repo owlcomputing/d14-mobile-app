@@ -54,6 +54,12 @@ export default function ProfileScreen() {
 
         <Widget header="Tools">
           <MenuRow
+            icon="create"
+            label="Edit Profile"
+            hint="Update contact and address info"
+            onPress={() => router.push('/edit-profile')}
+          />
+          <MenuRow
             icon="search"
             label="Member Lookup"
             hint="Verify membership by name or number"
@@ -70,8 +76,17 @@ export default function ProfileScreen() {
             label="District Contacts"
             hint="Officers and division contacts"
             onPress={() => router.push('/contacts')}
-            last
+            last={!isAdmin}
           />
+          {isAdmin ? (
+            <MenuRow
+              icon="megaphone"
+              label="Send Notification"
+              hint="Push a message to members (admin)"
+              onPress={() => router.push('/send-notification')}
+              last
+            />
+          ) : null}
         </Widget>
 
         <Pressable style={styles.signOut} onPress={confirmSignOut}>

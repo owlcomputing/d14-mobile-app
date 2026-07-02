@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { registerPushToken, unregisterPushToken } from '@/lib/push';
 import { supabase, type Membership, type Profile } from '@/lib/supabase';
 
 type AuthState = {
@@ -47,10 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session) {
         loadProfile(session.user.id);
+        if (event === 'SIGNED_IN') registerPushToken(session.user.id);
       } else {
         setProfile(null);
         setMembership(null);
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    await unregisterPushToken();
     await supabase.auth.signOut();
   }, []);
 

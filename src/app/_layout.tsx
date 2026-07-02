@@ -1,4 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -9,9 +12,12 @@ import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 60_000, retry: 1 },
+    // gcTime must exceed persister maxAge for offline cache to survive restarts
+    queries: { staleTime: 60_000, retry: 1, gcTime: 1000 * 60 * 60 * 24 * 14 },
   },
 });
+
+const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
 SplashScreen.preventAutoHideAsync();
 
@@ -61,6 +67,18 @@ function RootNavigator() {
           name="contacts"
           options={{ headerShown: true, title: 'District Contacts', headerBackTitle: 'Back' }}
         />
+        <Stack.Screen
+          name="edit-profile"
+          options={{ headerShown: true, title: 'Edit Profile', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="send-notification"
+          options={{ headerShown: true, title: 'Send Notification', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="renew"
+          options={{ headerShown: true, title: 'Renew Membership', headerBackTitle: 'Back' }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
@@ -72,12 +90,14 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <ThemeProvider value={d14Theme}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
         <AuthProvider>
           <StatusBar style="light" />
           <RootNavigator />
         </AuthProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </ThemeProvider>
   );
 }
