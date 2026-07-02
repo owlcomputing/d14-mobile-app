@@ -1,0 +1,68 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div
+    class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden"
+  >
+    <div class="p-6 lg:p-10">
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-base-content">
+          {{ this.activeRule?.name | uppercase }}
+        </h2>
+        <div class="flex gap-2">
+          <button
+            class="btn btn-secondary hover:btn-accent transition-colors duration-300 flex items-center gap-2 px-4 py-2 rounded-lg shadow-md"
+            (click)="openHelpModal()"
+            *ngIf="chairman"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="black"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M12 21a9 9 0 100-18 9 9 0 000 18z"
+              />
+            </svg>
+            Help
+          </button>
+          <button class="btn btn-primary" (click)="updateContent()">
+            SAVE
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg pb-[65px]">
+        <div class="w-full max-w-[1100px] mx-auto h-fit">
+          <quill-editor
+            [modules]="modules"
+            class="quill-editor-custom bg-base-100 rounded-lg"
+            [(ngModel)]="newContent"
+            style="height: 450px"
+          ></quill-editor>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- add a help modal -->
+<div class="modal" id="helpModal">
+  <div class="modal-box max-w-4xl w-11/12">
+    <h3 class="font-bold text-lg">Help</h3>
+    <p>Use the video below to learn how to edit the CMS for your division.</p>
+    <video controls class="w-full mt-4 rounded-lg">
+      <source
+        src="https://qxoroicvatularpyltbx.supabase.co/storage/v1/object/public/Images/D14-Demo-Chairman.mp4"
+        type="video/mp4"
+      />
+      Your browser does not support the video tag.
+    </video>
+    <div class="modal-action">
+      <button class="btn btn-primary" (click)="closeHelpModal()">Close</button>
+    </div>
+  </div>
+</div>

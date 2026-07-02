@@ -1,0 +1,77 @@
+::ng-deep {
+    .ql-toolbar {
+      border-radius: 12px;
+  
+      .ql-formats button,
+      .ql-picker-label,
+      .ql-picker-item,
+      .ql-formats .ql-picker {
+        color: white !important;
+        fill: white !important; /* For SVG icons */
+        stroke: white !important; /* For SVG icons with stroke */
+        background: none !important; /* Remove background */
+        border: none !important; /* Remove border */
+        &:hover, &:focus, &.ql-active {
+          color: white !important;
+          fill: white !important; /* For SVG icons */
+          stroke: white !important; /* For SVG icons with stroke */
+        }
+      }
+
+      .ql-picker-options {
+        background: rgba(0, 0, 0, 0.75); // Semi-transparent background
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Add shadow
+      }
+  
+      /* Ensure all svg icons are white */
+      svg {
+        fill: white !important;
+        stroke: white !important;
+      }
+  
+      /* Override specific styles */
+      .ql-stroke {
+        stroke: white !important;
+      }
+      .ql-fill {
+        fill: white !important;
+      }
+      .ql-even {
+        fill: white !important;
+        stroke: white !important;
+      }
+      .ql-picker-options {
+        border: none !important;
+      }
+    }
+  
+    .quill-editor-custom {
+      height: 100%;
+      .ql-container {
+        background: rgba(0, 0, 0, 0.75); // Semi-transparent background
+        border-radius: 12px;
+        padding: 16px;
+        height: 100%; // Ensure the container takes the full height
+        box-sizing: border-box; // Include padding in height calculation
+      }
+      .ql-editor {
+        color: white;
+        font-weight: 500;
+        font-size: 16px;
+        font-family: "Satoshi";
+        height: calc(100% - 32px); // Adjust for padding
+        box-sizing: border-box; // Include padding in height calculation
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Mersad";
+      }
+    }
+  }
+  

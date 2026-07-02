@@ -1,0 +1,37 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden">
+    <div class="p-6 lg:p-10">
+      <h2 class="text-3xl font-bold text-base-content mb-8">RULES</h2>
+
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg">
+        <div class="space-y-4">
+          <div
+            *ngFor="let rule of rules; trackBy: trackById"
+            class="bg-base-100 p-4 rounded-lg shadow flex justify-between items-center cursor-pointer hover:bg-base-200 transition-colors duration-200"
+            [routerLink]="['/secure/admin/rules-cms', rule.id]"
+          >
+            <h3 class="text-lg font-semibold text-base-content">
+              {{ rule.name }}
+            </h3>
+            <button [routerLink]="['/secure/admin/rules-cms', rule.id]" class="btn btn-ghost btn-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

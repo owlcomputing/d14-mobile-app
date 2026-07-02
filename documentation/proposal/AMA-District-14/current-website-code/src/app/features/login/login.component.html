@@ -1,0 +1,219 @@
+<div
+  class="w-full bg-slate-50 z-100 lg:h-screen flex justify-center items-center"
+>
+  <div class="flex flex-col items-center justify-center flex-1 relative">
+    <!-- Login Page -->
+    <div
+      *ngIf="!resetEmailPageActive && !resetPasswordPageActive"
+      class="flex flex-col z-[100] gap-4 w-full p-4 max-w-[500px] sm:min-h-0 sm:gap-6"
+    >
+      <!-- Logo for mobile -->
+      <div class="w-full">
+        <div class="flex flex-col w-full justify-center items-center">
+          <img
+            class="w-[200px] sm:w-[240px] h-auto"
+            src="/assets/images/d14_logo.png"
+            alt="D14 Logo"
+          />
+        </div>
+      </div>
+
+      <!-- Updated Attention-Grabbing Message Section with better contrast -->
+      <div
+        class="bg-amber-50 border-2 border-amber-700 p-4 rounded-lg shadow-md"
+      >
+        <h3 class="font-bold text-lg mb-3 text-gray-900">
+          Important Login Information
+        </h3>
+        <div class="text-base text-gray-900 space-y-4">
+          <div>
+            <p class="font-semibold mb-2 text-gray-700">
+              If you had an account in the old system:
+            </p>
+            <div class="bg-red-700 p-3 rounded shadow-sm">
+              <p class="text-white font-bold">
+                You cannot login with your old password.
+              </p>
+              <p class="mt-1 text-white">
+                Please click
+                <span class="font-bold underline">'Reset Password'</span>
+                below to set up your new password.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p class="font-semibold mb-1 text-gray-700">New to D14?</p>
+            <p class="text-gray-700">
+              Click
+              <span class="font-semibold text-blue-800 underline"
+                >'Create New Account'</span
+              >
+              to register.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2
+        class="font-mersad text-black font-bold text-2xl sm:text-[32px] text-center"
+      >
+        {{ isLoginMode ? "WELCOME BACK" : "CREATE NEW ACCOUNT" }}
+      </h2>
+
+      <div class="w-full flex gap-1 items-center">
+        <hr class="border-b-[1px] border-black flex-grow" />
+      </div>
+      <div
+        [formGroup]="isLoginMode ? loginForm : registerForm"
+        class="flex flex-col gap-6"
+      >
+        <input
+          formControlName="email"
+          placeholder="EMAIL"
+          type="email"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <input
+          formControlName="password"
+          placeholder="{{ isLoginMode ? 'PASSWORD' : 'CREATE PASSWORD' }}"
+          type="password"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <input
+          *ngIf="!isLoginMode"
+          formControlName="confirmPassword"
+          placeholder="CONFIRM PASSWORD"
+          type="password"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <span
+          class="text-black text-sm cursor-pointer"
+          (click)="resetEmailPageActive = true"
+        >
+          RESET PASSWORD
+        </span>
+        <div class="flex flex-col gap-1">
+          <button
+            class="btn bg-black text-white"
+            (click)="isLoginMode ? onUserLogin() : onUserRegister()"
+          >
+            {{ isLoginMode ? "SIGN IN" : "REGISTER" }}
+          </button>
+          <span
+            *ngIf="!isLoginMode"
+            (click)="toggleMode()"
+            class="self-center text-black cursor-pointer text-sm mt-1"
+          >
+            ALREADY HAVE AN ACCOUNT?
+          </span>
+          <button
+            *ngIf="isLoginMode"
+            (click)="toggleMode()"
+            class="btn btn-accent text-white mt-1"
+          >
+            CREATE NEW ACCOUNT
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Password Request Page -->
+    <div
+      *ngIf="resetEmailPageActive"
+      class="flex flex-col z-[100] gap-6 w-[340px]"
+    >
+      <h2 class="font-mersad text-black font-bold text-[32px] text-center">
+        RESET PASSWORD
+      </h2>
+      <p class="text-black text-center text-sm">
+        Enter your email to receive a link to reset your password.
+      </p>
+      <div [formGroup]="resetPasswordEmailForm" class="flex flex-col gap-6">
+        <input
+          formControlName="email"
+          placeholder="EMAIL"
+          type="email"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <div class="flex flex-col gap-1">
+          <button
+            class="btn bg-black text-white"
+            (click)="onResetPasswordRequest()"
+          >
+            SEND RESET LINK
+          </button>
+          <span
+            class="self-center text-black cursor-pointer text-sm mt-1"
+            (click)="resetEmailPageActive = false"
+          >
+            BACK TO LOGIN
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Password Update Page -->
+    <div
+      *ngIf="resetPasswordPageActive"
+      class="flex flex-col z-[100] gap-6 w-[340px]"
+    >
+      <h2 class="font-mersad text-black font-bold text-[32px] text-center">
+        RESET PASSWORD
+      </h2>
+      <p class="text-black text-center text-sm">
+        Please enter your new password.
+      </p>
+      <div [formGroup]="resetPasswordForm" class="flex flex-col gap-6">
+        <input
+          formControlName="password"
+          placeholder="NEW PASSWORD"
+          type="password"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <input
+          formControlName="confirmPassword"
+          placeholder="CONFIRM PASSWORD"
+          type="password"
+          class="p-2 border-b-2 border-black bg-white placeholder:text-black placeholder:font-mersad font-medium text-black"
+        />
+        <div class="flex flex-col gap-1">
+          <button class="btn bg-black text-white" (click)="onResetPassword()">
+            Reset Password
+          </button>
+          <span
+            class="self-center text-black cursor-pointer text-sm mt-1"
+            (click)="resetPasswordPageActive = false"
+          >
+            BACK TO LOGIN
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side image and text (hidden on mobile) -->
+  <div class="relative w-1/2 h-full flex-1 md:flex hidden overflow-hidden">
+    <img
+      class="object-cover w-full h-full origin-top overflow-hidden"
+      src="/assets/images/login.png"
+      alt="Login background"
+    />
+    <div
+      class="absolute left-0 top-0 w-full h-full z-50 side-shadow opacity-35 overflow-hidden"
+    ></div>
+    <div
+      class="absolute opacity-40 z-40 left-0 top-0 h-full w-[50%] min-w-[128px] login-shadow"
+    ></div>
+    <div
+      class="absolute left-0 top-0 w-full h-full z-50 flex justify-center flex-col p-6"
+    >
+      <h2 class="text-white text-6xl font-mersad font-medium">
+        THE PREMIER OFF ROAD RIDING AND RACING DISTRICT
+      </h2>
+      <span class="font-mersad text-white text-xl font-extralight">
+        AMA DISTRICT 14
+      </span>
+    </div>
+  </div>
+</div>

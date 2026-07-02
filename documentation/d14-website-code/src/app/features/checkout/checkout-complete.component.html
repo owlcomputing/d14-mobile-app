@@ -1,0 +1,64 @@
+<div class="flex flex-col w-full mb-[100px]">
+  <h1 class="font-semibold text-4xl self-center">CHECKOUT</h1>
+  <div class="flex flex-col items-center mt-7 h-full">
+    <div
+      class="flex flex-col w-full max-w-2xl bg-[RGBA(255,255,255,0.20)] rounded p-8 gap-6 items-center text-center"
+    >
+      <ng-container [ngSwitch]="state">
+        <div *ngSwitchCase="'loading'" class="flex flex-col items-center gap-4">
+          <div class="spinner"></div>
+          <h2 class="text-2xl font-semibold">Finalizing your membership...</h2>
+          <p class="text-base">Please don't close this page.</p>
+        </div>
+
+        <div *ngSwitchCase="'success'" class="flex flex-col items-center gap-4">
+          <div class="text-6xl">✓</div>
+          <h2 class="text-2xl font-semibold">Your membership has been updated.</h2>
+          <p class="text-base">{{ message }}</p>
+          <button
+            type="button"
+            class="mt-2 px-6 py-2 bg-white text-gray-800 font-semibold rounded hover:bg-gray-200 transition"
+            (click)="goToProfile()"
+          >
+            Go to Profile
+          </button>
+        </div>
+
+        <div *ngSwitchCase="'pending'" class="flex flex-col items-center gap-4">
+          <div class="text-6xl">⌛</div>
+          <h2 class="text-2xl font-semibold">Payment still processing</h2>
+          <p class="text-base">{{ message }}</p>
+          <button
+            type="button"
+            class="mt-2 px-6 py-2 bg-white text-gray-800 font-semibold rounded hover:bg-gray-200 transition"
+            (click)="goToProfile()"
+          >
+            Go to Profile
+          </button>
+        </div>
+
+        <div *ngSwitchCase="'error'" class="flex flex-col items-center gap-4">
+          <div class="text-6xl">!</div>
+          <h2 class="text-2xl font-semibold">Something went wrong</h2>
+          <p class="text-base">{{ message }}</p>
+          <p class="text-base">
+            If your card was charged and your membership isn't updated within a
+            few minutes, please contact
+            <a
+              class="underline"
+              href="mailto:secretary@ama-d14.org?subject=Membership%20checkout%20issue"
+              >secretary&#64;ama-d14.org</a
+            >.
+          </p>
+          <button
+            type="button"
+            class="mt-2 px-6 py-2 bg-white text-gray-800 font-semibold rounded hover:bg-gray-200 transition"
+            (click)="goToProfile()"
+          >
+            Go to Profile
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

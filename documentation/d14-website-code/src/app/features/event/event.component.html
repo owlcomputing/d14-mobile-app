@@ -1,0 +1,108 @@
+<div *ngIf="event" class="min-h-screen w-full bg-cover bg-center bg-no-repeat">
+  <div class="w-full min-h-screen px-4 py-8 md:px-8 md:py-12">
+    <div class="max-w-7xl mx-auto">
+      <h1
+        class="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-white text-center"
+      >
+        {{ event.name }}
+      </h1>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-black bg-opacity-50 rounded-lg p-6 backdrop-blur-sm">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              Event Details
+            </h2>
+            <div class="space-y-3">
+              <p class="flex items-center space-x-2">
+                <span class="font-medium">Division:</span>
+                <span class="text-white">{{
+                  getDivisionName(event.division_id)
+                }}</span>
+              </p>
+              <p class="flex items-center space-x-2">
+                <span class="font-medium">Start Date:</span>
+                <span class="text-white">{{
+                  event.date | date : "longDate"
+                }}</span>
+              </p>
+              <p *ngIf="event.end_date" class="flex items-center space-x-2">
+                <span class="font-medium">End Date:</span>
+                <span class="text-white">{{
+                  event.end_date | date : "longDate"
+                }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-black bg-opacity-50 rounded-lg p-6 backdrop-blur-sm">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              Description
+            </h2>
+            <p class="text-white leading-relaxed mb-4">
+              {{ event.description || "No description available" }}
+            </p>
+            <a
+              *ngIf="event?.link?.url"
+              [href]="event.link?.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary w-full text-lg py-3 flex items-center justify-center gap-2"
+            >
+              {{ event.link?.text || "Event Link" }}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="black"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                />
+              </svg>
+            </a>
+          </div>
+
+          <div
+            *ngIf="event.address"
+            class="bg-black bg-opacity-50 rounded-lg p-6 backdrop-blur-sm"
+          >
+            <h2 class="text-2xl font-semibold mb-4 text-primary">Location</h2>
+            <p class="text-white">{{ event.address }}</p>
+          </div>
+
+          <a
+            *ngIf="googleCalendarUrl"
+            [href]="googleCalendarUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-primary w-full text-lg py-3"
+          >
+            Add to Google Calendar
+          </a>
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-black bg-opacity-50 rounded-lg p-6 backdrop-blur-sm">
+            <h2 class="text-2xl font-semibold mb-4 text-primary">
+              Event Location
+            </h2>
+            <google-map
+              height="500px"
+              width="100%"
+              [center]="center"
+              [zoom]="zoom"
+              class="rounded-lg overflow-hidden"
+            >
+              <map-marker [position]="center"></map-marker>
+            </google-map>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,536 @@
+<header
+  *ngIf="!isAdmin || !isViewingAsAdmin; else adminHeader"
+  class="bg-black overflow-visible relative text-white p-4 flex items-center justify-between w-full h-[72px]"
+>
+  <!-- Logo that navigates to the home page -->
+  <img
+    [routerLink]="''"
+    src="/assets/images/d14_logo.png"
+    class="w-[90px] h-auto hover:cursor-pointer"
+  />
+
+  <!-- Navigation items for non-admin users -->
+  <div
+    class="hidden lg:flex flex-1 justify-center gap-3 font-medium xl:text-base text-xs items-center"
+  >
+    <ng-container *ngFor="let item of routes$ | async; let i = index">
+      <ng-container
+        *ngIf="!item.isAdminRoute && item.displayName !== 'PROFILE'"
+      >
+        <!-- Check if the item has subroutes -->
+        <ng-container *ngIf="item.subroutes?.length; else noSubRoutes">
+          <div class="relative group">
+            <!-- Dropdown menu for items with subroutes -->
+            <button
+              class="flex items-center hover:underline focus:outline-none"
+              (click)="
+                item.routerLink === '/secure/divisions'
+                  ? toggleDropdown('division')
+                  : toggleDropdown('rules')
+              "
+            >
+              {{ item.displayName }}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              *ngIf="
+                (item.routerLink === '/secure/divisions' &&
+                  isDivisionDropdownOpen) ||
+                (item.routerLink === '/secure/rules' && isRulesDropdownOpen)
+              "
+              class="absolute left-0 top-full mt-2 bg-gray-900 border border-white border-opacity-35 rounded-md shadow-lg z-[1000] min-w-[200px]"
+            >
+              <ng-container *ngFor="let subroute of item.subroutes">
+                <a
+                  class="block px-4 py-2 text-sm hover:bg-gray-800 transition-colors duration-200"
+                  [routerLink]="[subroute.routerLink]"
+                  (click)="handleClick(subroute.routerLink, item.routerLink)"
+                >
+                  {{ subroute.displayName }}
+                </a>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noSubRoutes>
+          <!-- Display the item directly if there are no subroutes -->
+          <a class="hover:underline" [routerLink]="item.routerLink">
+            {{ item.displayName }}
+          </a>
+        </ng-template>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <!-- Action buttons for larger screens (hidden below lg breakpoint) -->
+  <div class="gap-4 hidden lg:flex">
+    <!-- Show login button if user is not authenticated -->
+    <button
+      *ngIf="!authService.session; else loggedIn"
+      routerLink="/login"
+      class="btn btn-outline border-white text-white"
+    >
+      LOGIN
+    </button>
+
+    <!-- Show 'View My Site' or 'Go Back to Admin View' button for admins -->
+    <button
+      *ngIf="isAdmin"
+      (click)="toggleAdminView()"
+      [routerLink]="isViewingAsAdmin ? '/' : '/secure/admin/users'"
+      class="btn btn-outline border-white text-white"
+    >
+      {{ isViewingAsAdmin ? "View My Site" : "Go Back to Admin View" }}
+    </button>
+
+    <!-- Dropdown for authenticated users with profile picture and logout option -->
+    <ng-template #loggedIn>
+      <div class="hidden lg:flex dropdown dropdown-bottom dropdown-left">
+        <div
+          tabindex="0"
+          class="btn btn-ghost btn-circle avatar flex items-center cursor-pointer"
+        >
+          <div class="w-10 h-10 rounded-full overflow-hidden">
+            <img
+              *ngIf="
+                (authService.profile$ | async)?.profile_picture;
+                else skeleton
+              "
+              [src]="(authService.profile$ | async)?.profile_picture"
+              alt="Profile Picture"
+            />
+            <ng-template #skeleton>
+              <svg
+                class="text-gray-800 w-full h-full"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                />
+              </svg>
+            </ng-template>
+          </div>
+        </div>
+        <ul
+          tabindex="0"
+          class="dropdown-content p-0 menu shadow bg-gray-900 rounded-md z-[100] w-52 mt-2"
+        >
+          <ng-container *ngIf="isChairman">
+            <li *ngFor="let route of chairmanRoutes">
+              <a
+                class="px-4 py-2 hover:bg-gray-800 transition-colors duration-200"
+                [routerLink]="[route.routerLink]"
+              >
+                {{ route.displayName }}
+              </a>
+            </li>
+          </ng-container>
+          <li>
+            <a
+              class="px-4 py-2 hover:bg-gray-800 transition-colors duration-200"
+              [routerLink]="['/secure/profile']"
+              >View Profile</a
+            >
+          </li>
+          <li>
+            <a
+              class="px-4 py-2 hover:bg-gray-800 transition-colors duration-200"
+              (click)="logout()"
+              >Logout</a
+            >
+          </li>
+        </ul>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- hamburger menu if mobile is active -->
+  <div class="lg:hidden drawer drawer-end">
+    <input id="mobile-menu" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content flex justify-end">
+      <!-- Page content here -->
+      <label for="mobile-menu" class="drawer-button z-10">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
+        </svg>
+      </label>
+    </div>
+    <div class="drawer-side pt-[72px]">
+      <div class="absolute left-0 w-full bg-black z-[10000]">
+        <ul class="flex flex-col p-3">
+          <!-- Sidebar content here -->
+          <ng-container *ngFor="let item of routes$ | async">
+            <ng-container *ngIf="!item.isAdminRoute">
+              <div class="w-full border-b border-white border-opacity-30">
+                <!-- Main route link for items without subroutes, if isMember hide membership route -->
+                <a
+                  *ngIf="!item.subroutes"
+                  [routerLink]="item.routerLink"
+                  class="block p-3 text-white"
+                  (click)="closeDrawer()"
+                >
+                  {{ item.displayName }}
+                </a>
+
+                <!-- Dropdown toggle for "Divisions" -->
+                <div *ngIf="item.displayName === 'DIVISIONS'" class="relative">
+                  <button
+                    (click)="toggleDropdown('division', true)"
+                    class="block p-3 text-white w-full text-left transition-none"
+                  >
+                    {{ item.displayName }}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="inline-block w-4 h-4 ml-2 transform transition-transform duration-300"
+                      [ngClass]="{ 'rotate-180': isDivisionMobileDropdownOpen }"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown for subroutes with animated height transition -->
+                  <div
+                    class="overflow-hidden transition-all duration-300 ease-in-out"
+                    [ngClass]="
+                      isDivisionMobileDropdownOpen ? 'max-h-screen' : 'max-h-0'
+                    "
+                  >
+                    <ng-container *ngFor="let subroute of item.subroutes">
+                      <a
+                        class="block px-4 py-2 text-sm hover:bg-gray-800 transition-colors duration-200"
+                        [routerLink]="[subroute.routerLink]"
+                        (click)="
+                          handleClick(subroute.routerLink, item.routerLink);
+                          closeDrawer()
+                        "
+                      >
+                        {{ subroute.displayName }}
+                      </a>
+                    </ng-container>
+                  </div>
+                </div>
+
+                <!-- Dropdown toggle for "Rules" -->
+                <div *ngIf="item.displayName === 'RULES'" class="relative">
+                  <button
+                    (click)="toggleDropdown('rules', true)"
+                    class="block p-3 text-white w-full text-left transition-none"
+                  >
+                    {{ item.displayName }}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="inline-block w-4 h-4 ml-2 transform transition-transform duration-300"
+                      [ngClass]="{ 'rotate-180': isRulesMobileDropdownOpen }"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown for subroutes with animated height transition -->
+                  <div
+                    class="overflow-hidden transition-all duration-300 ease-in-out"
+                    [ngClass]="
+                      isRulesMobileDropdownOpen ? 'max-h-screen' : 'max-h-0'
+                    "
+                  >
+                    <ng-container *ngFor="let subroute of item.subroutes">
+                      <a
+                        class="block px-4 py-2 text-sm hover:bg-gray-800 transition-colors duration-200"
+                        [routerLink]="[subroute.routerLink]"
+                        (click)="
+                          handleClick(subroute.routerLink, item.routerLink);
+                          closeDrawer()
+                        "
+                      >
+                        {{ subroute.displayName }}
+                      </a>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+          <!-- Chairman Options Dropdown in Mobile Menu -->
+          <ng-container *ngIf="isChairman">
+            <div class="relative">
+              <button
+                (click)="toggleDropdown('chairman', true)"
+                class="block p-3 text-white w-full text-left transition-none"
+              >
+                CHAIRMAN OPTIONS
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="inline-block w-4 h-4 ml-2 transform transition-transform duration-300"
+                  [ngClass]="{ 'rotate-180': isChairmanMobileDropdownOpen }"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              <!-- Dropdown for Chairman Options in mobile menu -->
+              <div
+                class="overflow-hidden transition-all duration-300 ease-in-out"
+                [ngClass]="
+                  isChairmanMobileDropdownOpen ? 'max-h-screen' : 'max-h-0'
+                "
+              >
+                <ng-container *ngFor="let route of chairmanRoutes">
+                  <a
+                    class="block p-2 pl-5 text-white"
+                    [routerLink]="route.routerLink"
+                    (click)="closeDrawer()"
+                  >
+                    {{ route.displayName }}
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
+          <button
+            *ngIf="!authService.session; else loggedIn"
+            routerLink="/login"
+            class="btn btn-outline border-white w-full mt-3 mb-2 text-white"
+          >
+            LOGIN
+          </button>
+          <!-- Show 'Go Back to Admin View' button for admins -->
+          <button
+            *ngIf="isAdmin"
+            (click)="toggleAdminView()"
+            [routerLink]="isViewingAsAdmin ? '/' : '/secure/admin/users'"
+            class="btn btn-outline border-white w-full mt-3 mb-2"
+          >
+            Go Back to Admin View
+          </button>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+
+<ng-template #adminHeader>
+  <header
+    class="bg-black text-white flex-col justify-start items-start h-full transition-all duration-300 hidden lg:block"
+    [ngClass]="{ 'w-60': isSidebarOpen, 'w-24': !isSidebarOpen }"
+    (mouseenter)="onMouseEnter()"
+    (mouseleave)="onMouseLeave()"
+  >
+    <!-- Admin sidebar logo, dynamically sized based on sidebar state -->
+    <img
+      [routerLink]="''"
+      src="/assets/images/d14_logo.png"
+      alt="Logo"
+      class="my-8 mx-auto transition-all duration-300"
+      [ngClass]="{
+        'w-12': !isSidebarOpen,
+        'w-32': isSidebarOpen
+      }"
+    />
+
+    <nav class="flex flex-col mt-12 gap-2 w-full px-4">
+      <!-- Admin sidebar links -->
+      <ng-container *ngFor="let item of routes$ | async">
+        <ng-container *ngIf="item.isAdminRoute">
+          <!-- Check if the admin item has subroutes -->
+          <ng-container *ngIf="item.subroutes?.length; else noSubRoutes">
+            <div class="relative w-full">
+              <button
+                class="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-800 text-left"
+                (click)="toggleDropdown('division')"
+                [attr.aria-haspopup]="true"
+                [attr.aria-expanded]="isDivisionDropdownOpen"
+              >
+                <fa-icon [icon]="item.icon" size="lg" class="mr-3"></fa-icon>
+                <span
+                  class="whitespace-nowrap overflow-hidden transition-opacity duration-300 opacity-0"
+                  [ngClass]="{ 'opacity-100': isSidebarOpen }"
+                >
+                  {{ item.displayName }}
+                </span>
+              </button>
+              <!-- Dropdown for admin subroutes -->
+              <div
+                *ngIf="isDivisionDropdownOpen"
+                class="flex flex-col absolute left-16 top-0 bg-gray-900 z-50 border border-white border-opacity-35 w-44 mt-2 transition-all duration-300"
+              >
+                <ng-container *ngFor="let subroute of item.subroutes">
+                  <a
+                    class="p-2 last:border-b-0 border-b border-white border-opacity-35 hover:bg-gray-700 block"
+                    [routerLink]="[subroute.routerLink]"
+                  >
+                    {{ subroute.displayName }}
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #noSubRoutes>
+            <!-- Direct admin link if no subroutes are available -->
+            <a
+              class="flex items-center px-4 py-2 hover:bg-gray-800 group"
+              [routerLink]="item.routerLink"
+            >
+              <fa-icon [icon]="item.icon" size="lg" class="mr-3"></fa-icon>
+              <span
+                class="whitespace-nowrap overflow-hidden transition-opacity duration-300 opacity-0"
+                [ngClass]="{ 'opacity-100': isSidebarOpen }"
+              >
+                {{ item.displayName }}
+              </span>
+            </a>
+          </ng-template>
+        </ng-container>
+      </ng-container>
+
+      <!-- Admin view toggle and logout buttons -->
+      <div
+        class="relative w-full flex-col items-center justify-between gap-6 mt-4"
+      >
+        <!-- Admin view toggle button -->
+        <button
+          (click)="toggleAdminView()"
+          [routerLink]="isViewingAsAdmin ? '/' : '/secure/admin/users'"
+          class="flex items-center px-4 py-2 hover:bg-gray-800 text-white w-full text-left rounded-none group"
+        >
+          <fa-icon [icon]="faExchangeAlt" size="lg" class="mr-3"></fa-icon>
+          <span
+            class="whitespace-nowrap overflow-hidden transition-opacity duration-300 opacity-0"
+            [ngClass]="{ 'opacity-100': isSidebarOpen }"
+          >
+            {{ isViewingAsAdmin ? "View My Site" : "Go Back to Admin View" }}
+          </span>
+        </button>
+
+        <!-- Logout button -->
+        <button
+          (click)="logout()"
+          class="flex items-center px-4 py-2 hover:bg-gray-800 text-white w-full text-left rounded-none group"
+        >
+          <fa-icon [icon]="faSignOutAlt" size="lg" class="mr-3"></fa-icon>
+          <span
+            class="whitespace-nowrap overflow-hidden transition-opacity duration-300 opacity-0"
+            [ngClass]="{ 'opacity-100': isSidebarOpen }"
+          >
+            Logout
+          </span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Admin mobile nav -->
+  <header
+    class="lg:hidden bg-black overflow-hidden relative text-white p-4 flex flex-d items-center justify-between w-full h-[72px] xl:h-[100px]"
+  >
+    <!-- Logo that navigates to the home page -->
+    <img
+      [routerLink]="''"
+      src="/assets/images/d14_logo.png"
+      class="w-[90px] h-auto hover:cursor-pointer"
+    />
+
+    <!-- hamburger menu if mobile is active -->
+    <div class="lg:hidden drawer drawer-end">
+      <input id="mobile-menu" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content flex justify-end">
+        <!-- Page content here -->
+        <label for="mobile-menu" class="drawer-button z-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-8"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            />
+          </svg>
+        </label>
+      </div>
+      <div class="drawer-side pt-[72px]">
+        <div class="absolute left-0 w-full bg-black z-[10000]">
+          <ul class="flex flex-col p-3">
+            <!-- Sidebar content here -->
+            <ng-container *ngFor="let item of routes$ | async">
+              <ng-container *ngIf="item.isAdminRoute">
+                <div class="w-full border-b border-white border-opacity-30">
+                  <!-- Main route link for items without subroutes -->
+                  <a
+                    *ngIf="!item.subroutes"
+                    [routerLink]="item.routerLink"
+                    class="block p-3 text-white transition-none"
+                    (click)="closeDrawer()"
+                  >
+                    {{ item.displayName }}
+                  </a>
+                </div>
+              </ng-container>
+            </ng-container>
+            <!-- Show 'View My Site' or 'Go Back to Admin View' button for admins -->
+            <button
+              *ngIf="isAdmin"
+              (click)="toggleAdminView()"
+              routerLink="/"
+              class="btn btn-outline border-white text-white w-full mt-2"
+            >
+              View My Site
+            </button>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+</ng-template>

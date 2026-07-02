@@ -1,0 +1,34 @@
+/* styles.css or global.css */
+
+/* Apply the background image and overlay effect to the body */
+body {
+    background-image: url('../../public/images/landing_image.jpg');
+    background-size: auto; /* Do not stretch the background image */
+    background-repeat: repeat; /* Repeat the image both horizontally and vertically */
+    background-position: top left; /* Align the starting point of the image */
+    position: relative;
+    overflow-x: hidden; /* Prevent horizontal overflow */
+    overflow-y: hidden; /* Prevent vertical overflow */
+    min-height: 100vh;
+    margin: 0; /* Remove default body margin */
+  }
+  
+  /* Dark overlay effect */
+  body::before {
+    content: "";
+    position: fixed; /* Use fixed to cover the entire viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Semi-transparent black overlay */
+    pointer-events: none; /* Allow clicks through the overlay */
+    z-index: 0; /* Behind the content */
+  }
+  
+  /* Ensure the main content stacks above the overlay */
+  * {
+    position: relative;
+    z-index: 1; /* Stack above the body overlay */
+  }
+  

@@ -1,0 +1,717 @@
+<div class="space-y-6">
+  <!-- Add Organization Button -->
+  <div class="flex justify-between items-center">
+    <button class="btn btn-primary" (click)="openAddOrgModal()">
+      Add Organization
+    </button>
+    <!-- existing search bar div... -->
+    <div class="relative flex-grow ml-4">
+      <input
+        type="text"
+        placeholder="Search organizations"
+        class="input input-bordered w-full pr-16 bg-base-100 text-lg h-12"
+        [(ngModel)]="searchString"
+      />
+      <i class="fas fa-search absolute right-4 top-4 text-gray-400"></i>
+    </div>
+  </div>
+
+  <!-- Organizations Table -->
+  <div class="bg-base-200 p-4 rounded-lg shadow-lg overflow-x-auto">
+    <div class="text-sm text-gray-400 mb-4">
+      Results: {{ organizations.length }} Organizations
+    </div>
+    <table class="table w-full">
+      <thead>
+        <tr class="bg-base-300">
+          <th class="p-2">Organization Name</th>
+          <th class="p-2">Email</th>
+          <th class="p-2">Phone</th>
+          <th class="p-2">Location</th>
+          <th class="p-2">Membership Status</th>
+          <th class="p-2">Expiration Date</th>
+          <th class="p-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let org of filterOrganizations()" class="hover:bg-base-200">
+          <td class="p-2">{{ org.name }}</td>
+          <td class="p-2">{{ org.email }}</td>
+          <td class="p-2">{{ org.phone }}</td>
+          <td class="p-2">{{ org.city }}, {{ org.state }}</td>
+          <td class="p-2 text-center">
+            <span
+              [class]="
+                org.membership_status === 'active'
+                  ? 'text-success font-semibold px-3 py-1 rounded-full bg-success/10'
+                  : 'text-error font-semibold px-3 py-1 rounded-full bg-error/10'
+              "
+            >
+              {{ org.membership_status | titlecase }}
+            </span>
+          </td>
+          <td class="p-2">
+            {{
+              org.expiration_date
+                ? (org.expiration_date | date : "shortDate")
+                : ""
+            }}
+          </td>
+          <td class="p-2">
+            <div class="flex gap-2">
+              <button
+                class="btn btn-sm btn-primary"
+                (click)="openEditModal(org)"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-sm btn-error"
+                (click)="deleteOrganization(org)"
+              >
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Organization Modal -->
+  <dialog id="add_org_modal" class="modal">
+    <div class="modal-box bg-base-100 rounded-lg w-11/12 max-w-4xl p-6">
+      <form method="dialog">
+        <button
+          class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          (click)="closeAddOrgModal()"
+        >
+          ✕
+        </button>
+      </form>
+
+      <h2 class="text-2xl font-bold mb-6">Add New Organization</h2>
+
+      <div class="space-y-6">
+        <!-- Organization Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <h3 class="font-semibold text-lg">Organization Details</h3>
+            <input
+              type="text"
+              placeholder="Organization Name (required)"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.name"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.email"
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.phone"
+            />
+            <input
+              type="url"
+              placeholder="Website"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.website"
+            />
+            <input
+              type="text"
+              placeholder="AMA Number"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.ama_number"
+            />
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="font-semibold text-lg">Address</h3>
+            <input
+              type="text"
+              placeholder="Address Line 1"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.address"
+            />
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="City"
+                class="input input-bordered w-full"
+                [(ngModel)]="newOrg.city"
+              />
+              <input
+                type="text"
+                placeholder="State"
+                class="input input-bordered w-full"
+                [(ngModel)]="newOrg.state"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="ZIP Code"
+                class="input input-bordered w-full"
+                [(ngModel)]="newOrg.zip"
+              />
+              <input
+                type="text"
+                placeholder="Country"
+                class="input input-bordered w-full"
+                [(ngModel)]="newOrg.country"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Contact Information -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">Primary Contact Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Name"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_name"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_email"
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_phone"
+            />
+            <input
+              type="text"
+              placeholder="D14 Number"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_d14"
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_address"
+            />
+            <input
+              type="text"
+              placeholder="City"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_city"
+            />
+            <input
+              type="text"
+              placeholder="State"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_state"
+            />
+            <input
+              type="text"
+              placeholder="ZIP"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_zip"
+            />
+            <input
+              type="text"
+              placeholder="Country"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.primary_contact_country"
+            />
+          </div>
+        </div>
+
+        <!-- President/Owner Information -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">President/Owner Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Name"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_name"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_email"
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_phone"
+            />
+            <input
+              type="text"
+              placeholder="D14 Number"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_d14"
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_address"
+            />
+            <input
+              type="text"
+              placeholder="City"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_city"
+            />
+            <input
+              type="text"
+              placeholder="State"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_state"
+            />
+            <input
+              type="text"
+              placeholder="ZIP"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_zip"
+            />
+            <input
+              type="text"
+              placeholder="Country"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.president_country"
+            />
+          </div>
+        </div>
+
+        <!-- Referee/Other Information -->
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">Referee/Other Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Name"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_name"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_email"
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_phone"
+            />
+            <input
+              type="text"
+              placeholder="D14 Number"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_d14"
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_address"
+            />
+            <input
+              type="text"
+              placeholder="City"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_city"
+            />
+            <input
+              type="text"
+              placeholder="State"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_state"
+            />
+            <input
+              type="text"
+              placeholder="ZIP"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_zip"
+            />
+            <input
+              type="text"
+              placeholder="Country"
+              class="input input-bordered w-full"
+              [(ngModel)]="newOrg.referee_country"
+            />
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-2 mt-6">
+          <button class="btn btn-primary" (click)="addOrganization()">
+            Add Organization
+          </button>
+          <button class="btn btn-outline" (click)="closeAddOrgModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<!-- Edit Organization Modal -->
+<dialog id="org_modal" class="modal">
+  <div class="modal-box bg-base-100 rounded-lg w-11/12 max-w-4xl p-6">
+    <form method="dialog">
+      <button
+        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+        (click)="closeModal()"
+      >
+        ✕
+      </button>
+    </form>
+
+    <h2 class="text-2xl font-bold mb-6">Edit Organization</h2>
+
+    <div *ngIf="editedOrg" class="space-y-6">
+      <!-- Organization Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">Organization Details</h3>
+          <input
+            type="text"
+            placeholder="Organization Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.name"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.email"
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.phone"
+          />
+          <input
+            type="url"
+            placeholder="Website"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.website"
+          />
+        </div>
+
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">Address</h3>
+          <input
+            type="text"
+            placeholder="Address Line 1"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.address"
+          />
+
+          <div class="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="City"
+              class="input input-bordered w-full"
+              [(ngModel)]="editedOrg.city"
+            />
+            <input
+              type="text"
+              placeholder="State"
+              class="input input-bordered w-full"
+              [(ngModel)]="editedOrg.state"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="ZIP Code"
+              class="input input-bordered w-full"
+              [(ngModel)]="editedOrg.zip"
+            />
+            <input
+              type="text"
+              placeholder="Country"
+              class="input input-bordered w-full"
+              [(ngModel)]="editedOrg.country"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Contact Information -->
+      <div class="bg-base-200 p-4 rounded-lg mt-4">
+        <h3 class="font-semibold text-lg mb-4">Primary Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_name"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_email"
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_phone"
+          />
+          <input
+            type="text"
+            placeholder="D14 Number"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_d14"
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_address"
+          />
+          <input
+            type="text"
+            placeholder="City"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_city"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_state"
+          />
+          <input
+            type="text"
+            placeholder="ZIP"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_zip"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.primary_contact_country"
+          />
+        </div>
+      </div>
+
+      <!-- President Contact Information -->
+      <div class="bg-base-200 p-4 rounded-lg mt-4">
+        <h3 class="font-semibold text-lg mb-4">
+          President Contact Information
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_name"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_email"
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_phone"
+          />
+          <input
+            type="text"
+            placeholder="D14 Number"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_d14"
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_address"
+          />
+          <input
+            type="text"
+            placeholder="City"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_city"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_state"
+          />
+          <input
+            type="text"
+            placeholder="ZIP"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_zip"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.president_country"
+          />
+        </div>
+      </div>
+
+      <!-- Referee Contact Information -->
+      <div class="bg-base-200 p-4 rounded-lg mt-4">
+        <h3 class="font-semibold text-lg mb-4">Referee Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Name"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_name"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_email"
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_phone"
+          />
+          <input
+            type="text"
+            placeholder="D14 Number"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_d14"
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_address"
+          />
+          <input
+            type="text"
+            placeholder="City"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_city"
+          />
+          <input
+            type="text"
+            placeholder="State"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_state"
+          />
+          <input
+            type="text"
+            placeholder="ZIP"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_zip"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            class="input input-bordered w-full"
+            [(ngModel)]="editedOrg.referee_country"
+          />
+        </div>
+      </div>
+
+      <!-- Membership Information -->
+      <div class="bg-base-200 p-4 rounded-lg mt-4">
+        <h3 class="font-semibold text-lg mb-4">Membership Information</h3>
+        <div class="grid grid-cols-2 gap-4" *ngIf="selectedOrg">
+          <p>
+            <strong>Status:</strong>
+            <span
+              [class]="
+                selectedOrg.membership_status === 'active'
+                  ? 'text-success'
+                  : 'text-error'
+              "
+            >
+              {{ selectedOrg.membership_status }}
+            </span>
+          </p>
+          <div class="flex items-center gap-2">
+            <strong>Expiration Date:</strong>
+            <input
+              type="date"
+              class="input input-bordered input-sm"
+              [ngModel]="selectedOrg.expiration_date | date : 'yyyy-MM-dd'"
+              (ngModelChange)="updateExpirationDate($event)"
+            />
+          </div>
+          <button
+            class="btn btn-sm btn-primary"
+            (click)="openRenewModal(selectedOrg)"
+            [disabled]="!selectedOrg.organization_user_id"
+          >
+            Renew
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end space-x-2 mt-6">
+        <button class="btn btn-primary" (click)="saveChanges()">
+          Save Changes
+        </button>
+        <button class="btn btn-outline" (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="delete_org_modal" class="modal">
+  <div class="modal-box bg-base-100 rounded-lg p-6">
+    <h3 class="font-bold text-lg mb-4">Confirm Delete</h3>
+    <p class="py-4">
+      Are you sure you want to delete
+      <span class="font-semibold">{{ orgToDelete?.name }}</span
+      >? This action cannot be undone and will also delete the organization's
+      charter membership.
+    </p>
+    <div class="modal-action">
+      <button class="btn btn-error" (click)="confirmDelete()">Delete</button>
+      <button class="btn" (click)="closeDeleteModal()">Cancel</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Renewal Confirmation Modal -->
+<dialog id="renew_org_modal" class="modal">
+  <div class="modal-box bg-base-100 rounded-lg p-6">
+    <h3 class="font-bold text-lg mb-4">Renew Organization Membership</h3>
+    <p class="py-4">
+      Are you sure you want to renew the membership for
+      <strong>{{ orgToRenew?.name }}</strong
+      >?
+    </p>
+    <div class="modal-action">
+      <button class="btn btn-error" (click)="closeRenewModal()">Cancel</button>
+      <button class="btn btn-success" (click)="renewMembership()">
+        Confirm Renewal
+      </button>
+    </div>
+  </div>
+</dialog>

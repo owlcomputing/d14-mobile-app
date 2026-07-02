@@ -1,0 +1,304 @@
+<div class="min-h-screen p-6 lg:p-10">
+  <div
+    class="max-w-7xl mx-auto bg-base-300 rounded-xl shadow-xl overflow-hidden"
+  >
+    <div class="p-6 lg:p-10">
+      <h2 class="text-3xl font-bold text-base-content mb-8">
+        Send Email to Members
+      </h2>
+
+      <!-- Filters and Members Selection -->
+      <div class="space-y-8">
+        <!-- Member Search and Selection -->
+        <div class="bg-base-200 p-4 rounded-lg shadow-lg mb-4">
+          <div class="flex justify-between items-center mb-4">
+            <label class="text-lg font-medium text-base-content"
+              >Search and Select Members
+              <i
+                class="fas fa-info-circle cursor-pointer ml-2"
+                matTooltip="Search input searches by first name, last name, and email address"
+                matTooltipPosition="above"
+              ></i
+            ></label>
+          </div>
+          <div class="relative w-full mb-4">
+            <input
+              type="text"
+              placeholder="Search members"
+              class="input input-bordered w-full pr-20 bg-base-100 text-base sm:text-lg h-12 border-white"
+              [(ngModel)]="searchString"
+              (keyup.enter)="searchMembers()"
+            />
+            <button
+              class="btn btn-outline text-white absolute right-0 top-0 h-12 rounded-tl-none rounded-bl-none hover:bg-base-200"
+              (click)="searchMembers()"
+            >
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div
+            *ngIf="!isLoading"
+            class="max-h-96 overflow-y-auto border border-base-content border-opacity-20 rounded-md bg-base-100"
+          >
+            <div
+              *ngFor="let member of filteredMembers"
+              class="form-control border-b border-base-300 last:border-b-0"
+            >
+              <label
+                class="label cursor-pointer hover:bg-base-200 transition-colors duration-200"
+              >
+                <span class="label-text"
+                  >{{ member.first_name }} {{ member.last_name }} ({{
+                    isChild(member.email)
+                      ? member.email.split("@")[0].split("+")[0] +
+                        "@" +
+                        member.email.split("@")[1] +
+                        ") (child"
+                      : member.email
+                  }})
+                  {{
+                    member.member_type === "Charter" ? "(charter)" : ""
+                  }}</span
+                >
+                <input
+                  type="checkbox"
+                  [id]="'member-' + member.id"
+                  (change)="toggleMemberSelection($event, member)"
+                  class="checkbox checkbox-primary"
+                  [checked]="selectedMembers.includes(member)"
+                />
+              </label>
+            </div>
+          </div>
+          <div
+            *ngIf="isLoading"
+            class="flex justify-center items-center h-48 mt-4"
+          >
+            <svg
+              class="animate-spin h-10 w-10 text-primary"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Division Selection -->
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+          <label
+            class="text-lg font-medium text-base-content flex items-center"
+          >
+            Select Divisions
+            <i
+              class="fas fa-info-circle cursor-pointer ml-2"
+              matTooltip="Choosing any of the divisions below will set all members of the divisions as a recipient"
+              matTooltipPosition="above"
+            ></i>
+          </label>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div *ngFor="let division of divisions" class="relative">
+            <input
+              type="checkbox"
+              [id]="'division-' + division.id"
+              (change)="toggleDivisionSelection($event, division)"
+              [checked]="selectedDivisions.includes(division.name)"
+              class="sr-only peer"
+            />
+            <label
+              [for]="'division-' + division.id"
+              class="flex items-center justify-center p-4 w-full text-center bg-base-100 border border-base-content border-opacity-20 rounded-md cursor-pointer transition-colors duration-200 hover:bg-base-300 peer-checked:bg-primary peer-checked:text-primary-content"
+            >
+              {{ division.name }}
+            </label>
+          </div>
+          <input
+            type="checkbox"
+            id="charter"
+            (change)="toggleCharterSelection()"
+            [checked]="charterSelected"
+            class="sr-only peer"
+          />
+          <label
+            for="charter"
+            class="flex items-center justify-center p-4 w-full text-center bg-base-100 border border-base-content border-opacity-20 rounded-md cursor-pointer transition-colors duration-200 hover:bg-base-300 peer-checked:bg-primary peer-checked:text-primary-content"
+          >
+            Charter Members
+          </label>
+        </div>
+      </div>
+
+      <!-- Selected Recipients -->
+      <div class="mt-8 bg-base-200 p-4 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-base-content">
+            Selected Recipients
+          </h3>
+          <button
+            class="px-3 py-1 text-sm font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200 transition-colors duration-300"
+            (click)="clearAllRecipients()"
+          >
+            Clear All
+          </button>
+        </div>
+        <div
+          class="bg-base-100 p-2 rounded-md max-h-60 overflow-y-auto border border-base-content border-opacity-20"
+        >
+          <ul class="space-y-2">
+            <li
+              *ngFor="let member of selectedMembers"
+              class="text-sm text-base-content text-opacity-80 p-2 bg-base-200 rounded"
+            >
+              {{ member.first_name }} {{ member.last_name }} ({{
+                member.email
+              }})
+            </li>
+            <li
+              *ngFor="let division of selectedDivisions"
+              class="text-sm text-base-content text-opacity-80 p-2 bg-base-200 rounded"
+            >
+              {{
+                division !== "Charter"
+                  ? division + " Division"
+                  : "Charter Members"
+              }}
+            </li>
+          </ul>
+        </div>
+        <p class="text-sm text-base-content text-opacity-60 mt-2">
+          Total recipients: {{ selectedMembers.length }} users and
+          {{ selectedDivisions.length }} divisions
+        </p>
+      </div>
+
+      <!-- Email Subject Full Width -->
+      <div class="bg-base-200 p-4 rounded-lg shadow-lg mb-8 mt-8">
+        <label
+          for="email-subject"
+          class="block text-lg font-medium text-base-content mb-2"
+          >Email Subject</label
+        >
+        <input
+          id="email-subject"
+          type="text"
+          [(ngModel)]="subject"
+          class="input input-bordered w-full bg-base-100"
+          placeholder="Enter email subject"
+        />
+      </div>
+
+      <!-- Email Content -->
+      <div class="mt-8 bg-base-200 p-4 rounded-lg shadow-lg">
+        <label
+          for="email-content"
+          class="block text-lg font-medium text-base-content mb-2"
+          >Email Content</label
+        >
+        <quill-editor
+          id="email-content"
+          [modules]="modules"
+          class="bg-base-100 border border-base-content border-opacity-20 rounded-lg shadow-sm"
+          [(ngModel)]="newContent"
+          [styles]="{ height: '300px' }"
+        ></quill-editor>
+      </div>
+
+      <!-- Send Button -->
+      <div class="flex justify-end mt-8">
+        <button
+          (click)="sendEmail()"
+          class="btn btn-primary"
+          [disabled]="isSendingEmail"
+        >
+          <ng-container *ngIf="!isSendingEmail">
+            <svg
+              class="h-5 w-5 mr-2"
+              fill="none"
+              stroke="black"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              ></path>
+            </svg>
+            Send Email
+          </ng-container>
+          <ng-container *ngIf="isSendingEmail">
+            <svg
+              class="animate-spin h-5 w-5 mr-2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Sending...
+          </ng-container>
+        </button>
+      </div>
+
+      <!-- Batch Progress -->
+      <div *ngIf="isSendingEmail && totalBatches > 0" class="mt-4 bg-base-200 p-4 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-base-content font-medium">
+            Sending batch {{ currentBatch }} of {{ totalBatches }}...
+          </span>
+          <span class="text-base-content text-opacity-60">
+            {{ ((currentBatch / totalBatches) * 100) | number:'1.0-0' }}%
+          </span>
+        </div>
+        <div class="w-full bg-base-300 rounded-full h-3">
+          <div
+            class="bg-primary h-3 rounded-full transition-all duration-300"
+            [style.width.%]="(currentBatch / totalBatches) * 100"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Batch Error Message -->
+      <div *ngIf="batchError" class="mt-4 bg-error bg-opacity-10 border border-error rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-error mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-error">{{ batchError }}</span>
+        </div>
+        <p class="text-base-content text-opacity-60 mt-2 text-sm">
+          You can try sending again to restart from the beginning.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

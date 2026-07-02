@@ -1,0 +1,98 @@
+<div
+  class="text-white flex flex-col items-center justify-center w-full md:py-8 px-4 lg:max-w-7xl mx-auto lg:px-8"
+>
+  <!-- Calendar Header with Month, Year, and Controls -->
+  <div class="w-full flex justify-between items-center mb-6">
+    <button (click)="prevMonth()" class="btn btn-outline btn-sm text-white">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <h2 class="text-3xl font-bold">{{ viewDate | date : "MMMM yyyy" }}</h2>
+    <button (click)="nextMonth()" class="btn btn-outline btn-sm text-white">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <!-- Filter by Division -->
+  <div
+    class="w-full flex flex-col lg:flex-row lg:justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0"
+  >
+    <div class="w-full">
+      <label class="text-sm font-medium mb-2 block">Filter by Division:</label>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <button
+          *ngFor="let division of divisions"
+          (click)="toggleDivision(division.id)"
+          class="btn w-full p-3 rounded-lg text-left"
+          [ngClass]="{
+            'btn-primary hover:bg-white': isDivisionSelected(division.id),
+            'btn-outline hover:bg-transparent': !isDivisionSelected(division.id)
+          }"
+        >
+          <span class="flex items-center space-x-2">
+            <span
+              class="w-4 h-4 rounded-full"
+              [style.background]="divisionColors[division.id]"
+            ></span>
+            <!-- if small screen don't show name, just add a dot wiht the color -->
+            <span
+              class=""
+              [ngClass]="{ 'text-black': isDivisionSelected(division.id) }"
+            >
+              {{ division.name }}
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="w-full bg-base-100 rounded-lg overflow-hidden shadow-xl mb-4">
+    <!-- Days of the Week Header -->
+    <div class="grid grid-cols-7 bg-base-200">
+      <div
+        *ngFor="let day of days"
+        class="py-2 text-center text-sm font-medium uppercase"
+      >
+        {{ day }}
+      </div>
+    </div>
+
+    <!-- Calendar Days and Events -->
+    <div class="grid grid-cols-7 gap-px bg-base-300">
+      <div
+        *ngFor="let day of daysInMonth"
+        class="bg-base-100 p-2 min-h-[100px]"
+      >
+        <p
+          class="text-sm font-bold mb-2"
+          [ngClass]="{ 'text-primary': isCurrentDay(day) }"
+        >
+          {{ day | date : "d" }}
+        </p>
+        <div class="space-y-1">
+          <div
+            *ngFor="let event of getEventsForDay(day)"
+            class="text-xs font-medium p-1 rounded cursor-pointer truncate sm:p-1 sm:w-full sm:h-auto p-2 h-8"
+            [style.background]="divisionColors[event.division_id]"
+            [style.color]="getContrastColor(divisionColors[event.division_id])"
+            (click)="navigateToEvent(event)"
+          >
+            <span class="hidden sm:inline">{{ event.name }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export to Google Calendar Button -->
+  <div class="flex justify-start w-full mt-5">
+    <button
+      class="btn btn-primary bg-blue-400 hover:bg-blue-500 w-100px max-w-xsflex items-center justify-center p-3 rounded-lg hover:bg-blue-600 transition duration-200 ease-in-out shadow-lg"
+      (click)="downloadCalendar()"
+    >
+      <!-- download icon -->
+      <i class="fas fa-download pr-2"></i>Download Calendar
+    </button>
+  </div>
+</div>

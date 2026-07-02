@@ -1,0 +1,14 @@
+<div class="bg-black bg-opacity-40 p-4 md:p-8 lg:p-12 text-white h-full overflow-hidden">
+  <div class="max-w-4xl mx-auto bg-white bg-opacity-10 rounded-xl p-6 backdrop-blur-sm h-[calc(100vh-180px)] overflow-hidden">
+    <h2 class="text-3xl font-bold border-b border-white border-opacity-20 pb-2 mb-6">
+      {{ activeRules?.name }}
+    </h2>
+    <div class="overflow-y-scroll h-[calc(100vh-300px)] pr-4">
+      <div
+        id="content"
+        class="prose prose-invert prose-sm max-w-none"
+        [innerHTML]="activeRules?.content ?? 'No rules content available'"
+      ></div>
+    </div>
+  </div>
+</div>
