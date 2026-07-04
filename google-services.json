@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "38931427110",
+    "project_id": "ama-d14-stg",
+    "storage_bucket": "ama-d14-stg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38931427110:android:9c0f3a3dc3f3af3822dbe7",
+        "android_client_info": {
+          "package_name": "com.owlcomputing.d14"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHl_DQun1184G3W6ftIzPrRteLnIUKhdA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

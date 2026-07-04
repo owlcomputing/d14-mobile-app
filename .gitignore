@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# FCM service account key (secret)
+fcm-service-account.json
