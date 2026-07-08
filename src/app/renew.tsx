@@ -137,8 +137,8 @@ export default function RenewScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.intro}>
-        Select the memberships you&apos;d like to renew. Each renewal extends the membership one
-        year.
+        Select the memberships you&apos;d like to renew. Each renewal adds one year to the current
+        expiration date — renewing early never costs you time.
       </Text>
 
       <Widget header="Memberships">

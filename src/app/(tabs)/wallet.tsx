@@ -82,16 +82,23 @@ export default function WalletScreen() {
           <DetailRow label="AMA Number" value={profile?.ama_number?.toString() ?? '—'} last />
         </Widget>
 
-        {/* Renew */}
-        {!active || expiringSoon ? (
-          <Pressable
-            style={({ pressed }) => [styles.renewButton, pressed && { opacity: 0.85 }]}
-            onPress={() => router.push('/renew')}>
-            <Text style={styles.renewButtonText}>
-              {active ? 'Renew Membership — Expiring Soon' : 'Renew Membership'}
-            </Text>
-          </Pressable>
-        ) : null}
+        {/* Renew — always available; early renewals extend from the current
+            expiration date, so no time is lost */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.renewButton,
+            active && !expiringSoon && styles.renewButtonQuiet,
+            pressed && { opacity: 0.85 },
+          ]}
+          onPress={() => router.push('/renew')}>
+          <Text style={styles.renewButtonText}>
+            {!active
+              ? 'Renew Membership'
+              : expiringSoon
+                ? 'Renew Membership — Expiring Soon'
+                : 'Renew Early'}
+          </Text>
+        </Pressable>
 
         {/* Family members */}
         {family.data?.length ? (
@@ -214,6 +221,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 15,
     marginBottom: Spacing.three,
+  },
+  renewButtonQuiet: {
+    backgroundColor: D14Colors.surface,
+    borderWidth: 1,
+    borderColor: D14Colors.border,
   },
   renewButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
   detailLabel: { color: D14Colors.textSecondary, fontSize: 13 },
