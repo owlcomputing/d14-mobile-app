@@ -88,23 +88,18 @@ export default function RenewScreen() {
         throw new Error(sessionError?.message ?? 'Could not start checkout');
       }
 
-      // Open Stripe's hosted checkout; it deep-links back via checkout-return
+      // Open Stripe's hosted checkout in a browser. We already know the
+      // session id from create-checkout-session, so we don't depend on the
+      // deep-link redirect (Android blocks automatic custom-scheme redirects)
+      // — when the browser closes, for any reason, we verify with Stripe.
       setWorking('Waiting for payment…');
       const result = await WebBrowser.openAuthSessionAsync(checkout.url, 'd14://checkout-complete');
-      if (result.type !== 'success') {
-        setWorking(null);
-        return; // user closed the browser
-      }
-      const sessionId = new URL(result.url).searchParams.get('session_id');
-      if (!sessionId || sessionId === 'cancelled') {
-        setWorking(null);
-        return;
-      }
+      const deepLinked = result.type === 'success';
 
       setWorking('Confirming payment…');
       const { data: fulfillment, error: fulfillError } = await supabase.functions.invoke(
         'fulfill-checkout',
-        { body: { session_id: sessionId } },
+        { body: { session_id: checkout.id } },
       );
       if (fulfillError) throw new Error(fulfillError.message);
 
@@ -114,11 +109,19 @@ export default function RenewScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       } else if (fulfillment.status === 'pending') {
-        Alert.alert(
-          'Payment Processing',
-          'Your payment is still processing. Your membership will update automatically once it completes.',
-          [{ text: 'OK', onPress: () => router.back() }],
-        );
+        if (deepLinked) {
+          // Came back via the post-payment page but Stripe still shows the
+          // payment settling (e.g. bank-based methods)
+          Alert.alert(
+            'Payment Processing',
+            'Your payment is still processing. Your membership will update automatically once it completes.',
+            [{ text: 'OK', onPress: () => router.back() }],
+          );
+        } else {
+          // Browser dismissed without completing checkout — card payments
+          // settle instantly, so this means no payment was made
+          Alert.alert('Checkout Not Completed', 'No payment was made. You can try again anytime.');
+        }
       } else {
         throw new Error(fulfillment.message ?? 'Fulfillment failed');
       }
