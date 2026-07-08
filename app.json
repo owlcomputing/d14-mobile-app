@@ -53,6 +53,12 @@
         {
           "color": "#E63946"
         }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow AMA District 14 to add events to your calendar."
+        }
       ]
     ],
     "experiments": {

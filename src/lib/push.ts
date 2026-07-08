@@ -56,17 +56,24 @@ export async function registerPushToken(profileId: string): Promise<void> {
   }
 }
 
-/** Remove this device's token so a signed-out device stops receiving pushes. */
-export async function unregisterPushToken(): Promise<void> {
+/** This device's Expo push token, or null where push isn't available. */
+export async function getDevicePushToken(): Promise<string | null> {
   try {
-    if (!Device.isDevice) return;
+    if (!Device.isDevice) return null;
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
     const { data: token } = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined,
     );
-    await supabase.from('push_tokens').delete().eq('token', token);
+    return token;
   } catch {
-    // best-effort
+    return null;
   }
+}
+
+/** Remove this device's token so a signed-out device stops receiving pushes. */
+export async function unregisterPushToken(): Promise<void> {
+  const token = await getDevicePushToken();
+  if (!token) return;
+  await supabase.from('push_tokens').delete().eq('token', token);
 }

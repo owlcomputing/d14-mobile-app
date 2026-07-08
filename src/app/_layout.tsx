@@ -7,7 +7,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { LockScreen } from '@/components/lock-screen';
 import { D14Colors } from '@/constants/theme';
+import { AppLockProvider, useAppLock } from '@/providers/app-lock-provider';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
 const queryClient = new QueryClient({
@@ -36,12 +38,14 @@ const d14Theme = {
 
 function RootNavigator() {
   const { session, loading } = useAuth();
+  const { locked } = useAppLock();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
 
   if (loading) return null;
+  if (locked) return <LockScreen />;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -79,6 +83,14 @@ function RootNavigator() {
           name="renew"
           options={{ headerShown: true, title: 'Renew Membership', headerBackTitle: 'Back' }}
         />
+        <Stack.Screen
+          name="notification-settings"
+          options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="magazine"
+          options={{ headerShown: true, title: 'D14 Magazine', headerBackTitle: 'Back' }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
@@ -94,8 +106,10 @@ export default function RootLayout() {
         client={queryClient}
         persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
         <AuthProvider>
-          <StatusBar style="light" />
-          <RootNavigator />
+          <AppLockProvider>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </AppLockProvider>
         </AuthProvider>
       </PersistQueryClientProvider>
     </ThemeProvider>

@@ -10,3 +10,8 @@ verify_jwt = true
 # requires the user's JWT via fulfill-checkout.
 [functions.checkout-return]
 verify_jwt = false
+
+# renewal-reminders is invoked by pg_cron (no JWT); access is gated by the
+# x-cron-secret header checked against the CRON_SECRET function secret.
+[functions.renewal-reminders]
+verify_jwt = false

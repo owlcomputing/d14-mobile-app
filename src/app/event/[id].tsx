@@ -1,11 +1,55 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Calendar from 'expo-calendar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
+
+async function addToCalendar(name: string, date: string, endDate: string | null, notes: string) {
+  const { status } = await Calendar.requestCalendarPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Calendar access needed', 'Allow calendar access in Settings to add events.');
+    return;
+  }
+  let calendarId: string;
+  if (Platform.OS === 'ios') {
+    const defaultCal = await Calendar.getDefaultCalendarAsync();
+    calendarId = defaultCal.id;
+  } else {
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const writable = calendars.find((c) => c.allowsModifications && c.isPrimary) ??
+      calendars.find((c) => c.allowsModifications);
+    if (!writable) {
+      Alert.alert('No calendar found', 'No writable calendar is available on this device.');
+      return;
+    }
+    calendarId = writable.id;
+  }
+  // All-day event spanning the event date range
+  const start = new Date(`${date.slice(0, 10)}T00:00:00`);
+  const end = new Date(`${(endDate ?? date).slice(0, 10)}T00:00:00`);
+  end.setDate(end.getDate() + 1);
+  await Calendar.createEventAsync(calendarId, {
+    title: name,
+    startDate: start,
+    endDate: end,
+    allDay: true,
+    notes,
+  });
+  Alert.alert('Added', `"${name}" was added to your calendar.`);
+}
 
 function formatEventDate(date: string, endDate?: string | null) {
   const opts = { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' } as const;
@@ -56,6 +100,15 @@ export default function EventDetailScreen() {
         </Pressable>
       ) : null}
 
+      <Pressable
+        style={({ pressed }) => [styles.calendarButton, pressed && { opacity: 0.85 }]}
+        onPress={() =>
+          addToCalendar(e.name ?? 'D14 Event', e.date, e.end_date, description.slice(0, 500))
+        }>
+        <Ionicons name="calendar" size={16} color={D14Colors.white} />
+        <Text style={styles.calendarButtonText}>Add to Calendar</Text>
+      </Pressable>
+
       {description ? (
         <Widget header="Details" style={{ marginTop: Spacing.three }}>
           <Text style={styles.description}>{description}</Text>
@@ -84,5 +137,16 @@ const styles = StyleSheet.create({
   },
   metaText: { color: D14Colors.textSecondary, fontSize: 14 },
   linkText: { color: D14Colors.red, fontWeight: '600' },
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    backgroundColor: D14Colors.red,
+    borderRadius: Radius.md,
+    paddingVertical: 13,
+    marginTop: Spacing.three,
+  },
+  calendarButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
   description: { color: D14Colors.white, fontSize: 14, lineHeight: 22 },
 });

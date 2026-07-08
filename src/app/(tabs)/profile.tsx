@@ -1,15 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { useAppLock } from '@/providers/app-lock-provider';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, signOut, isAdmin, isChairman } = useAuth();
+  const appLock = useAppLock();
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
   const initials = [profile?.first_name?.[0], profile?.last_name?.[0]].filter(Boolean).join('');
@@ -87,6 +89,43 @@ export default function ProfileScreen() {
               last
             />
           ) : null}
+        </Widget>
+
+        <Widget header="Settings">
+          <MenuRow
+            icon="notifications"
+            label="Notification Preferences"
+            hint="Choose divisions for push notifications"
+            onPress={() => router.push('/notification-settings')}
+          />
+          <MenuRow
+            icon="book"
+            label="D14 Magazine"
+            hint="Browse district magazine issues"
+            onPress={() => router.push('/magazine')}
+          />
+          <View style={[styles.row]}>
+            <View style={styles.menuIcon}>
+              <Ionicons name="finger-print" size={16} color={D14Colors.red} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowText}>App Lock</Text>
+              <Text style={styles.rowHint}>
+                {appLock.biometricsAvailable
+                  ? 'Require Face ID / fingerprint to open the app'
+                  : 'No biometrics enrolled on this device'}
+              </Text>
+            </View>
+            <Switch
+              value={appLock.enabled}
+              onValueChange={(on) => {
+                void appLock.setEnabled(on);
+              }}
+              disabled={!appLock.biometricsAvailable}
+              trackColor={{ true: D14Colors.red, false: D14Colors.surfaceSelected }}
+              thumbColor={D14Colors.white}
+            />
+          </View>
         </Widget>
 
         <Pressable style={styles.signOut} onPress={confirmSignOut}>
