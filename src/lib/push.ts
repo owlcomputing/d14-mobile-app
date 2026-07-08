@@ -1,27 +1,40 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { supabase } from './supabase';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Remote push was removed from Expo Go (SDK 53+) on Android — importing or
+// initializing expo-notifications there crashes the app, so everything in
+// this module lazy-loads the native module and no-ops in Expo Go.
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
+
+function canUsePush(): boolean {
+  return Device.isDevice && !isExpoGo;
+}
+
+async function loadNotifications() {
+  const Notifications = await import('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+  return Notifications;
+}
 
 /**
  * Register this device for push notifications and store the Expo push token.
- * Silently no-ops where push isn't available (simulator, Expo Go on Android,
- * no EAS project configured yet).
+ * Silently no-ops where push isn't available (simulator, Expo Go, no EAS
+ * project configured).
  */
 export async function registerPushToken(profileId: string): Promise<void> {
   try {
-    if (!Device.isDevice) return;
+    if (!canUsePush()) return;
+    const Notifications = await loadNotifications();
 
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
@@ -59,7 +72,8 @@ export async function registerPushToken(profileId: string): Promise<void> {
 /** This device's Expo push token, or null where push isn't available. */
 export async function getDevicePushToken(): Promise<string | null> {
   try {
-    if (!Device.isDevice) return null;
+    if (!canUsePush()) return null;
+    const Notifications = await loadNotifications();
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
     const { data: token } = await Notifications.getExpoPushTokenAsync(

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Calendar from 'expo-calendar';
+// SDK 57 replaced the functional API; the classic functions live under /legacy
+import * as Calendar from 'expo-calendar/legacy';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -18,37 +19,46 @@ import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
 
 async function addToCalendar(name: string, date: string, endDate: string | null, notes: string) {
-  const { status } = await Calendar.requestCalendarPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('Calendar access needed', 'Allow calendar access in Settings to add events.');
-    return;
-  }
-  let calendarId: string;
-  if (Platform.OS === 'ios') {
-    const defaultCal = await Calendar.getDefaultCalendarAsync();
-    calendarId = defaultCal.id;
-  } else {
-    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-    const writable = calendars.find((c) => c.allowsModifications && c.isPrimary) ??
-      calendars.find((c) => c.allowsModifications);
-    if (!writable) {
-      Alert.alert('No calendar found', 'No writable calendar is available on this device.');
+  try {
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Calendar access needed', 'Allow calendar access in Settings to add events.');
       return;
     }
-    calendarId = writable.id;
+    let calendarId: string;
+    if (Platform.OS === 'ios') {
+      const defaultCal = await Calendar.getDefaultCalendarAsync();
+      calendarId = defaultCal.id;
+    } else {
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      const writable =
+        calendars.find((c) => c.allowsModifications && c.isPrimary) ??
+        calendars.find((c) => c.allowsModifications);
+      if (!writable) {
+        Alert.alert('No calendar found', 'No writable calendar is available on this device.');
+        return;
+      }
+      calendarId = writable.id;
+    }
+    // All-day event spanning the event date range
+    const start = new Date(`${date.slice(0, 10)}T00:00:00`);
+    const end = new Date(`${(endDate ?? date).slice(0, 10)}T00:00:00`);
+    end.setDate(end.getDate() + 1);
+    await Calendar.createEventAsync(calendarId, {
+      title: name,
+      startDate: start,
+      endDate: end,
+      allDay: true,
+      notes,
+    });
+    Alert.alert('Added', `"${name}" was added to your calendar.`);
+  } catch (error) {
+    console.error('addToCalendar failed:', error);
+    Alert.alert(
+      'Could not add event',
+      error instanceof Error ? error.message : 'An unexpected error occurred.',
+    );
   }
-  // All-day event spanning the event date range
-  const start = new Date(`${date.slice(0, 10)}T00:00:00`);
-  const end = new Date(`${(endDate ?? date).slice(0, 10)}T00:00:00`);
-  end.setDate(end.getDate() + 1);
-  await Calendar.createEventAsync(calendarId, {
-    title: name,
-    startDate: start,
-    endDate: end,
-    allDay: true,
-    notes,
-  });
-  Alert.alert('Added', `"${name}" was added to your calendar.`);
 }
 
 function formatEventDate(date: string, endDate?: string | null) {
