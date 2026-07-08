@@ -88,8 +88,8 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
         />
         <Stack.Screen
-          name="magazine"
-          options={{ headerShown: true, title: 'D14 Magazine', headerBackTitle: 'Back' }}
+          name="media"
+          options={{ headerShown: true, title: 'Podcast & Media', headerBackTitle: 'Back' }}
         />
       </Stack.Protected>
       <Stack.Protected guard={!session}>

@@ -8,7 +8,6 @@
     "scheme": "d14",
     "userInterfaceStyle": "dark",
     "ios": {
-      "icon": "./assets/expo.icon",
       "supportsTablet": false,
       "bundleIdentifier": "com.owlcomputing.d14"
     },
@@ -38,7 +37,7 @@
         {
           "backgroundColor": "#0A0A0A",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 220
         }
       ],
       "expo-secure-store",

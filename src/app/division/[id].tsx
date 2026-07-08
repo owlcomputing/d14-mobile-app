@@ -4,10 +4,11 @@ import { useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
+import { HtmlContent } from '@/components/html-content';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
-import { htmlToText } from '@/lib/html';
 import { useDivision, useUpcomingEvents } from '@/lib/queries';
 
 export default function DivisionDetailScreen() {
@@ -32,7 +33,7 @@ export default function DivisionDetailScreen() {
   }
 
   const d = division.data;
-  const about = htmlToText(d.cms?.content);
+  const about = d.cms?.content?.trim();
   const open = (url: string) => WebBrowser.openBrowserAsync(url);
 
   const quickLinks = [
@@ -48,7 +49,7 @@ export default function DivisionDetailScreen() {
         {d.logo ? (
           <Image source={{ uri: d.logo }} style={styles.heroLogo} contentFit="contain" />
         ) : (
-          <Ionicons name="flag" size={44} color={D14Colors.red} />
+          <DivisionIcon name={d.name} size={44} />
         )}
         <Text style={styles.heroTitle}>{d.name}</Text>
         <Text style={styles.heroSub}>AMA District 14</Text>
@@ -85,9 +86,7 @@ export default function DivisionDetailScreen() {
 
       {about ? (
         <Widget header="About">
-          <Text style={styles.about} numberOfLines={12}>
-            {about}
-          </Text>
+          <HtmlContent html={about} />
         </Widget>
       ) : null}
 
@@ -149,7 +148,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   quickLabel: { color: D14Colors.white, fontSize: 12, fontWeight: '600' },
-  about: { color: D14Colors.white, fontSize: 13, lineHeight: 20 },
   emptyText: { color: D14Colors.textSecondary, paddingVertical: Spacing.two },
   ruleRow: {
     flexDirection: 'row',

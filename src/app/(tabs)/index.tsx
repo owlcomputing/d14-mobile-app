@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
@@ -91,6 +92,24 @@ export default function HomeScreen() {
           </Pressable>
         </Widget>
 
+        {/* Podcast */}
+        <Widget header="The Dirtbike Download">
+          <View style={styles.podcastRow}>
+            <View style={styles.podcastIcon}>
+              <Ionicons name="mic" size={24} color={D14Colors.red} />
+            </View>
+            <Text style={styles.podcastText}>
+              The official D14 podcast — riders, race recaps, and district news. Listen or watch
+              right in the app.
+            </Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.podcastButton, pressed && { opacity: 0.85 }]}
+            onPress={() => router.push('/media')}>
+            <Text style={styles.podcastButtonText}>Listen &amp; Watch</Text>
+          </Pressable>
+        </Widget>
+
         {/* Divisions grid */}
         <Widget header="Divisions">
           <View style={styles.divisionGrid}>
@@ -100,11 +119,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [styles.divisionItem, pressed && { opacity: 0.7 }]}
                 onPress={() => router.push(`/division/${d.id}`)}>
                 <View style={styles.divisionCircle}>
-                  {d.logo ? (
-                    <Image source={{ uri: d.logo }} style={styles.divisionLogo} contentFit="contain" />
-                  ) : (
-                    <Ionicons name="flag" size={22} color={D14Colors.red} />
-                  )}
+                  <DivisionIcon name={d.name} size={26} />
                 </View>
                 <Text style={styles.divisionLabel} numberOfLines={2}>
                   {d.name}
@@ -147,7 +162,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
-  divisionLogo: { width: 40, height: 40, borderRadius: Radius.md },
+  podcastRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  podcastIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: D14Colors.surfaceRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  podcastText: { flex: 1, color: D14Colors.textSecondary, fontSize: 12, lineHeight: 18 },
+  podcastButton: {
+    backgroundColor: D14Colors.red,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: Spacing.three,
+  },
+  podcastButtonText: { color: D14Colors.white, fontSize: 13, fontWeight: '700' },
   divisionLabel: {
     color: D14Colors.textSecondary,
     fontSize: 10,

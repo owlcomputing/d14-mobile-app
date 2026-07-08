@@ -99,10 +99,10 @@ export default function ProfileScreen() {
             onPress={() => router.push('/notification-settings')}
           />
           <MenuRow
-            icon="book"
-            label="D14 Magazine"
-            hint="Browse district magazine issues"
-            onPress={() => router.push('/magazine')}
+            icon="mic"
+            label="Podcast & Media"
+            hint="The Dirtbike Download and magazine archive"
+            onPress={() => router.push('/media')}
           />
           <View style={[styles.row]}>
             <View style={styles.menuIcon}>
