@@ -19,8 +19,17 @@ import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
 
-function openDirections(locationName: string | null, address: string | null) {
-  const query = encodeURIComponent([locationName, address].filter(Boolean).join(', '));
+function openDirections(
+  locationName: string | null,
+  address: string | null,
+  latitude: number | null,
+  longitude: number | null,
+) {
+  // Exact coordinates (from the website's Places autocomplete) beat a text search
+  const query =
+    latitude != null && longitude != null
+      ? `${latitude},${longitude}`
+      : encodeURIComponent([locationName, address].filter(Boolean).join(', '));
   Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
 }
 
@@ -153,7 +162,7 @@ export default function EventDetailScreen() {
               styles.directionsButton,
               pressed && { opacity: 0.85 },
             ]}
-            onPress={() => openDirections(e.location_name, e.address)}>
+            onPress={() => openDirections(e.location_name, e.address, e.latitude, e.longitude)}>
             <Ionicons name="navigate" size={16} color={D14Colors.white} />
             <Text style={styles.calendarButtonText}>Directions</Text>
           </Pressable>
