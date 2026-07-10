@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -13,6 +13,7 @@ import { useDivision, useUpcomingEvents } from '@/lib/queries';
 
 export default function DivisionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const divisionId = Number(id);
   const division = useDivision(divisionId);
   const events = useUpcomingEvents(5, divisionId);
@@ -44,14 +45,27 @@ export default function DivisionDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Division hero */}
+      {/* Division hero — main_img as background, logo in place of the title */}
       <View style={styles.hero}>
+        {d.main_img ? (
+          <>
+            <Image source={{ uri: d.main_img }} style={styles.heroBackground} contentFit="cover" />
+            <View style={styles.heroOverlay} />
+          </>
+        ) : null}
         {d.logo ? (
-          <Image source={{ uri: d.logo }} style={styles.heroLogo} contentFit="contain" />
+          <Image
+            source={{ uri: d.logo }}
+            style={styles.heroLogo}
+            contentFit="contain"
+            accessibilityLabel={d.name ?? 'Division logo'}
+          />
         ) : (
-          <DivisionIcon name={d.name} size={44} />
+          <>
+            <DivisionIcon name={d.name} size={44} />
+            <Text style={styles.heroTitle}>{d.name}</Text>
+          </>
         )}
-        <Text style={styles.heroTitle}>{d.name}</Text>
         <Text style={styles.heroSub}>AMA District 14</Text>
         {d.cms?.facebook || d.cms?.instagram ? (
           <View style={styles.socialRow}>
@@ -105,12 +119,18 @@ export default function DivisionDetailScreen() {
       {d.rules.length ? (
         <Widget header="Rules">
           {d.rules.map((r, i) => (
-            <View
+            <Pressable
               key={r.id}
-              style={[styles.ruleRow, i < d.rules.length - 1 && styles.ruleRowBorder]}>
+              style={({ pressed }) => [
+                styles.ruleRow,
+                i < d.rules.length - 1 && styles.ruleRowBorder,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => router.push(`/rules/${r.id}`)}>
               <Ionicons name="document-text" size={15} color={D14Colors.textTertiary} />
               <Text style={styles.ruleName}>{r.name ?? 'Rules document'}</Text>
-            </View>
+              <Text style={styles.ruleChevron}>›</Text>
+            </Pressable>
           ))}
         </Widget>
       ) : null}
@@ -133,8 +153,24 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.four,
     marginBottom: Spacing.three,
+    overflow: 'hidden',
   },
-  heroLogo: { width: 96, height: 96 },
+  heroBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(10,10,10,0.72)',
+  },
+  heroLogo: { width: 240, height: 96, borderRadius: Radius.sm },
   heroTitle: { color: D14Colors.white, fontSize: 22, fontWeight: '800', marginTop: Spacing.two },
   heroSub: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
   socialRow: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.three },
@@ -156,5 +192,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   ruleRowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
-  ruleName: { color: D14Colors.white, fontSize: 13 },
+  ruleName: { color: D14Colors.white, fontSize: 13, flex: 1 },
+  ruleChevron: { color: D14Colors.textTertiary, fontSize: 18, fontWeight: '300' },
 });

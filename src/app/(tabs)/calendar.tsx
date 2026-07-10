@@ -18,16 +18,29 @@ export default function CalendarScreen() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [divisionId, setDivisionId] = useState<number | undefined>(undefined);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const events = useEventsForMonth(year, month, divisionId);
   const divisions = useDivisions();
 
   const prevMonth = () => {
+    setSelectedDay(null);
     if (month === 0) { setMonth(11); setYear(year - 1); } else setMonth(month - 1);
   };
   const nextMonth = () => {
+    setSelectedDay(null);
     if (month === 11) { setMonth(0); setYear(year + 1); } else setMonth(month + 1);
   };
+
+  const isoForDay = (day: number) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  // Filter to events overlapping the selected day (handles multi-day ranges)
+  const visibleEvents = (events.data ?? []).filter((e) => {
+    if (selectedDay === null) return true;
+    const iso = isoForDay(selectedDay);
+    return iso >= e.date.slice(0, 10) && iso <= (e.end_date ?? e.date).slice(0, 10);
+  });
 
   // Days of this month that have at least one event (handles multi-day ranges)
   const eventDays = useMemo(() => {
@@ -75,7 +88,15 @@ export default function CalendarScreen() {
               </Text>
             ))}
             {cells.map((day, i) => (
-              <View key={i} style={[styles.dayCell, day === today && styles.todayCell]}>
+              <Pressable
+                key={i}
+                disabled={!day}
+                onPress={() => day && setSelectedDay(selectedDay === day ? null : day)}
+                style={[
+                  styles.dayCell,
+                  day === today && styles.todayCell,
+                  day != null && day === selectedDay && styles.selectedCell,
+                ]}>
                 <Text
                   style={[
                     styles.dayText,
@@ -84,7 +105,7 @@ export default function CalendarScreen() {
                   {day ?? ''}
                 </Text>
                 {day && eventDays.has(day) ? <View style={styles.eventDot} /> : null}
-              </View>
+              </Pressable>
             ))}
           </View>
         </Widget>
@@ -102,9 +123,14 @@ export default function CalendarScreen() {
           ))}
         </ScrollView>
 
-        <Widget header={`Events in ${MONTH_NAMES[month]}`}>
-          {events.data?.length ? (
-            events.data.map((e) => (
+        <Widget
+          header={
+            selectedDay !== null
+              ? `Events on ${MONTH_NAMES[month]} ${selectedDay}`
+              : `Events in ${MONTH_NAMES[month]}`
+          }>
+          {visibleEvents.length ? (
+            visibleEvents.map((e) => (
               <EventRow
                 key={e.id}
                 id={e.id}
@@ -117,9 +143,18 @@ export default function CalendarScreen() {
             ))
           ) : (
             <Text style={styles.empty}>
-              {events.isLoading ? 'Loading…' : 'No events this month'}
+              {events.isLoading
+                ? 'Loading…'
+                : selectedDay !== null
+                  ? 'No events on this day'
+                  : 'No events this month'}
             </Text>
           )}
+          {selectedDay !== null ? (
+            <Pressable onPress={() => setSelectedDay(null)} hitSlop={8}>
+              <Text style={styles.clearFilter}>Show all of {MONTH_NAMES[month]} ›</Text>
+            </Pressable>
+          ) : null}
         </Widget>
       </ScrollView>
     </SafeAreaView>
@@ -170,7 +205,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   todayCell: { backgroundColor: D14Colors.red },
+  selectedCell: {
+    borderWidth: 1.5,
+    borderColor: D14Colors.red,
+    backgroundColor: D14Colors.surfaceRaised,
+  },
   dayText: { color: D14Colors.white, fontSize: 13 },
+  clearFilter: {
+    color: D14Colors.red,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: Spacing.two,
+  },
   todayText: { fontWeight: '800' },
   eventDot: {
     width: 4,

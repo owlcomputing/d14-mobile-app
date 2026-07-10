@@ -91,6 +91,10 @@ function RootNavigator() {
           name="media"
           options={{ headerShown: true, title: 'Podcast & Media', headerBackTitle: 'Back' }}
         />
+        <Stack.Screen
+          name="rules/[id]"
+          options={{ headerShown: true, title: 'Rules', headerBackTitle: 'Back' }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" />
