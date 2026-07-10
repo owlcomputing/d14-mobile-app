@@ -9,11 +9,12 @@ type EventRowProps = {
   date: string;
   endDate?: string | null;
   divisionName?: string | null;
+  locationName?: string | null;
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function EventRow({ id, name, date, endDate, divisionName }: EventRowProps) {
+export function EventRow({ id, name, date, endDate, divisionName, locationName }: EventRowProps) {
   const router = useRouter();
   // Dates are date-only strings; avoid timezone shifts from Date parsing
   const [, monthStr, dayStr] = date.slice(0, 10).split('-');
@@ -36,7 +37,11 @@ export function EventRow({ id, name, date, endDate, divisionName }: EventRowProp
         <Text style={styles.name} numberOfLines={1}>
           {name ?? 'Event'}
         </Text>
-        {divisionName ? <Text style={styles.meta}>{divisionName}</Text> : null}
+        {divisionName || locationName ? (
+          <Text style={styles.meta} numberOfLines={1}>
+            {[divisionName, locationName].filter(Boolean).join(' • ')}
+          </Text>
+        ) : null}
       </View>
       <Text style={styles.chevron}>›</Text>
     </Pressable>

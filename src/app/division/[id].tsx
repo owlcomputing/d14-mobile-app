@@ -93,7 +93,7 @@ export default function DivisionDetailScreen() {
       <Widget header="Upcoming Events">
         {events.data?.length ? (
           events.data.map((e) => (
-            <EventRow key={e.id} id={e.id} name={e.name} date={e.date} endDate={e.end_date} />
+            <EventRow key={e.id} id={e.id} name={e.name} date={e.date} endDate={e.end_date} locationName={e.location_name} />
           ))
         ) : (
           <Text style={styles.emptyText}>

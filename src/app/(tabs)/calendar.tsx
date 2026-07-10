@@ -112,6 +112,7 @@ export default function CalendarScreen() {
                 date={e.date}
                 endDate={e.end_date}
                 divisionName={e.divisions?.name}
+                locationName={e.location_name}
               />
             ))
           ) : (

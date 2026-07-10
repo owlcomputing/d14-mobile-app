@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -18,7 +19,18 @@ import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
 
-async function addToCalendar(name: string, date: string, endDate: string | null, notes: string) {
+function openDirections(locationName: string | null, address: string | null) {
+  const query = encodeURIComponent([locationName, address].filter(Boolean).join(', '));
+  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+}
+
+async function addToCalendar(
+  name: string,
+  date: string,
+  endDate: string | null,
+  notes: string,
+  location?: string,
+) {
   try {
     const { status } = await Calendar.requestCalendarPermissionsAsync();
     if (status !== 'granted') {
@@ -50,6 +62,7 @@ async function addToCalendar(name: string, date: string, endDate: string | null,
       endDate: end,
       allDay: true,
       notes,
+      location,
     });
     Alert.alert('Added', `"${name}" was added to your calendar.`);
   } catch (error) {
@@ -109,15 +122,43 @@ export default function EventDetailScreen() {
           <Text style={[styles.metaText, styles.linkText]}>{e.divisions.name}</Text>
         </Pressable>
       ) : null}
+      {e.location_name || e.address ? (
+        <View style={styles.metaRow}>
+          <Ionicons name="location" size={15} color={D14Colors.red} />
+          <Text style={styles.metaText}>
+            {[e.location_name, e.address].filter(Boolean).join(' • ')}
+          </Text>
+        </View>
+      ) : null}
 
-      <Pressable
-        style={({ pressed }) => [styles.calendarButton, pressed && { opacity: 0.85 }]}
-        onPress={() =>
-          addToCalendar(e.name ?? 'D14 Event', e.date, e.end_date, description.slice(0, 500))
-        }>
-        <Ionicons name="calendar" size={16} color={D14Colors.white} />
-        <Text style={styles.calendarButtonText}>Add to Calendar</Text>
-      </Pressable>
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={({ pressed }) => [styles.calendarButton, pressed && { opacity: 0.85 }]}
+          onPress={() =>
+            addToCalendar(
+              e.name ?? 'D14 Event',
+              e.date,
+              e.end_date,
+              description.slice(0, 500),
+              [e.location_name, e.address].filter(Boolean).join(', ') || undefined,
+            )
+          }>
+          <Ionicons name="calendar" size={16} color={D14Colors.white} />
+          <Text style={styles.calendarButtonText}>Add to Calendar</Text>
+        </Pressable>
+        {e.location_name || e.address ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.calendarButton,
+              styles.directionsButton,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => openDirections(e.location_name, e.address)}>
+            <Ionicons name="navigate" size={16} color={D14Colors.white} />
+            <Text style={styles.calendarButtonText}>Directions</Text>
+          </Pressable>
+        ) : null}
+      </View>
 
       {description ? (
         <Widget header="Details" style={{ marginTop: Spacing.three }}>
@@ -147,7 +188,9 @@ const styles = StyleSheet.create({
   },
   metaText: { color: D14Colors.textSecondary, fontSize: 14 },
   linkText: { color: D14Colors.red, fontWeight: '600' },
+  buttonRow: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.three },
   calendarButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,7 +198,11 @@ const styles = StyleSheet.create({
     backgroundColor: D14Colors.red,
     borderRadius: Radius.md,
     paddingVertical: 13,
-    marginTop: Spacing.three,
+  },
+  directionsButton: {
+    backgroundColor: D14Colors.surface,
+    borderWidth: 1,
+    borderColor: D14Colors.border,
   },
   calendarButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
   description: { color: D14Colors.white, fontSize: 14, lineHeight: 22 },

@@ -185,6 +185,7 @@ export type Database = {
           id: number
           latitude: number | null
           link: Json | null
+          location_name: string | null
           longitude: number | null
           name: string | null
         }
@@ -197,6 +198,7 @@ export type Database = {
           id?: number
           latitude?: number | null
           link?: Json | null
+          location_name?: string | null
           longitude?: number | null
           name?: string | null
         }
@@ -209,6 +211,7 @@ export type Database = {
           id?: number
           latitude?: number | null
           link?: Json | null
+          location_name?: string | null
           longitude?: number | null
           name?: string | null
         }
