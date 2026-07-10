@@ -18,7 +18,14 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://qxoroicvatularpyltbx.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4b3JvaWN2YXR1bGFycHlsdGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIwMjQzNzIsImV4cCI6MjA0NzYwMDM3Mn0.0E6mDKLTWsbpy_SNpEbnTznmQ-9xUenh1JEtVoZgSOg",
+        "EXPO_PUBLIC_STRIPE_PRICE_DEFAULT": "price_1QO00CDggUXjcA6Lj1fUjKCZ",
+        "EXPO_PUBLIC_STRIPE_PRICE_CHARTER": "price_1QNzy8DggUXjcA6LeGVegs6m",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://ama-d14.org"
+      }
     }
   },
   "submit": {
