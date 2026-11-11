@@ -1,0 +1,82 @@
+AMA District 14 Board Meeting (Google Meet) - September 16, 2026
+Mobile app excerpts only
+
+This is an excerpt of the auto-generated meeting transcript, keeping only the
+portions that discuss the D14 mobile app. All other agenda items were removed.
+Timestamps are from the original recording. "[...]" marks removed content.
+Speaker labels come from the transcription tool and are sometimes misattributed.
+
+Resulting action items are tracked in /TODO.md.
+
+---
+
+[...]
+
+5:31 - VicePresident D14
+  So the second one on that was add AMA minor release upload to the app.  Have we got that, Dan? What is that? That's an agenda item? It was an action item from the last meeting about adding the minor release upload to app spec.  Uh-oh. Yeah, so remember we were talking about having embedded in the app the AMA minor release and our AMA card proper as wallet items in there or being able to dock inside there?
+
+6:15 - Adam Alexander
+  Like you can upload a picture of your minor release and stuff? Yes. Okay. Yeah, I mean, we can do the wallet functionality.  Yeah.
+
+6:23 - VicePresident D14
+  Yeah, that's going to be in there. It's not finished yet. Yeah, mean, having access to the AMA system is probably not going to happen.  Right. Right. We just want to be able to upload pictures, right? Yeah.
+
+6:34 - Adam Alexander
+  Yeah. You should be able to save anything. Yeah, we'll make it so you can save anything on there and then it'll be available offline.  Yes, that's exactly what we talked about. But we, go ahead, James, sorry. No, I would just agree. Yeah, I would say leave that on there as an action item because the app isn't launched yet.  So let's just leave that on there and then we'll clear that off once.
+
+7:00 - Dan Stephens (OWL Computing)
+  The app launched here probably in a month or so. I will say that Adam and I have played with it, and it's good.
+
+7:07 - Adam Alexander
+  Right. Yeah. Have you implemented the not joining in the newest builds so you don't have to join to use the app?
+
+7:17 - Dan Stephens (OWL Computing)
+  Yeah, so it's going to be, yeah, public, essentially, so you don't have to sign into it or whatever.
+
+7:24 - Adam Alexander
+  Yes. But to use some of that functionality, it will require a sign-in, obviously. Right, right, always. But you'd like to be able to explore all the divisions and everything like that, and that was my biggest complaint, is we had to sign in before you can do anything, and we want to have limited functionality, you know, for the public.  Yep.
+
+7:47 - Dan Stephens (OWL Computing)
+  So anybody can go in there, look at our schedule, look at who we are in the divisions, but if you want to get much deeper than that.  Yeah, I think the intention will be, I mean, I think.
+
+8:00 - Adam Alexander
+  We can definitely have things, you know, mostly public, at least everything that's public on the website currently, right? Right.
+
+8:05 - Dan Stephens (OWL Computing)
+  But I think we want to try to get people's information as well so that we could potentially send emails to them, you know, reminders of events or whatever it might be.  That might be something we can do with a pop-up too, right, Dan?
+
+8:20 - Adam Alexander
+  Yeah, we could do a pop-up or just have, like, all the actions, you know, twice throughout the content, try to get people to sign up for, like, email notifications and things like that.
+
+8:32 - Dan Stephens (OWL Computing)
+  Right. I just don't want to see everybody have to be a member to get into everything because if we can, you know, scoot them along to selling them a membership by the value we provide, that's what we want.
+
+8:46 - Adam Alexander
+  Agreed. All right. So the next item on there from last meeting was that, you know, pay the app deposit and then arrange 50% of completion.
+
+8:56 - VicePresident D14
+  We paid the deposit, correct, Ally? Sorry. Yeah. Okay. I also don't know. Yeah. Yeah. Oh, you know. Yeah. Schedule app liaison meetings.  I know we haven't, I don't think we've had any app liaison meetings, but Dan's been sending stuff back and forth with Adam and I.  We've got links to it and worked on it. So that's not really something we have to talk about or mess with right now.
+
+[...]
+
+13:52 - VicePresident D14
+  Unfinished business was just mobile app update.  Dan, want to give everybody just a broad spectrum update on how the app is going, the development? Yeah, so we kind of touched on it a little bit there, but got a large portion of it completed.
+
+14:15 - Dan Stephens (OWL Computing)
+  So like I said, you guys have given me some feedback. I have a couple things to implement yet from that.  I think our target date was originally somewhere in October, and that should not be a problem to get everything completed by then.  Hopefully live on the app stores and everything. Everything is deployable on Android devices right now. have to make a flight update to make it available on iPhone.  Of course, iPhone is even a bit more of pain to work with, but it's going to be the same now.  I want it to work perfect for my new iPhone Duo. I don't even know what that is. We don't mess with iPhones around here, Adam.  Dan and I are Android until we die. I'm sorry, don't speak, bro.
+
+15:00 - Adam Alexander
+  Okay. So, yeah, no, everything's going really good, though.
+
+15:09 - Dan Stephens (OWL Computing)
+  So, yeah, we'll probably release a new version to you guys that have seen it already and get some more feedback, do another round of feedback, and then it'll be going live shortly after.
+
+15:23 - Steve Baginski
+  Sweet.
+
+[...]
+
+35:14 - Secretary D14
+  I'm looking forward to the rollout of the new app and how that's going to change the interaction between the riders and their membership login processes.
+
+[...]
