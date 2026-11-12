@@ -3,12 +3,58 @@ import { useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SignInPrompt } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useAppLock } from '@/providers/app-lock-provider';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function ProfileScreen() {
+  const { session } = useAuth();
+  if (!session) return <GuestProfile />;
+  return <MemberProfile />;
+}
+
+function GuestProfile() {
+  const router = useRouter();
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <View style={[styles.avatar, styles.guestAvatar]}>
+            <Ionicons name="person" size={30} color={D14Colors.textSecondary} />
+          </View>
+          <Text style={styles.name}>Guest</Text>
+          <Text style={styles.meta}>Browsing AMA District 14</Text>
+        </View>
+
+        <SignInPrompt
+          icon="person-circle"
+          title="Sign in to your account"
+          message="Members can manage their profile and family, renew their membership, and choose which divisions send them notifications."
+        />
+
+        <Widget header="Explore">
+          <MenuRow
+            icon="mic"
+            label="Podcast & Media"
+            hint="The Dirtbike Download and magazine archive"
+            onPress={() => router.push('/media')}
+          />
+          <MenuRow
+            icon="people"
+            label="District Contacts"
+            hint="Officers and division contacts"
+            onPress={() => router.push('/contacts')}
+            last
+          />
+        </Widget>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function MemberProfile() {
   const router = useRouter();
   const { profile, signOut, isAdmin, isChairman } = useAuth();
   const appLock = useAppLock();
@@ -188,6 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
   },
   avatarText: { color: D14Colors.white, fontSize: 26, fontWeight: '800' },
+  guestAvatar: { backgroundColor: D14Colors.surfaceRaised },
   name: { color: D14Colors.white, fontSize: 20, fontWeight: '700' },
   meta: { color: D14Colors.textSecondary, fontSize: 13, marginTop: 2 },
   roleBadge: {

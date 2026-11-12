@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SignInPrompt } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useFamilyMembers } from '@/lib/queries';
@@ -18,6 +19,28 @@ function formatDate(iso: string | null | undefined) {
 }
 
 export default function WalletScreen() {
+  const { session } = useAuth();
+  if (!session) return <GuestWallet />;
+  return <MemberWallet />;
+}
+
+function GuestWallet() {
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Membership Card</Text>
+        <Text style={styles.subtitle}>Your digital D14 card lives here</Text>
+        <SignInPrompt
+          icon="card"
+          title="Sign in to see your card"
+          message="Members can show their D14 membership card and QR code at the gate, right from their phone. Not a member yet? Join on the D14 website."
+        />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function MemberWallet() {
   const router = useRouter();
   const { profile, membership } = useAuth();
   const family = useFamilyMembers(profile?.id);

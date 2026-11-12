@@ -26,7 +26,7 @@ function membershipStatus(expiration: string | undefined) {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile, membership } = useAuth();
+  const { session, profile, membership } = useAuth();
   const events = useUpcomingEvents(3);
   const divisions = useDivisions();
   const status = membershipStatus(membership?.expiration);
@@ -52,22 +52,40 @@ export default function HomeScreen() {
           />
         </View>
         <Text style={styles.greeting}>
-          Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
+          {session
+            ? `Welcome back${profile?.first_name ? `, ${profile.first_name}` : ''}`
+            : 'Welcome to District 14'}
         </Text>
 
-        {/* Membership card teaser */}
-        <Pressable onPress={() => router.push('/wallet')}>
-          <Widget variant="red" style={styles.cardTeaser}>
-            <Ionicons name="card" size={28} color={D14Colors.white} />
-            <View style={styles.cardTeaserText}>
-              <Text style={styles.cardTeaserTitle}>Membership Card</Text>
-              <Text style={styles.cardTeaserSub}>
-                {status.active ? `Tap to open wallet • ${status.label}` : status.label}
-              </Text>
-            </View>
-            <Text style={styles.cardTeaserChevron}>›</Text>
-          </Widget>
-        </Pressable>
+        {session ? (
+          /* Membership card teaser */
+          <Pressable onPress={() => router.push('/wallet')}>
+            <Widget variant="red" style={styles.cardTeaser}>
+              <Ionicons name="card" size={28} color={D14Colors.white} />
+              <View style={styles.cardTeaserText}>
+                <Text style={styles.cardTeaserTitle}>Membership Card</Text>
+                <Text style={styles.cardTeaserSub}>
+                  {status.active ? `Tap to open wallet • ${status.label}` : status.label}
+                </Text>
+              </View>
+              <Text style={styles.cardTeaserChevron}>›</Text>
+            </Widget>
+          </Pressable>
+        ) : (
+          /* Guest: invite to sign in or join */
+          <Pressable onPress={() => router.push('/login')}>
+            <Widget variant="red" style={styles.cardTeaser}>
+              <Ionicons name="person-add" size={26} color={D14Colors.white} />
+              <View style={styles.cardTeaserText}>
+                <Text style={styles.cardTeaserTitle}>Join AMA District 14</Text>
+                <Text style={styles.cardTeaserSub}>
+                  Members: sign in for your card • New riders: become a member
+                </Text>
+              </View>
+              <Text style={styles.cardTeaserChevron}>›</Text>
+            </Widget>
+          </Pressable>
+        )}
 
         {/* Upcoming events */}
         <Widget header="Upcoming Events">

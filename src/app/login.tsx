@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import * as WebBrowser from 'expo-web-browser';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,11 +14,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { openMembershipSignup } from '@/components/sign-in-prompt';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { signIn } = useAuth();
+  // Guests can browse without signing in, so this sheet is always dismissible.
+  const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +39,14 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <Pressable
+        style={styles.close}
+        onPress={close}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Close sign in">
+        <Ionicons name="close" size={26} color={D14Colors.textSecondary} />
+      </Pressable>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -83,16 +96,15 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          <Pressable
-            onPress={() =>
-              WebBrowser.openBrowserAsync(
-                process.env.EXPO_PUBLIC_WEBSITE_URL ?? 'https://ama-d14.org',
-              )
-            }>
+          <Pressable onPress={openMembershipSignup}>
             <Text style={styles.hint}>
               New to District 14? Tap here to sign up for a membership on the D14 website — in-app
               signup is coming soon.
             </Text>
+          </Pressable>
+
+          <Pressable onPress={close} style={styles.guestLink}>
+            <Text style={styles.guestLinkText}>Continue browsing as a guest</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -102,6 +114,9 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: D14Colors.black },
+  close: { position: 'absolute', top: Spacing.five, right: Spacing.four, zIndex: 1 },
+  guestLink: { alignItems: 'center', paddingVertical: Spacing.two },
+  guestLinkText: { color: D14Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   container: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   header: { alignItems: 'center', marginBottom: Spacing.five },
   logo: { width: 260, height: 91 },

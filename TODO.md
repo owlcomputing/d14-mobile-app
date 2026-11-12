@@ -12,10 +12,11 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - No AMA system integration. The board agreed that's not happening; it's just an upload/photo.
   - Board is keeping this as an open action item until the app launches.
 
-- [ ] **Public / guest browsing — no sign-in required** (~7:07–8:00)
-  - Anyone can open the app and explore without an account: schedule/calendar, events, divisions, and at least everything that's public on the website today.
-  - Sign-in only gates member features (wallet, profile, renewal, notifications settings, admin tools, etc.).
-  - Currently the whole app is behind `Stack.Protected guard={!!session}` in [src/app/_layout.tsx](src/app/_layout.tsx).
+- [x] **Public / guest browsing — no sign-in required** (~7:07–8:00). Done 2026-11-12.
+  - Guests can open home, calendar, events, divisions, rules, contacts and podcast/media. Wallet and Profile tabs show a sign-in / become-a-member prompt ([sign-in-prompt.tsx](src/components/sign-in-prompt.tsx)).
+  - Member-only screens (renew, edit profile, lookup, scanner, notification settings, send notification) stay behind `Stack.Protected`; a guest deep link to one lands on the tabs.
+  - Login is a dismissible sheet ("Continue browsing as a guest"); signing in closes it and returns to where the user was.
+  - Still to check on a real Android/iOS device: login sheet presentation and the sign-out confirm (verified on web only).
 
 - [ ] **Capture guest contact info / sign-up prompts** (~8:05–8:32)
   - Get people's info so we can send email reminders about events, etc.
