@@ -44,16 +44,17 @@ export function SignInPrompt({ icon, title, message, variant = 'guest' }: SignIn
             onPress={() => router.push('/login')}>
             <Text style={styles.primaryText}>Sign In</Text>
           </Pressable>
+          {/* Joining needs an account first: free sign-up, then "Become a member" in the app */}
           <Pressable
             style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.7 }]}
-            onPress={openMembershipSignup}>
+            onPress={() => router.push('/signup')}>
             <Text style={styles.secondaryText}>Become a Member</Text>
           </Pressable>
         </>
       ) : (
         <Pressable
           style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
-          onPress={openMembershipSignup}>
+          onPress={() => router.push('/join')}>
           <Text style={styles.primaryText}>Become a Member</Text>
         </Pressable>
       )}

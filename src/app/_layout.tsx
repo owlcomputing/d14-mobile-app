@@ -102,6 +102,10 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Scan QR Code', headerBackTitle: 'Back' }}
         />
         <Stack.Screen
+          name="join"
+          options={{ headerShown: true, title: 'Become a Member', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
           name="document/new"
           options={{
             headerShown: true,

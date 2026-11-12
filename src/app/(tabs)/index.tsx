@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
-import { openMembershipSignup } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useUpcomingEvents } from '@/lib/queries';
@@ -60,13 +59,13 @@ export default function HomeScreen() {
 
         {session && profileReady && !isMember ? (
           /* Prospect: signed up for reminders, not a member yet */
-          <Pressable onPress={openMembershipSignup}>
+          <Pressable onPress={() => router.push('/join')}>
             <Widget variant="red" style={styles.cardTeaser}>
               <Ionicons name="ribbon" size={26} color={D14Colors.white} />
               <View style={styles.cardTeaserText}>
                 <Text style={styles.cardTeaserTitle}>Become a D14 member</Text>
                 <Text style={styles.cardTeaserSub}>
-                  Get your digital membership card • join on the D14 website
+                  Join in the app • get your digital membership card
                 </Text>
               </View>
               <Text style={styles.cardTeaserChevron}>›</Text>

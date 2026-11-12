@@ -24,6 +24,14 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 - [ ] **Capture guest contact info / sign-up prompts** (~8:05–8:32). Built on staging 2026-11-12 as "Get race reminders" (see Prospects under Push notifications); needs device testing, then prod.
   - Calls to action: Home card for guests, event pages, login screen. Prospects see "Become a D14 member" on Home, Wallet and Profile.
 
+- [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
+  - "Become a Member" ([join.tsx](src/app/join.tsx)) for signed-in non-members: who's joining (just me / me + family / family only) → details → family members → review → Stripe hosted checkout → membership active, Wallet unlocks. Guests create a free account first.
+  - Same data as the website's form ([new-membership.ts](src/lib/new-membership.ts)): stages `temp_membership_form_data`, creates family accounts through `createUser` (now with random passwords instead of `password`), and uses the website's `create-checkout-session` / `fulfill-checkout` unchanged. Checkout shared with renewals ([checkout.ts](src/lib/checkout.ts)).
+  - Charter (club) memberships stay on the website.
+  - Tested on staging up to the Stripe page (test mode, 2 × $15 = $30 for parent + child; staged data matches the website's format), closed unpaid. Not tested: a completed payment. Fulfillment emails "New Membership Signup" to the real secretary@ama-d14.org even from staging, so warn them first.
+  - [ ] Test on device: pay with Stripe test card 4242 4242 4242 4242 (any future date / CVC / ZIP), confirm the Wallet card appears.
+  - [ ] Prod: needs the `create-checkout-session` `uiMode: 'hosted'` change deployed to prod (see migration checklist), same as renewals.
+
 ### Release
 
 - [ ] Ship a new build to the board testers (Adam, James, etc.) for another feedback round, then go live shortly after (~15:09)

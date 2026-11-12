@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { openMembershipSignup } from '@/components/sign-in-prompt';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import {
   EMAIL_CONSENT_TEXT,
@@ -211,9 +210,10 @@ export default function SignupScreen() {
                 We&apos;ll email you a 6-digit code to confirm your address. You can change these
                 choices or delete your account anytime in Profile.
               </Text>
-              <Pressable onPress={openMembershipSignup} style={styles.linkRow}>
-                <Text style={styles.link}>Want a full D14 membership instead? Join on the website</Text>
-              </Pressable>
+              <Text style={styles.fine}>
+                Want a full D14 membership? Create your free account here first, then tap
+                &quot;Become a member&quot; to join in the app.
+              </Text>
             </>
           ) : (
             <>

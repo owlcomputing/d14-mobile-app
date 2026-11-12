@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,11 +13,10 @@ import {
 
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { runHostedCheckout } from '@/lib/checkout';
 import { useFamilyMembers } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
-
-const CHECKOUT_RETURN_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/checkout-return?session_id={CHECKOUT_SESSION_ID}`;
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return 'No membership';
@@ -70,60 +68,30 @@ export default function RenewScreen() {
           ? process.env.EXPO_PUBLIC_STRIPE_PRICE_CHARTER
           : process.env.EXPO_PUBLIC_STRIPE_PRICE_DEFAULT;
 
-      const { data: checkout, error: sessionError } = await supabase.functions.invoke(
-        'create-checkout-session',
+      const outcome = await runHostedCheckout(
         {
-          body: {
-            priceId,
-            recurring: false,
-            user_id: profile.id,
-            renewal: true,
-            uiMode: 'hosted',
-            returnUrl: CHECKOUT_RETURN_URL,
-            customerEmail: profile.email ?? undefined,
-          },
+          priceId,
+          user_id: profile.id,
+          renewal: true,
+          customerEmail: profile.email ?? undefined,
         },
+        setWorking,
       );
-      if (sessionError || !checkout?.url) {
-        throw new Error(sessionError?.message ?? 'Could not start checkout');
-      }
 
-      // Open Stripe's hosted checkout in a browser. We already know the
-      // session id from create-checkout-session, so we don't depend on the
-      // deep-link redirect (Android blocks automatic custom-scheme redirects)
-      // — when the browser closes, for any reason, we verify with Stripe.
-      setWorking('Waiting for payment…');
-      const result = await WebBrowser.openAuthSessionAsync(checkout.url, 'd14://checkout-complete');
-      const deepLinked = result.type === 'success';
-
-      setWorking('Confirming payment…');
-      const { data: fulfillment, error: fulfillError } = await supabase.functions.invoke(
-        'fulfill-checkout',
-        { body: { session_id: checkout.id } },
-      );
-      if (fulfillError) throw new Error(fulfillError.message);
-
-      if (fulfillment.status === 'fulfilled' || fulfillment.status === 'already_fulfilled') {
+      if (outcome === 'paid') {
         await refreshProfile();
         Alert.alert('Membership Renewed!', 'Your membership has been extended for another year.', [
           { text: 'OK', onPress: () => router.back() },
         ]);
-      } else if (fulfillment.status === 'pending') {
-        if (deepLinked) {
-          // Came back via the post-payment page but Stripe still shows the
-          // payment settling (e.g. bank-based methods)
-          Alert.alert(
-            'Payment Processing',
-            'Your payment is still processing. Your membership will update automatically once it completes.',
-            [{ text: 'OK', onPress: () => router.back() }],
-          );
-        } else {
-          // Browser dismissed without completing checkout — card payments
-          // settle instantly, so this means no payment was made
-          Alert.alert('Checkout Not Completed', 'No payment was made. You can try again anytime.');
-        }
+      } else if (outcome === 'processing') {
+        // Back from the post-payment page, but the payment is still settling
+        Alert.alert(
+          'Payment Processing',
+          'Your payment is still processing. Your membership will update automatically once it completes.',
+          [{ text: 'OK', onPress: () => router.back() }],
+        );
       } else {
-        throw new Error(fulfillment.message ?? 'Fulfillment failed');
+        Alert.alert('Checkout Not Completed', 'No payment was made. You can try again anytime.');
       }
     } catch (error) {
       Alert.alert('Renewal failed', error instanceof Error ? error.message : String(error));
