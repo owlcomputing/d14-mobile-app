@@ -44,3 +44,6 @@ example
 
 # FCM service account key (secret)
 fcm-service-account.json
+
+# Supabase CLI local cache (linked project, CLI version)
+supabase/.temp/
