@@ -6,10 +6,12 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 
 ### Features
 
-- [ ] **Wallet document storage** (board action item, ~5:31–6:34)
-  - Let members add their own documents to the wallet: AMA minor release, AMA card, and "anything" else (photo or file).
-  - Saved docs must be **available offline** (e.g. at the gate with no signal).
-  - No AMA system integration. The board agreed that's not happening; it's just an upload/photo.
+- [ ] **Wallet document storage** (board action item, ~5:31–6:34). Built 2026-11-12; needs on-device testing.
+  - "My Documents" on the member wallet: add from Camera, Photos or File (PDF/image), name it (quick picks: AMA Card, AMA Minor Release, Insurance Card, Other), view full screen, rename, share/open, delete.
+  - Stored **only on the phone** in the app's private documents folder ([wallet-documents.ts](src/lib/wallet-documents.ts)), per signed-in profile, so it works offline and minors' release forms never leave the device. Not backed up by us; a new phone starts empty. Signing out keeps the files for the next sign-in.
+  - No AMA system integration (board agreed it's just an upload/photo).
+  - [ ] Test on Android (Expo Go) and iPhone: camera, photo library, PDF pick + "Open PDF", rename, delete, airplane mode, app restart.
+  - Later, if wanted: optional cloud backup so documents follow members to a new phone (would need a private Supabase Storage bucket and a privacy policy update).
   - Board is keeping this as an open action item until the app launches.
 
 - [x] **Public / guest browsing — no sign-in required** (~7:07–8:00). Done 2026-11-12.

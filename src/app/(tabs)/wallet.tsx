@@ -4,6 +4,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SignInPrompt } from '@/components/sign-in-prompt';
+import { WalletDocumentsSection } from '@/components/wallet-documents-section';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useFamilyMembers } from '@/lib/queries';
@@ -104,6 +105,9 @@ function MemberWallet() {
           <DetailRow label="D14 Number" value={profile?.d14_number?.toString() ?? '—'} />
           <DetailRow label="AMA Number" value={profile?.ama_number?.toString() ?? '—'} last />
         </Widget>
+
+        {/* AMA card, minor release, etc. stored on this device (works offline) */}
+        {profile ? <WalletDocumentsSection profileId={profile.id} /> : null}
 
         {/* Renew — always available; early renewals extend from the current
             expiration date, so no time is lost */}

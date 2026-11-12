@@ -44,7 +44,15 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow AMA District 14 to use the camera to scan member QR codes for gate verification."
+          "cameraPermission": "Allow AMA District 14 to use the camera to scan member QR codes and photograph documents for your wallet."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow AMA District 14 to use the camera to scan member QR codes and photograph documents for your wallet.",
+          "photosPermission": "Allow AMA District 14 to add photos of your AMA card, minor release and other documents to your wallet.",
+          "microphonePermission": false
         }
       ],
       [
@@ -58,7 +66,8 @@
         {
           "calendarPermission": "Allow AMA District 14 to add events to your calendar."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

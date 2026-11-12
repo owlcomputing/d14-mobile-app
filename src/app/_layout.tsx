@@ -86,6 +86,19 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Scan QR Code', headerBackTitle: 'Back' }}
         />
         <Stack.Screen
+          name="document/new"
+          options={{
+            headerShown: true,
+            title: 'Add Document',
+            headerBackTitle: 'Cancel',
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="document/[id]"
+          options={{ headerShown: true, title: 'Document', headerBackTitle: 'Wallet' }}
+        />
+        <Stack.Screen
           name="edit-profile"
           options={{ headerShown: true, title: 'Edit Profile', headerBackTitle: 'Back' }}
         />
