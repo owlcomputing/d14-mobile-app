@@ -49,7 +49,9 @@ function readIndex(profileId: string): WalletDoc[] {
 function writeIndex(profileId: string, docs: WalletDoc[]) {
   const index = new File(profileDir(profileId), INDEX_FILE);
   if (!index.exists) index.create();
-  index.write(JSON.stringify(docs));
+  // SDK 58: File.write() is async; writeSync keeps the index update atomic
+  // with the caller (callers re-read the index immediately after).
+  index.writeSync(JSON.stringify(docs));
 }
 
 export function docUri(profileId: string, doc: WalletDoc) {

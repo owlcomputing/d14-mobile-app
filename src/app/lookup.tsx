@@ -93,7 +93,7 @@ export default function LookupScreen() {
             <Text style={styles.count}>
               {search.data.length} result{search.data.length === 1 ? '' : 's'}
             </Text>
-          ) : null
+          ) : undefined
         }
       />
 

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -106,8 +106,11 @@ function MemberWallet() {
           <DetailRow label="AMA Number" value={profile?.ama_number?.toString() ?? '—'} last />
         </Widget>
 
-        {/* AMA card, minor release, etc. stored on this device (works offline) */}
-        {profile ? <WalletDocumentsSection profileId={profile.id} /> : null}
+        {/* AMA card, minor release, etc. stored on this device (works offline).
+            expo-file-system's File/Directory API isn't available on web. */}
+        {profile && Platform.OS !== 'web' ? (
+          <WalletDocumentsSection profileId={profile.id} />
+        ) : null}
 
         {/* Renew — always available; early renewals extend from the current
             expiration date, so no time is lost */}
