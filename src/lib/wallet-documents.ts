@@ -71,7 +71,35 @@ export function kindForMime(mimeType: string | null | undefined): WalletDocKind 
   return mimeType === 'application/pdf' ? 'pdf' : 'image';
 }
 
-/** Copy a picked file (camera, photo library or document picker URI) into the wallet. */
+// --- Staging -----------------------------------------------------------------
+// Picked files can live in places expo-file-system isn't allowed to read. In
+// Expo Go, for example, the camera's output sits outside the project's sandbox
+// ("Missing 'READ' permission"). So every pick is first written into our own
+// cache folder, and saving moves it from there into the wallet.
+
+function stagingDir() {
+  const dir = new Directory(Paths.cache, 'wallet-staging');
+  if (dir.exists) dir.delete(); // only one pending pick at a time
+  dir.create({ intermediates: true, idempotent: true });
+  return dir;
+}
+
+/** Stage a camera/photo-library image from the picker's base64 JPEG data. Returns its URI. */
+export function stageImageBase64(base64: string): string {
+  const file = new File(stagingDir(), `${Date.now()}.jpg`);
+  file.create();
+  file.writeSync(base64, { encoding: 'base64' });
+  return file.uri;
+}
+
+/** Stage a file from File.pickFileAsync (a content:// or temp URI we may read). Returns its URI. */
+export async function stagePickedFile(picked: File): Promise<string> {
+  const dest = new File(stagingDir(), `${Date.now()}-${picked.name || 'document'}`);
+  await picked.copy(dest);
+  return dest.uri;
+}
+
+/** Move a staged file (see stage* above) into the wallet. */
 export async function addWalletDoc(
   profileId: string,
   input: { sourceUri: string; title: string; mimeType: string | null; sourceName?: string | null },
@@ -80,7 +108,7 @@ export async function addWalletDoc(
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const fileName = `${id}.${extensionFor(kind, input.mimeType, input.sourceName)}`;
   const dest = new File(profileDir(profileId), fileName);
-  await new File(input.sourceUri).copy(dest);
+  await new File(input.sourceUri).move(dest);
 
   const doc: WalletDoc = {
     id,

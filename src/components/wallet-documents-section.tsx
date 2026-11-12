@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,13 @@ import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
-import { docUri, useWalletDocs, type WalletDoc } from '@/lib/wallet-documents';
+import {
+  docUri,
+  stageImageBase64,
+  stagePickedFile,
+  useWalletDocs,
+  type WalletDoc,
+} from '@/lib/wallet-documents';
 
 type Picked = { uri: string; mimeType: string | null; name: string | null };
 
@@ -43,29 +49,50 @@ export function WalletDocumentsSection({ profileId }: { profileId: string }) {
       );
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled) {
-      const a = result.assets[0];
-      openAdd({ uri: a.uri, mimeType: a.mimeType ?? 'image/jpeg', name: a.fileName ?? null });
-    }
+    await run(async () =>
+      handleImage(
+        await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8, base64: true }),
+      ),
+    );
   };
 
-  const choosePhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-    if (!result.canceled) {
-      const a = result.assets[0];
-      openAdd({ uri: a.uri, mimeType: a.mimeType ?? 'image/jpeg', name: a.fileName ?? null });
-    }
+  const choosePhoto = () =>
+    run(async () =>
+      handleImage(
+        await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          quality: 0.8,
+          base64: true,
+        }),
+      ),
+    );
+
+  // Use the picker's image data rather than its file: the camera's output file
+  // may be outside the folders we're allowed to read (e.g. in Expo Go).
+  const handleImage = (result: ImagePicker.ImagePickerResult) => {
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (!asset.base64) throw new Error('The picture could not be read. Please try again.');
+    openAdd({ uri: stageImageBase64(asset.base64), mimeType: 'image/jpeg', name: null });
   };
 
-  const chooseFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/pdf', 'image/*'],
-      copyToCacheDirectory: true,
+  const chooseFile = () =>
+    run(async () => {
+      const picked = await File.pickFileAsync({ mimeTypes: ['application/pdf', 'image/*'] });
+      if (picked.canceled) return;
+      const file = picked.result;
+      openAdd({
+        uri: await stagePickedFile(file),
+        mimeType: file.type || null,
+        name: file.name || null,
+      });
     });
-    if (!result.canceled) {
-      const a = result.assets[0];
-      openAdd({ uri: a.uri, mimeType: a.mimeType ?? null, name: a.name });
+
+  const run = async (fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch (e) {
+      Alert.alert('Could not add document', e instanceof Error ? e.message : 'Please try again.');
     }
   };
 
