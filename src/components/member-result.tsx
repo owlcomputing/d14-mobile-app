@@ -17,6 +17,11 @@ export type MemberResultData = {
 export const MEMBER_DIRECTORY_COLUMNS =
   'id, first_name, last_name, d14_number, disciplines, member_type, expiration';
 
+/** member_directory is a view, so generated types mark every column nullable; rows always have an id. */
+export function hasId<T extends { id: string | null }>(row: T): row is T & { id: string } {
+  return row.id != null;
+}
+
 export function membershipActive(m: MemberResultData): boolean {
   return m.expiration ? new Date(m.expiration) >= new Date() : false;
 }

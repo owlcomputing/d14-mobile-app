@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
+  hasId,
   MEMBER_DIRECTORY_COLUMNS,
   MemberResult,
   type MemberResultData,
@@ -35,7 +36,7 @@ function useScannedMember(id: string | null) {
         .eq('id', id!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data && hasId(data) ? data : null;
     },
   });
 }

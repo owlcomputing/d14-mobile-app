@@ -15,3 +15,8 @@ verify_jwt = false
 # x-cron-secret header checked against the CRON_SECRET function secret.
 [functions.renewal-reminders]
 verify_jwt = false
+
+# delete-account verifies the caller's JWT inside the function and only acts
+# on the caller's own account; platform-level verification stays on too.
+[functions.delete-account]
+verify_jwt = true

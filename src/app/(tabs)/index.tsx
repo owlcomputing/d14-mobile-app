@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
+import { openMembershipSignup } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useUpcomingEvents } from '@/lib/queries';
@@ -26,7 +27,7 @@ function membershipStatus(expiration: string | undefined) {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { session, profile, membership } = useAuth();
+  const { session, profile, membership, isMember, profileReady } = useAuth();
   const events = useUpcomingEvents(3);
   const divisions = useDivisions();
   const status = membershipStatus(membership?.expiration);
@@ -57,7 +58,21 @@ export default function HomeScreen() {
             : 'Welcome to District 14'}
         </Text>
 
-        {session ? (
+        {session && profileReady && !isMember ? (
+          /* Prospect: signed up for reminders, not a member yet */
+          <Pressable onPress={openMembershipSignup}>
+            <Widget variant="red" style={styles.cardTeaser}>
+              <Ionicons name="ribbon" size={26} color={D14Colors.white} />
+              <View style={styles.cardTeaserText}>
+                <Text style={styles.cardTeaserTitle}>Become a D14 member</Text>
+                <Text style={styles.cardTeaserSub}>
+                  Get your digital membership card • join on the D14 website
+                </Text>
+              </View>
+              <Text style={styles.cardTeaserChevron}>›</Text>
+            </Widget>
+          </Pressable>
+        ) : session ? (
           /* Membership card teaser */
           <Pressable onPress={() => router.push('/wallet')}>
             <Widget variant="red" style={styles.cardTeaser}>
@@ -72,19 +87,26 @@ export default function HomeScreen() {
             </Widget>
           </Pressable>
         ) : (
-          /* Guest: invite to sign in or join */
-          <Pressable onPress={() => router.push('/login')}>
-            <Widget variant="red" style={styles.cardTeaser}>
-              <Ionicons name="person-add" size={26} color={D14Colors.white} />
-              <View style={styles.cardTeaserText}>
-                <Text style={styles.cardTeaserTitle}>Join AMA District 14</Text>
-                <Text style={styles.cardTeaserSub}>
-                  Members: sign in for your card • New riders: become a member
-                </Text>
-              </View>
-              <Text style={styles.cardTeaserChevron}>›</Text>
-            </Widget>
-          </Pressable>
+          /* Guest: free sign-up for reminders, or sign in */
+          <>
+            <Pressable onPress={() => router.push('/signup')}>
+              <Widget variant="red" style={styles.cardTeaser}>
+                <Ionicons name="notifications" size={26} color={D14Colors.white} />
+                <View style={styles.cardTeaserText}>
+                  <Text style={styles.cardTeaserTitle}>Get race reminders</Text>
+                  <Text style={styles.cardTeaserSub}>
+                    Free • pick your divisions • no membership needed
+                  </Text>
+                </View>
+                <Text style={styles.cardTeaserChevron}>›</Text>
+              </Widget>
+            </Pressable>
+            <Pressable onPress={() => router.push('/login')} style={styles.signInRow}>
+              <Text style={styles.signInText}>
+                Already a member? <Text style={styles.signInLink}>Sign in</Text>
+              </Text>
+            </Pressable>
+          </>
         )}
 
         {/* Upcoming events */}
@@ -168,6 +190,9 @@ const styles = StyleSheet.create({
   cardTeaserTitle: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
   cardTeaserSub: { color: D14Colors.white, opacity: 0.85, fontSize: 12, marginTop: 2 },
   cardTeaserChevron: { color: D14Colors.white, opacity: 0.7, fontSize: 24, fontWeight: '300' },
+  signInRow: { alignItems: 'center', marginTop: -4, marginBottom: Spacing.three },
+  signInText: { color: D14Colors.textSecondary, fontSize: 13 },
+  signInLink: { color: D14Colors.red, fontWeight: '700' },
   empty: { color: D14Colors.textSecondary, paddingVertical: Spacing.two },
   link: { color: D14Colors.red, fontSize: 13, fontWeight: '600', marginTop: Spacing.two },
   divisionGrid: { flexDirection: 'row', flexWrap: 'wrap' },

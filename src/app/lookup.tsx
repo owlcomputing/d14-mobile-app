@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import {
+  hasId,
   MEMBER_DIRECTORY_COLUMNS,
   MemberResult,
   type MemberResultData,
@@ -42,7 +43,7 @@ function useMemberSearch(query: string) {
       }
       const { data, error } = await builder;
       if (error) throw error;
-      return data;
+      return (data ?? []).filter(hasId);
     },
   });
 }

@@ -1,11 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CommunicationsSection } from '@/components/communications-section';
 import { SignInPrompt } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 import { useAppLock } from '@/providers/app-lock-provider';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -56,8 +68,13 @@ function GuestProfile() {
 
 function MemberProfile() {
   const router = useRouter();
-  const { profile, signOut, isAdmin, isChairman } = useAuth();
+  const { session, profile, signOut, isAdmin, isChairman, isMember, profileReady } = useAuth();
   const appLock = useAppLock();
+  const [deleting, setDeleting] = useState(false);
+  // Gate tools (member lookup, QR scanner) read member_directory, which only
+  // members, chairmen and admins can see.
+  const canCheckMembers = isMember || isAdmin || isChairman;
+  const isProspect = profileReady && !canCheckMembers;
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
   const initials = [profile?.first_name?.[0], profile?.last_name?.[0]].filter(Boolean).join('');
@@ -68,6 +85,43 @@ function MemberProfile() {
       { text: 'Sign Out', style: 'destructive', onPress: signOut },
     ]);
 
+  const deleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+      if (error) throw error;
+      if (data?.result === 'deleted') {
+        Alert.alert('Account deleted', 'Your account and its data have been removed.');
+        await signOut();
+      } else {
+        Alert.alert(
+          'Request sent',
+          'Because your account has membership records, the D14 secretary will confirm with you by email and complete the deletion.',
+        );
+      }
+    } catch {
+      Alert.alert('Could not delete account', 'Please check your connection and try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const confirmDelete = () =>
+    Alert.alert(
+      'Delete your account?',
+      isProspect
+        ? 'This permanently deletes your account, your notification settings and your saved choices. Documents in your wallet stay on this phone until you remove them.'
+        : 'Your account has membership records, so we will send a deletion request to the D14 secretary, who will confirm with you by email.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: isProspect ? 'Delete' : 'Send Request',
+          style: 'destructive',
+          onPress: () => void deleteAccount(),
+        },
+      ],
+    );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -75,10 +129,16 @@ function MemberProfile() {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials || '?'}</Text>
           </View>
-          <Text style={styles.name}>{fullName || 'Member'}</Text>
+          <Text style={styles.name}>{fullName || (isProspect ? 'Welcome' : 'Member')}</Text>
           <Text style={styles.meta}>
-            {profile?.member_type ?? 'Member'}
-            {profile?.d14_number ? ` • D14 #${profile.d14_number}` : ''}
+            {isProspect ? (
+              'Race reminders • not a member yet'
+            ) : (
+              <>
+                {profile?.member_type ?? 'Member'}
+                {profile?.d14_number ? ` • D14 #${profile.d14_number}` : ''}
+              </>
+            )}
           </Text>
           {isAdmin || isChairman ? (
             <View style={styles.roleBadge}>
@@ -100,6 +160,15 @@ function MemberProfile() {
           />
         </Widget>
 
+        {isProspect ? (
+          <SignInPrompt
+            variant="prospect"
+            icon="ribbon"
+            title="Become a D14 member"
+            message="Join on the D14 website with this same email address. Your account becomes a member account, with your digital card in the Wallet."
+          />
+        ) : null}
+
         <Widget header="Tools">
           <MenuRow
             icon="create"
@@ -107,18 +176,22 @@ function MemberProfile() {
             hint="Update contact and address info"
             onPress={() => router.push('/edit-profile')}
           />
-          <MenuRow
-            icon="search"
-            label="Member Lookup"
-            hint="Verify membership by name or number"
-            onPress={() => router.push('/lookup')}
-          />
-          <MenuRow
-            icon="qr-code"
-            label="Scan QR Code"
-            hint="Verify a member card at the gate"
-            onPress={() => router.push('/scanner')}
-          />
+          {canCheckMembers ? (
+            <>
+              <MenuRow
+                icon="search"
+                label="Member Lookup"
+                hint="Verify membership by name or number"
+                onPress={() => router.push('/lookup')}
+              />
+              <MenuRow
+                icon="qr-code"
+                label="Scan QR Code"
+                hint="Verify a member card at the gate"
+                onPress={() => router.push('/scanner')}
+              />
+            </>
+          ) : null}
           <MenuRow
             icon="people"
             label="District Contacts"
@@ -136,6 +209,8 @@ function MemberProfile() {
             />
           ) : null}
         </Widget>
+
+        {session && profile ? <CommunicationsSection profileId={profile.id} /> : null}
 
         <Widget header="Settings">
           <MenuRow
@@ -176,6 +251,13 @@ function MemberProfile() {
 
         <Pressable style={styles.signOut} onPress={confirmSignOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
+        </Pressable>
+        <Pressable style={styles.deleteAccount} onPress={confirmDelete} disabled={deleting}>
+          {deleting ? (
+            <ActivityIndicator color={D14Colors.textTertiary} />
+          ) : (
+            <Text style={styles.deleteAccountText}>Delete my account</Text>
+          )}
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -267,4 +349,6 @@ const styles = StyleSheet.create({
   chevron: { color: D14Colors.textTertiary, fontSize: 20, fontWeight: '300' },
   signOut: { alignItems: 'center', paddingVertical: Spacing.three },
   signOutText: { color: D14Colors.error, fontSize: 14, fontWeight: '600' },
+  deleteAccount: { alignItems: 'center', paddingBottom: Spacing.three },
+  deleteAccountText: { color: D14Colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
 });

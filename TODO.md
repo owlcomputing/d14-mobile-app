@@ -21,10 +21,8 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Login is a dismissible sheet ("Continue browsing as a guest"); signing in closes it and returns to where the user was.
   - Still to check on a real Android/iOS device: login sheet presentation and the sign-out confirm (verified on web only).
 
-- [ ] **Capture guest contact info / sign-up prompts** (~8:05–8:32)
-  - Get people's info so we can send email reminders about events, etc.
-  - Options discussed: a pop-up, and/or calls to action placed throughout the content (e.g. "get email notifications").
-  - Goal: don't force membership up front; show value and nudge guests toward buying a membership.
+- [ ] **Capture guest contact info / sign-up prompts** (~8:05–8:32). Built on staging 2026-11-12 as "Get race reminders" (see Prospects under Push notifications); needs device testing, then prod.
+  - Calls to action: Home card for guests, event pages, login screen. Prospects see "Become a D14 member" on Home, Wallet and Profile.
 
 ### Release
 
@@ -65,7 +63,8 @@ Fixed 2026-11-12 (staging + prod):
 
 Still open:
 - [ ] **Child and club accounts are created with the password `password`** (membership form children and admin-created charter accounts, in d14-angular `membership.component.ts` and `organization-management.component.ts`). Child emails are predictable (`parent+child1@…`), so anyone who knows a parent's email can sign in as their child and see the family's profiles. Fix: have `createUser` generate a random password for these accounts. Then decide whether to reset existing ones (find out first whether children ever sign in themselves).
-- [ ] **`member_directory` is readable by every signed-in user** (names, D14 #, member type, membership status only; no contact info). That's fine for gate checks today, but once guest/prospect sign-up exists, anyone could make an account and browse the member list. Restrict it to members/chairmen/admins (or add a gate-staff role) before launching prospect sign-up.
+- [x] **`member_directory` was readable by every signed-in user.** Now limited to members, chairmen and admins (`20261112_prospects_and_consents.sql`, staging; prod with the prospect release).
+- [ ] **The website's `emails` edge function is an open email relay**: `verify_jwt = false`, no caller check, and it sends to whatever `to` addresses the request gives, from `no-reply@em5910.ama-d14.org`. Anyone can send email that looks like it's from D14 (phishing risk, and it can hurt the domain's sending reputation). Fix in d14-angular: require an admin token when `to` is set (the contact form only needs the default secretary address), and/or add a server-side secret for internal callers like `delete-account`.
 - [ ] `renewals` insert policy is `WITH CHECK (true)`; tighten to own/family rows after checking the website renewal flow.
 - [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
 
@@ -89,8 +88,12 @@ The app needs two kinds of push notifications.
     - Save a history of sent notifications (who sent it, which audience, how many devices received it).
     - Optionally schedule a send for later.
 
-- [ ] **Guest sign-up for notifications ("prospect" users)**
-  - Guests who aren't members can sign up just to receive notifications. This is also the "sign-up prompt" from the board meeting.
+- [ ] **Guest sign-up for notifications ("prospect" users)**. Built on staging 2026-11-12.
+  - **How it works:** "Get race reminders" ([signup.tsx](src/app/signup.tsx)): name, email, divisions, separate push / marketing-email opt-ins → 6-digit email code (confirms the email) → real login with `member_type` NULL and no membership (the website's existing "registered, not paid" state; the website sends them to its membership page on login). Consents go to `communication_consents` (append-only, exact wording + source), divisions to `communication_preferences`. Members can also sign in with an emailed code. Profile → Communications toggles; Profile → Delete my account (prospects deleted immediately via `delete-account`; members send a request to the secretary). `member_directory` now members/chairmen/admins only.
+  - [ ] Test on device: sign up with a real email (code arrives, profile/consents created), prospect Home/Wallet/Profile, toggles, delete account; member code sign-in.
+  - [ ] Prod: run `20261112_prospects_and_consents.sql`, apply [auth email templates](supabase/templates/README.md) + rate limit, deploy `delete-account`.
+  - [ ] Admin side: "Prospects only / Members only / Everyone" audience in send screens; prospect list + consent view on the website (see website parity item).
+  - Original notes:
   - Collect name and email (phone optional?) and save them in the database as a **prospect** user type, so we can:
     - send them push notifications and emails like any other audience, and
     - market memberships to them later. Track prospect → member conversions.

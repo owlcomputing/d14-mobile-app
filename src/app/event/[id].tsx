@@ -18,6 +18,7 @@ import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
+import { useAuth } from '@/providers/auth-provider';
 
 function openDirections(
   locationName: string | null,
@@ -96,6 +97,7 @@ function formatEventDate(date: string, endDate?: string | null) {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { session } = useAuth();
   const event = useEvent(Number(id));
 
   if (event.isLoading) {
@@ -174,11 +176,41 @@ export default function EventDetailScreen() {
           <Text style={styles.description}>{description}</Text>
         </Widget>
       ) : null}
+
+      {/* Guests: invite them to sign up for reminders (board request, Q3 2026) */}
+      {!session ? (
+        <Pressable
+          style={({ pressed }) => [styles.reminderCta, pressed && { opacity: 0.85 }]}
+          onPress={() => router.push('/signup')}>
+          <Ionicons name="notifications" size={20} color={D14Colors.red} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.reminderTitle}>Never miss a race</Text>
+            <Text style={styles.reminderText}>
+              Get free reminders for {e.divisions?.name ?? 'D14'} events. No membership needed.
+            </Text>
+          </View>
+          <Text style={styles.reminderChevron}>›</Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  reminderCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    backgroundColor: D14Colors.surface,
+    borderWidth: 1,
+    borderColor: D14Colors.red,
+    borderRadius: Radius.lg,
+    padding: Spacing.three,
+    marginTop: Spacing.three,
+  },
+  reminderTitle: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
+  reminderText: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  reminderChevron: { color: D14Colors.textTertiary, fontSize: 22, fontWeight: '300' },
   container: { flex: 1, backgroundColor: D14Colors.black },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   center: {

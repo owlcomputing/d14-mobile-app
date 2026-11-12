@@ -36,11 +36,21 @@ on request; items marked 👤 need Dan.
       require the caller's token (website deployed to prod, functions
       deployed to staging and prod 2026-11-12).
 
+### Prospect sign-up (pending)
+
+- [ ] `supabase/migrations/20261112_prospects_and_consents.sql`: consent log,
+      preferences, members-only `member_directory`. Applied to staging
+      2026-11-12.
+- [ ] Auth email templates + email rate limit per
+      [supabase/templates/README.md](../../supabase/templates/README.md)
+      (Management API). Applied to staging 2026-11-12.
+
 ## 2. Edge functions
 
 - [ ] 👤 Commit the `create-checkout-session` change in d14-angular (adds
       `uiMode: 'hosted'` — backward compatible) and deploy to prod
 - [ ] Deploy `send-push` (mobile repo) to prod
+- [ ] Deploy `delete-account` (mobile repo) to prod (staging deployed 2026-11-12)
 - [ ] Deploy `checkout-return` (mobile repo, `--no-verify-jwt`) to prod
 - [ ] Deploy `renewal-reminders` (mobile repo, `--no-verify-jwt`) to prod
 - [ ] Set prod `CRON_SECRET` function secret (generate a fresh one — do not

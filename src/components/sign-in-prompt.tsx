@@ -17,13 +17,18 @@ type SignInPromptProps = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   title: string;
   message: string;
+  /**
+   * 'guest' (signed out): Sign In + Become a Member.
+   * 'prospect' (signed in, no membership): Become a Member only.
+   */
+  variant?: 'guest' | 'prospect';
 };
 
 /**
- * Shown to guests (signed-out users) in place of member-only content, with
- * a way to sign in and a way to join.
+ * Shown in place of member-only content: to guests with a way to sign in and
+ * a way to join, and to prospects with a way to join.
  */
-export function SignInPrompt({ icon, title, message }: SignInPromptProps) {
+export function SignInPrompt({ icon, title, message, variant = 'guest' }: SignInPromptProps) {
   const router = useRouter();
   return (
     <Widget style={styles.card}>
@@ -32,16 +37,26 @@ export function SignInPrompt({ icon, title, message }: SignInPromptProps) {
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
-      <Pressable
-        style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
-        onPress={() => router.push('/login')}>
-        <Text style={styles.primaryText}>Sign In</Text>
-      </Pressable>
-      <Pressable
-        style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.7 }]}
-        onPress={openMembershipSignup}>
-        <Text style={styles.secondaryText}>Become a Member</Text>
-      </Pressable>
+      {variant === 'guest' ? (
+        <>
+          <Pressable
+            style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
+            onPress={() => router.push('/login')}>
+            <Text style={styles.primaryText}>Sign In</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.7 }]}
+            onPress={openMembershipSignup}>
+            <Text style={styles.secondaryText}>Become a Member</Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
+          onPress={openMembershipSignup}>
+          <Text style={styles.primaryText}>Become a Member</Text>
+        </Pressable>
+      )}
     </Widget>
   );
 }

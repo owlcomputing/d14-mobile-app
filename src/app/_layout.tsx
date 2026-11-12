@@ -136,6 +136,8 @@ function RootNavigator() {
           false, Expo Router drops it from history and returns to the tabs. */}
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+        {/* Prospect sign-up ("Get race reminders"); closes itself on code verification */}
+        <Stack.Screen name="signup" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>
   );

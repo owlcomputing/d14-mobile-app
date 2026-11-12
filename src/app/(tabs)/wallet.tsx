@@ -1,5 +1,13 @@
 import { useRouter } from 'expo-router';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,9 +28,39 @@ function formatDate(iso: string | null | undefined) {
 }
 
 export default function WalletScreen() {
-  const { session } = useAuth();
+  const { session, isMember, profileReady } = useAuth();
   if (!session) return <GuestWallet />;
+  if (!profileReady) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.loading]} edges={['top']}>
+        <ActivityIndicator color={D14Colors.red} />
+      </SafeAreaView>
+    );
+  }
+  if (!isMember) return <ProspectWallet />;
   return <MemberWallet />;
+}
+
+/** Signed in for race reminders, but not (yet) a D14 member. */
+function ProspectWallet() {
+  const { profile } = useAuth();
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Wallet</Text>
+        <Text style={styles.subtitle}>Your digital D14 card lives here once you join</Text>
+        <SignInPrompt
+          variant="prospect"
+          icon="card"
+          title="Become a D14 member"
+          message="Members get a digital membership card with a QR code for the gate, right here in the app. Join on the D14 website using this same email address."
+        />
+        {profile && Platform.OS !== 'web' ? (
+          <WalletDocumentsSection profileId={profile.id} />
+        ) : null}
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 function GuestWallet() {
@@ -174,6 +212,7 @@ function DetailRow({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: D14Colors.black },
+  loading: { alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   title: { color: D14Colors.white, fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: {

@@ -15,8 +15,10 @@ import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { getDevicePushToken } from '@/lib/push';
 import { useDivisions } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/providers/auth-provider';
 
 export default function NotificationSettingsScreen() {
+  const { profile } = useAuth();
   const divisions = useDivisions();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,17 +30,24 @@ export default function NotificationSettingsScreen() {
     (async () => {
       const t = await getDevicePushToken();
       setToken(t);
-      if (t) {
-        const { data } = await supabase
-          .from('push_tokens')
-          .select('divisions')
-          .eq('token', t)
-          .maybeSingle();
-        setSelected(data?.divisions ?? null);
-      }
+      // This phone's push setting wins; otherwise use the account-level choice
+      // (set at sign-up, used for email and new devices).
+      const [{ data: device }, { data: account }] = await Promise.all([
+        t
+          ? supabase.from('push_tokens').select('divisions').eq('token', t).maybeSingle()
+          : Promise.resolve({ data: null }),
+        profile
+          ? supabase
+              .from('communication_preferences')
+              .select('divisions')
+              .eq('profile_id', profile.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      setSelected(device ? device.divisions : (account?.divisions ?? null));
       setLoading(false);
     })();
-  }, []);
+  }, [profile]);
 
   const toggle = (name: string) => {
     const all = divisions.data?.map((d) => d.name).filter((n): n is string => !!n) ?? [];
@@ -52,12 +61,17 @@ export default function NotificationSettingsScreen() {
   };
 
   const save = async () => {
-    if (!token || saving) return;
+    if (!profile || saving) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('push_tokens')
-      .update({ divisions: selected })
-      .eq('token', token);
+    const { error: accountError } = await supabase.from('communication_preferences').upsert({
+      profile_id: profile.id,
+      divisions: selected,
+      updated_at: new Date().toISOString(),
+    });
+    const { error: deviceError } = token
+      ? await supabase.from('push_tokens').update({ divisions: selected }).eq('token', token)
+      : { error: null };
+    const error = accountError ?? deviceError;
     setSaving(false);
     Alert.alert(error ? 'Save failed' : 'Saved', error ? error.message : 'Notification preferences updated.');
   };
@@ -70,18 +84,6 @@ export default function NotificationSettingsScreen() {
     );
   }
 
-  if (!token) {
-    return (
-      <View style={styles.center}>
-        <Ionicons name="notifications-off" size={36} color={D14Colors.textTertiary} />
-        <Text style={styles.unavailable}>
-          Push notifications aren&apos;t available on this device or haven&apos;t been allowed yet.
-          Check your system notification settings for the D14 app.
-        </Text>
-      </View>
-    );
-  }
-
   const allSelected = selected === null;
 
   return (
@@ -90,6 +92,15 @@ export default function NotificationSettingsScreen() {
         Choose which divisions send you event reminders and news. District-wide announcements are
         always delivered.
       </Text>
+      {!token ? (
+        <View style={styles.notice}>
+          <Ionicons name="notifications-off" size={18} color={D14Colors.textTertiary} />
+          <Text style={styles.noticeText}>
+            Push notifications aren&apos;t available on this device or haven&apos;t been allowed
+            yet. Your choices are still saved to your account for emails and your other devices.
+          </Text>
+        </View>
+      ) : null}
       <Widget header="Divisions">
         <Pressable style={styles.row} onPress={() => setSelected(null)}>
           <Ionicons
@@ -131,6 +142,15 @@ export default function NotificationSettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: D14Colors.black },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
+  notice: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    backgroundColor: D14Colors.surface,
+    borderRadius: Radius.md,
+    padding: Spacing.three,
+    marginBottom: Spacing.three,
+  },
+  noticeText: { flex: 1, color: D14Colors.textSecondary, fontSize: 12, lineHeight: 17 },
   center: {
     flex: 1,
     backgroundColor: D14Colors.black,

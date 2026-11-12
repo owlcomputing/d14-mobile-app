@@ -10,10 +10,94 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.1 (8cbcf98)"
+    PostgrestVersion: "12.1"
   }
   public: {
     Tables: {
+      communication_consents: {
+        Row: {
+          channel: string
+          consent_text: string
+          created_at: string
+          granted: boolean
+          id: number
+          profile_id: string
+          source: string
+        }
+        Insert: {
+          channel: string
+          consent_text: string
+          created_at?: string
+          granted: boolean
+          id?: never
+          profile_id: string
+          source: string
+        }
+        Update: {
+          channel?: string
+          consent_text?: string
+          created_at?: string
+          granted?: boolean
+          id?: never
+          profile_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_preferences: {
+        Row: {
+          created_at: string
+          divisions: string[] | null
+          profile_id: string
+          signup_source: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          divisions?: string[] | null
+          profile_id: string
+          signup_source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          divisions?: string[] | null
+          profile_id?: string
+          signup_source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_preferences_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_preferences_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: string | null
@@ -144,6 +228,13 @@ export type Database = {
             foreignKeyName: "divisions_chairman_id_fkey"
             columns: ["chairman_id"]
             isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "divisions_chairman_id_fkey"
+            columns: ["chairman_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -166,6 +257,13 @@ export type Database = {
           date_created?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "emails_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "emails_admin_id_fkey"
             columns: ["admin_id"]
@@ -276,7 +374,21 @@ export type Database = {
             foreignKeyName: "membership_notes_admin_id_fkey"
             columns: ["admin_id"]
             isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_notes_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_notes_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
             referencedColumns: ["id"]
           },
           {
@@ -318,6 +430,13 @@ export type Database = {
             foreignKeyName: "fk_parent"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_parent"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -325,7 +444,21 @@ export type Database = {
             foreignKeyName: "fk_profile_id"
             columns: ["profile_id"]
             isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_profile_id"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_receipts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
             referencedColumns: ["id"]
           },
           {
@@ -360,6 +493,13 @@ export type Database = {
           profile_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_profile_id"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_profile_id"
             columns: ["profile_id"]
@@ -708,6 +848,13 @@ export type Database = {
             foreignKeyName: "organizations_primary_contact_id_fkey"
             columns: ["organization_user_id"]
             isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_primary_contact_id_fkey"
+            columns: ["organization_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -816,6 +963,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
             referencedColumns: ["id"]
           },
           {
@@ -934,6 +1088,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "push_tokens_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "push_tokens_profile_id_fkey"
             columns: ["profile_id"]
@@ -1080,7 +1241,21 @@ export type Database = {
             foreignKeyName: "fk_profile_id"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_profile_id"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temp_membership_form_data_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "member_directory"
             referencedColumns: ["id"]
           },
           {
@@ -1094,13 +1269,39 @@ export type Database = {
       }
     }
     Views: {
+      current_communication_consents: {
+        Row: {
+          channel: string | null
+          consent_text: string | null
+          created_at: string | null
+          granted: boolean | null
+          profile_id: string | null
+          source: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_directory: {
         Row: {
-          disciplines: string[] | null
           d14_number: number | null
+          disciplines: string[] | null
           expiration: string | null
           first_name: string | null
-          id: string
+          id: string | null
           last_name: string | null
           member_type: string | null
         }
@@ -1282,12 +1483,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1311,11 +1512,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1336,11 +1537,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1361,11 +1562,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1378,11 +1579,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

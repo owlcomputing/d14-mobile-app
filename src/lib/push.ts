@@ -31,7 +31,11 @@ async function loadNotifications() {
  * Silently no-ops where push isn't available (simulator, Expo Go, no EAS
  * project configured).
  */
-export async function registerPushToken(profileId: string): Promise<void> {
+export async function registerPushToken(
+  profileId: string,
+  /** Division filter for this device (null = all). Omit to keep the existing setting. */
+  divisions?: string[] | null,
+): Promise<void> {
   try {
     if (!canUsePush()) return;
     const Notifications = await loadNotifications();
@@ -63,6 +67,7 @@ export async function registerPushToken(profileId: string): Promise<void> {
       profile_id: profileId,
       platform: Platform.OS,
       updated_at: new Date().toISOString(),
+      ...(divisions !== undefined ? { divisions } : {}),
     });
   } catch {
     // Push is best-effort; never block sign-in on registration failures
