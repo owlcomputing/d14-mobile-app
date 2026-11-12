@@ -4,7 +4,11 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { MemberResult, type MemberResultData } from '@/components/member-result';
+import {
+  MEMBER_DIRECTORY_COLUMNS,
+  MemberResult,
+  type MemberResultData,
+} from '@/components/member-result';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
@@ -26,10 +30,8 @@ function useScannedMember(id: string | null) {
     enabled: !!id,
     queryFn: async (): Promise<MemberResultData | null> => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select(
-          'id, first_name, last_name, d14_number, disciplines, member_type, memberships(expiration)',
-        )
+        .from('member_directory')
+        .select(MEMBER_DIRECTORY_COLUMNS)
         .eq('id', id!)
         .maybeSingle();
       if (error) throw error;

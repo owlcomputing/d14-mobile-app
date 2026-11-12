@@ -46,14 +46,19 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 
 ## Security follow-ups (shared database)
 
-Found during the 2026-11-12 RLS audit. These affect the website too, so coordinate changes with d14-angular.
+Found during the 2026-11-12 security audit. These affect the website too, so coordinate changes with d14-angular.
 
-- [ ] **Any signed-in user can read every profile**, including home addresses, phone numbers, birthdates and emails (`profiles` policy "Authenticated users can see profile" is `USING (true)`). Anyone who creates a free account could download all ~12k members' details. The app's member lookup and QR scanner depend on this today, so the fix is to:
-  - restrict full profile reads to self, family, and admins, and
-  - give the lookup/scanner a limited view or RPC (name, D14 #, member type, disciplines, expiration only), ideally limited to chairmen/admins/gate staff.
-- [ ] `profiles` insert policy is `WITH CHECK (true)`: a signed-in user can insert profile rows for other IDs. Tighten to `id = auth.uid()` after checking the website's signup/family flows.
-- [ ] `renewals` insert policy is also `WITH CHECK (true)`; review the same way.
-- [ ] **Broken: charter (club) membership signup for non-admins** (confirmed on prod 2026-11-12 with a rolled-back insert test: `42501 new row violates row-level security policy`). The website inserts into `organizations` as the signed-in user ([membership.component.ts](../d14-angular/src/app/features/membership/membership.component.ts), charter path), but the only non-admin policy on `organizations`, named "Primary Contacts can insert", is actually a SELECT policy. Non-admin inserts are rejected. This predates the 2026-11-12 changes. Fix: add an INSERT policy `WITH CHECK (organization_user_id = auth.uid())`.
+Fixed 2026-11-12 (staging + prod):
+- [x] RLS was off on 9 tables (membership forms, memberships, rules, division media, …), so the public key had full read/write access. See migrations `20261112_rls_*`.
+- [x] Every signed-in user could read every profile (addresses, phones, birthdates). Profiles are now limited to self, family and admins; the app's lookup/scanner use the limited `member_directory` view. See `20261112_profiles_privacy.sql`.
+- [x] `profiles` insert allowed any ID. Now own ID only.
+- [x] Charter (club) signup was broken for non-admins: `organizations` had no insert policy. See `20261112_organizations_insert_policy.sql`.
+- [x] `createUser` / `deleteUser` / `updateUser` edge functions had no auth at all: anyone could delete accounts, make themselves admin, or create free memberships. Fixed in d14-angular PR #19 (website sends the user token; functions check it).
+
+Still open:
+- [ ] **Child and club accounts are created with the password `password`** (membership form children and admin-created charter accounts, in d14-angular `membership.component.ts` and `organization-management.component.ts`). Child emails are predictable (`parent+child1@…`), so anyone who knows a parent's email can sign in as their child and see the family's profiles. Fix: have `createUser` generate a random password for these accounts. Then decide whether to reset existing ones (find out first whether children ever sign in themselves).
+- [ ] **`member_directory` is readable by every signed-in user** (names, D14 #, member type, membership status only; no contact info). That's fine for gate checks today, but once guest/prospect sign-up exists, anyone could make an account and browse the member list. Restrict it to members/chairmen/admins (or add a gate-staff role) before launching prospect sign-up.
+- [ ] `renewals` insert policy is `WITH CHECK (true)`; tighten to own/family rows after checking the website renewal flow.
 - [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
 
 ## Push notifications

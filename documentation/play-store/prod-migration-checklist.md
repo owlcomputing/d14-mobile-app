@@ -23,9 +23,18 @@ on request; items marked 👤 need Dan.
       backup tables; adds missing read/admin/chairman policies and fixes
       UPDATE policies that had no USING clause. **Applied to staging and prod
       2026-11-12.**
-- [ ] `supabase/migrations/20261112_organizations_insert_policy.sql`: lets
+- [x] `supabase/migrations/20261112_organizations_insert_policy.sql`: lets
       a signed-in member create their own organization (fixes charter
-      signup). **Applied to staging 2026-11-12; prod pending.**
+      signup). **Applied to staging and prod 2026-11-12.**
+- [x] `supabase/migrations/20261112_profiles_privacy.sql`: limits profile
+      reads to self/family/admins, own-ID inserts, `set_d14_number` as
+      SECURITY DEFINER, and the new `member_directory` view used by the
+      app's lookup/scanner. **Applied to staging and prod 2026-11-12.** The
+      app's lookup/scanner code that uses `member_directory` must ship in the
+      next build.
+- [x] d14-angular PR #19: `createUser` / `deleteUser` / `updateUser` now
+      require the caller's token (website deployed to prod, functions
+      deployed to staging and prod 2026-11-12).
 
 ## 2. Edge functions
 

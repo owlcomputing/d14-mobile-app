@@ -11,12 +11,13 @@ import {
   View,
 } from 'react-native';
 
-import { MemberResult, type MemberResultData } from '@/components/member-result';
+import {
+  MEMBER_DIRECTORY_COLUMNS,
+  MemberResult,
+  type MemberResultData,
+} from '@/components/member-result';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
-
-const MEMBER_COLUMNS =
-  'id, first_name, last_name, d14_number, disciplines, member_type, memberships(expiration)';
 
 function useMemberSearch(query: string) {
   const q = query.trim();
@@ -29,7 +30,9 @@ function useMemberSearch(query: string) {
       if (/^\d+$/.test(q)) filters.push(`d14_number.eq.${q}`);
       // "First Last" style search
       const parts = q.split(/\s+/);
-      let builder = supabase.from('profiles').select(MEMBER_COLUMNS).limit(25);
+      // member_directory exposes only gate-check fields; profiles itself is
+      // limited to the signed-in user's own family.
+      let builder = supabase.from('member_directory').select(MEMBER_DIRECTORY_COLUMNS).limit(25);
       if (parts.length >= 2) {
         builder = builder
           .ilike('first_name', `%${parts[0]}%`)

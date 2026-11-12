@@ -9,13 +9,16 @@ export type MemberResultData = {
   d14_number: number | null;
   disciplines: string[] | null;
   member_type: string | null;
-  // One membership row per profile (profile_id is unique); renewals extend it
-  memberships: { expiration: string } | null;
+  // From the member_directory view (one membership row per profile)
+  expiration: string | null;
 };
 
+/** Columns to select from member_directory for lookup / scanner results. */
+export const MEMBER_DIRECTORY_COLUMNS =
+  'id, first_name, last_name, d14_number, disciplines, member_type, expiration';
+
 export function membershipActive(m: MemberResultData): boolean {
-  const expiration = m.memberships?.expiration;
-  return expiration ? new Date(expiration) >= new Date() : false;
+  return m.expiration ? new Date(m.expiration) >= new Date() : false;
 }
 
 export function MemberResult({ member }: { member: MemberResultData }) {

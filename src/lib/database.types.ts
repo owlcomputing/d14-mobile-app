@@ -1094,7 +1094,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      member_directory: {
+        Row: {
+          disciplines: string[] | null
+          d14_number: number | null
+          expiration: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          member_type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_temp_membership_forms: { Args: never; Returns: undefined }
