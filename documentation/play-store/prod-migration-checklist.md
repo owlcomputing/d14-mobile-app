@@ -21,8 +21,11 @@ on request; items marked 👤 need Dan.
 - [ ] `supabase/migrations/20261112_rls_remaining_tables.sql` — enables RLS on
       `division_media`, `rules`, `magazine_issues`, `emails` and the empty
       backup tables; adds missing read/admin/chairman policies and fixes
-      UPDATE policies that had no USING clause. **Applied to staging
-      2026-11-12; prod pending Dan's OK.**
+      UPDATE policies that had no USING clause. **Applied to staging and prod
+      2026-11-12.**
+- [ ] `supabase/migrations/20261112_organizations_insert_policy.sql`: lets
+      a signed-in member create their own organization (fixes charter
+      signup). **Applied to staging 2026-11-12; prod pending.**
 
 ## 2. Edge functions
 
