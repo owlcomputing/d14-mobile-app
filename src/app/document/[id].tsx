@@ -20,14 +20,14 @@ import { useAuth } from '@/providers/auth-provider';
 export default function DocumentScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { profile } = useAuth();
+  const { profile, isMember } = useAuth();
   const [doc, setDoc] = useState<WalletDoc | undefined>(() =>
     profile ? getWalletDoc(profile.id, id) : undefined,
   );
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(doc?.title ?? '');
 
-  if (!profile || !doc) {
+  if (!profile || !doc || !isMember) {
     return (
       <View style={styles.missing}>
         <Stack.Screen options={{ title: 'Document' }} />

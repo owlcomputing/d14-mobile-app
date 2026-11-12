@@ -28,7 +28,7 @@ import { useAuth } from '@/providers/auth-provider';
 /** Name and save a picked photo/PDF into the wallet. Reached from WalletDocumentsSection. */
 export default function NewDocumentScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, isMember } = useAuth();
   // Picked file handed over in memory by WalletDocumentsSection
   const [pick] = useState(getPendingPick);
   const uri = pick?.uri;
@@ -38,7 +38,8 @@ export default function NewDocumentScreen() {
   const [saving, setSaving] = useState(false);
   const kind = kindForMime(mimeType);
 
-  if (!pick) {
+  // Wallet documents are members-only (the Wallet tab doesn't offer them to prospects).
+  if (!pick || !isMember) {
     return (
       <View style={[styles.container, styles.missing]}>
         <Text style={styles.missingText}>Nothing to add. Go back and pick a photo or file.</Text>

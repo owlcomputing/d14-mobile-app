@@ -41,23 +41,19 @@ export default function WalletScreen() {
   return <MemberWallet />;
 }
 
-/** Signed in for race reminders, but not (yet) a D14 member. */
+/** Signed in for race reminders, but not (yet) a D14 member. The Wallet is members-only. */
 function ProspectWallet() {
-  const { profile } = useAuth();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Wallet</Text>
-        <Text style={styles.subtitle}>Your digital D14 card lives here once you join</Text>
+        <Text style={styles.subtitle}>For AMA District 14 members</Text>
         <SignInPrompt
           variant="prospect"
-          icon="card"
-          title="Become a D14 member"
-          message="Members get a digital membership card with a QR code for the gate, right here in the app. Join on the D14 website using this same email address."
+          icon="lock-closed"
+          title="The Wallet is for members only"
+          message="Members get a digital membership card with a QR code for the gate, plus a place to keep their AMA card and minor release, all available offline. Join on the D14 website using this same email address."
         />
-        {profile && Platform.OS !== 'web' ? (
-          <WalletDocumentsSection profileId={profile.id} />
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

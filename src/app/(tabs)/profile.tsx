@@ -110,7 +110,7 @@ function MemberProfile() {
     Alert.alert(
       'Delete your account?',
       isProspect
-        ? 'This permanently deletes your account, your notification settings and your saved choices. Documents in your wallet stay on this phone until you remove them.'
+        ? 'This permanently deletes your account, your notification settings and your saved choices.'
         : 'Your account has membership records, so we will send a deletion request to the D14 secretary, who will confirm with you by email.',
       [
         { text: 'Cancel', style: 'cancel' },
