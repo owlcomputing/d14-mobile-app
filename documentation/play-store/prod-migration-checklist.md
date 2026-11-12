@@ -11,6 +11,19 @@ on request; items marked 👤 need Dan.
 - [ ] `supabase/migrations/20260710_event_locations.sql` — events.location_name
       (events.address already exists in prod)
 
+### Security fixes (shared with the website, not app-specific)
+
+- [x] `supabase/migrations/20261112_rls_temp_forms_memberships.sql` — enables
+      RLS on `temp_membership_form_data` and `memberships` (both were fully
+      readable/writable with the anon key). **Applied to staging and prod
+      2026-11-12**, verified with anon REST checks and rolled-back
+      parent/child/other-member/admin impersonation tests.
+- [ ] `supabase/migrations/20261112_rls_remaining_tables.sql` — enables RLS on
+      `division_media`, `rules`, `magazine_issues`, `emails` and the empty
+      backup tables; adds missing read/admin/chairman policies and fixes
+      UPDATE policies that had no USING clause. **Applied to staging
+      2026-11-12; prod pending Dan's OK.**
+
 ## 2. Edge functions
 
 - [ ] 👤 Commit the `create-checkout-session` change in d14-angular (adds

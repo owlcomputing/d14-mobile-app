@@ -44,6 +44,18 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Store listing: App Store screenshots (6.9" iPhone), description (adapt [store-listing.md](documentation/play-store/store-listing.md)), privacy policy URL, App Privacy "nutrition label" answers, age rating, support URL.
 - [ ] App store launch (original target: October 2026)
 
+## Security follow-ups (shared database)
+
+Found during the 2026-11-12 RLS audit. These affect the website too, so coordinate changes with d14-angular.
+
+- [ ] **Any signed-in user can read every profile**, including home addresses, phone numbers, birthdates and emails (`profiles` policy "Authenticated users can see profile" is `USING (true)`). Anyone who creates a free account could download all ~12k members' details. The app's member lookup and QR scanner depend on this today, so the fix is to:
+  - restrict full profile reads to self, family, and admins, and
+  - give the lookup/scanner a limited view or RPC (name, D14 #, member type, disciplines, expiration only), ideally limited to chairmen/admins/gate staff.
+- [ ] `profiles` insert policy is `WITH CHECK (true)`: a signed-in user can insert profile rows for other IDs. Tighten to `id = auth.uid()` after checking the website's signup/family flows.
+- [ ] `renewals` insert policy is also `WITH CHECK (true)`; review the same way.
+- [ ] **Broken: charter (club) membership signup for non-admins** (confirmed on prod 2026-11-12 with a rolled-back insert test: `42501 new row violates row-level security policy`). The website inserts into `organizations` as the signed-in user ([membership.component.ts](../d14-angular/src/app/features/membership/membership.component.ts), charter path), but the only non-admin policy on `organizations`, named "Primary Contacts can insert", is actually a SELECT policy. Non-admin inserts are rejected. This predates the 2026-11-12 changes. Fix: add an INSERT policy `WITH CHECK (organization_user_id = auth.uid())`.
+- [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
+
 ## Push notifications
 
 The app needs two kinds of push notifications.
