@@ -99,6 +99,28 @@ export async function stagePickedFile(picked: File): Promise<string> {
   return dest.uri;
 }
 
+// --- Hand-off to the "Add Document" screen ---------------------------------
+// The staged file's URI must NOT be passed as a route param: Expo Router
+// percent-decodes params, and in Expo Go the app's folder name itself contains
+// encoded characters (e.g. %40 for the @ in the project id). The decoded URI
+// points at a path that doesn't exist, which broke the preview and made saving
+// fail with "Missing 'READ' permission". Keep it in memory instead.
+
+export type PendingPick = { uri: string; mimeType: string | null; name: string | null };
+let pendingPick: PendingPick | null = null;
+
+export function setPendingPick(pick: PendingPick) {
+  pendingPick = pick;
+}
+
+export function getPendingPick(): PendingPick | null {
+  return pendingPick;
+}
+
+export function clearPendingPick() {
+  pendingPick = null;
+}
+
 /** Move a staged file (see stage* above) into the wallet. */
 export async function addWalletDoc(
   profileId: string,

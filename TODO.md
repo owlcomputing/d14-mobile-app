@@ -47,6 +47,10 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Store listing: App Store screenshots (6.9" iPhone), description (adapt [store-listing.md](documentation/play-store/store-listing.md)), privacy policy URL, App Privacy "nutrition label" answers, age rating, support URL.
 - [ ] App store launch (original target: October 2026)
 
+## Performance
+
+- [ ] **Division page content embeds photos as base64.** The website's CMS editor saves images inline in `division_cms_content.content`, so some divisions are huge (staging, 2026-11-12: division 18 = 5.1 MB, 41 = 2.8 MB, 16 = 1.0 MB). Each visit downloads it all, which is slow on mobile data, and it overflowed the app's offline cache on Android ("Row too big to fit into CursorWindow"; division details are no longer cached as a workaround). Fix in d14-angular: upload CMS images to Supabase Storage and store URLs, plus a one-time migration of existing content.
+
 ## Security follow-ups (shared database)
 
 Found during the 2026-11-12 security audit. These affect the website too, so coordinate changes with d14-angular.

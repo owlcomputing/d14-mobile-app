@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,21 +16,35 @@ import {
 } from 'react-native';
 
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
-import { addWalletDoc, kindForMime, SUGGESTED_TITLES } from '@/lib/wallet-documents';
+import {
+  addWalletDoc,
+  clearPendingPick,
+  getPendingPick,
+  kindForMime,
+  SUGGESTED_TITLES,
+} from '@/lib/wallet-documents';
 import { useAuth } from '@/providers/auth-provider';
 
 /** Name and save a picked photo/PDF into the wallet. Reached from WalletDocumentsSection. */
 export default function NewDocumentScreen() {
   const router = useRouter();
   const { profile } = useAuth();
-  const { uri, mimeType, name } = useLocalSearchParams<{
-    uri: string;
-    mimeType?: string;
-    name?: string;
-  }>();
+  // Picked file handed over in memory by WalletDocumentsSection
+  const [pick] = useState(getPendingPick);
+  const uri = pick?.uri;
+  const mimeType = pick?.mimeType ?? null;
+  const name = pick?.name ?? null;
   const [title, setTitle] = useState('');
   const [saving, setSaving] = useState(false);
   const kind = kindForMime(mimeType);
+
+  if (!pick) {
+    return (
+      <View style={[styles.container, styles.missing]}>
+        <Text style={styles.missingText}>Nothing to add. Go back and pick a photo or file.</Text>
+      </View>
+    );
+  }
 
   const save = async () => {
     if (!profile || !uri || saving) return;
@@ -39,9 +53,10 @@ export default function NewDocumentScreen() {
       await addWalletDoc(profile.id, {
         sourceUri: uri,
         title: title || (kind === 'pdf' ? name || 'Document' : 'Document'),
-        mimeType: mimeType || null,
-        sourceName: name || null,
+        mimeType,
+        sourceName: name,
       });
+      clearPendingPick();
       router.back();
     } catch (e) {
       setSaving(false);
@@ -110,6 +125,8 @@ export default function NewDocumentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: D14Colors.black },
+  missing: { alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
+  missingText: { color: D14Colors.textSecondary, fontSize: 14, textAlign: 'center' },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   preview: {
     height: 260,

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
+import { defaultShouldDehydrateQuery, QueryClient, type Query } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,7 +19,23 @@ const queryClient = new QueryClient({
   },
 });
 
-const persister = createAsyncStoragePersister({ storage: AsyncStorage });
+// Saved query cache (offline support). Android AsyncStorage can't read back a
+// value over ~2 MB ("Row too big to fit into CursorWindow"), and division page
+// content from the website CMS embeds photos as base64 (5 MB+ for some
+// divisions), so division detail queries are never saved. Member lookup / QR
+// scan results aren't saved either: other members' data shouldn't stay on the
+// phone.
+const CACHE_KEY = 'd14-query-cache-v2';
+AsyncStorage.removeItem('REACT_QUERY_OFFLINE_CACHE').catch(() => {}); // old, possibly oversized
+const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: CACHE_KEY });
+
+const NOT_PERSISTED = new Set(['member-search', 'scanned-member']);
+function shouldPersistQuery(query: Query) {
+  const [root, id] = query.queryKey;
+  if (root === 'divisions' && id !== undefined) return false; // division detail (CMS content)
+  if (typeof root === 'string' && NOT_PERSISTED.has(root)) return false;
+  return defaultShouldDehydrateQuery(query);
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -130,7 +146,11 @@ export default function RootLayout() {
     <ThemeProvider value={d14Theme}>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
+        persistOptions={{
+          persister,
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+          dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+        }}>
         <AuthProvider>
           <AppLockProvider>
             <StatusBar style="light" />

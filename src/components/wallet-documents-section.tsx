@@ -9,6 +9,7 @@ import { Widget } from '@/components/widget';
 import { D14Colors, Radius, Spacing } from '@/constants/theme';
 import {
   docUri,
+  setPendingPick,
   stageImageBase64,
   stagePickedFile,
   useWalletDocs,
@@ -30,11 +31,11 @@ export function WalletDocumentsSection({ profileId }: { profileId: string }) {
   const router = useRouter();
   const { docs } = useWalletDocs(profileId);
 
-  const openAdd = (picked: Picked) =>
-    router.push({
-      pathname: '/document/new',
-      params: { uri: picked.uri, mimeType: picked.mimeType ?? '', name: picked.name ?? '' },
-    });
+  // Hand the pick over in memory, not as route params (see setPendingPick).
+  const openAdd = (picked: Picked) => {
+    setPendingPick(picked);
+    router.push('/document/new');
+  };
 
   const takePhoto = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
