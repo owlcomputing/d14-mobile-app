@@ -30,25 +30,36 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Charter (club) memberships stay on the website.
   - Tested on staging up to the Stripe page (test mode, 2 × $15 = $30 for parent + child; staged data matches the website's format), closed unpaid. Not tested: a completed payment. Fulfillment emails "New Membership Signup" to the real secretary@ama-d14.org even from staging, so warn them first.
   - [ ] Test on device: pay with Stripe test card 4242 4242 4242 4242 (any future date / CVC / ZIP), confirm the Wallet card appears.
-  - [ ] Prod: needs the `create-checkout-session` `uiMode: 'hosted'` change deployed to prod (see migration checklist), same as renewals.
+  - [x] Prod: `create-checkout-session` hosted mode deployed (d14-angular PR #20, 2026-11-13).
 
 ### Release
 
 - [ ] Ship a new build to the board testers (Adam, James, etc.) for another feedback round, then go live shortly after (~15:09)
+  - Decided 2026-11-13: testers use **production** (real accounts and data). Android testers get an APK install link (EAS `tester` profile in [eas.json](eas.json): production settings, internal distribution); iPhone testers get TestFlight once the Apple account exists.
+  - [x] Prod rollout for the tester build (2026-11-13): app migrations, app edge functions, sign-in code emails + rate limit, `create-checkout-session` hosted mode (d14-angular PR #20). See [prod-migration-checklist.md](documentation/play-store/prod-migration-checklist.md).
+  - [ ] 👤 `CRON_SECRET` + daily renewal-reminders job on prod (script ready; Dan runs it).
+  - [x] Dan smoke-tested the tester APK on prod (EAS build e9708de0, versionCode 2), 2026-11-13.
+  - [ ] 👤 Send the install link to the board testers.
+  - [ ] Before the Play Store build: block `SYSTEM_ALERT_WINDOW` and `DUMP`, which libraries add to the Android manifest.
+  - Heads-up for testers: Join and Renew on prod are **real charges**.
 - [ ] **Launch on Apple devices (iOS / App Store)**: Android is already deployable; iOS isn't (~14:15). No iOS build has ever been run on EAS.
   - Already done: `ios.bundleIdentifier` is `com.owlcomputing.d14` in [app.json](app.json); `supportsTablet: false`.
-  - Apple account setup:
-    - Apple Developer Program membership ($99/yr). Decide whose account: OWL Computing's or AMA District 14's (an organization account needs a D-U-N-S number and takes longer to approve).
-    - Register the bundle ID and create the app record in App Store Connect.
-    - Let EAS generate the distribution certificate, provisioning profile, and **APNs push key** (`eas credentials`). iOS push won't work without the APNs key.
+  - Apple account setup (decided 2026-11-13: **OWL Computing** accounts for both stores; being re-created under OWL's new EIN, Dan handling D-U-N-S + enrollment externally):
+    - [ ] 👤 Enroll in the Apple Developer Program ($99/yr) as OWL Computing. As an organization, Apple needs OWL's D-U-N-S number (look it up or request it free from Apple's D-U-N-S lookup; a new one can take ~5 business days), a legal entity name, and a website. Enrolling through the Apple Developer app on an iPhone is the fastest path.
+    - [ ] 👤 Once approved, create the app record in App Store Connect (name "AMA District 14", bundle ID `com.owlcomputing.d14`, SKU e.g. `d14-mobile`). Note the Apple ID number it shows (the `ascAppId`).
+    - [ ] Put `ascAppId` and the Apple team ID in `submit.production.ios` in [eas.json](eas.json).
+    - [ ] 👤 First iOS build must be run by Dan in a terminal (Apple sign-in + 2FA): `nvm use && npx eas-cli@latest build -p ios --profile production`. Answer **yes** to letting EAS create the distribution certificate and provisioning profile, and **yes** to setting up push notifications (creates the APNs key; iOS push doesn't work without it).
   - Config:
-    - Add the App Store Connect app ID / Apple team to `submit.production.ios` in [eas.json](eas.json).
-    - Set `ios.config.usesNonExemptEncryption: false` so every upload doesn't stop at the export-compliance question.
-    - Check iOS permission prompts: camera (set), calendar (set), microphone (expo-camera default), **Face ID** for app lock (`expo-local-authentication` isn't in `plugins`, so the `NSFaceIDUsageDescription` text may be missing, and that crashes on Face ID devices). Wallet document upload will need photo library text later.
-  - Build and test: `eas build -p ios --profile production` → `eas submit -p ios` → TestFlight. Invite the board testers through TestFlight and test on real iPhones: push, Face ID lock, QR scanner, add to calendar, Stripe renewal return (`d14://checkout-complete`), offline cache.
+    - [x] `ios.config.usesNonExemptEncryption: false` so uploads skip the export-compliance question (2026-11-13).
+    - [x] Permission prompts: camera, photos, calendar set; **Face ID** text added via the `expo-local-authentication` plugin; microphone removed (iOS text off, Android `RECORD_AUDIO` blocked) since nothing records audio (2026-11-13).
+  - iPhone check in **Expo Go** (Dan, 2026-11-13): mostly fine. Two things that Expo Go can't show, to re-test in the real build:
+    - **App Lock asked for the device passcode, not Face ID.** Expo Go has no Face ID permission text of ours, so iOS falls back to the passcode. Fixed in config above; confirm Face ID prompts in the TestFlight build.
+    - **Push toggle didn't ask for permission.** Expected: push is disabled in Expo Go ([push.ts](src/lib/push.ts)). Confirm the permission prompt in the TestFlight build.
+    - [ ] Decide: **Face ID sign-in after signing out.** App Lock only protects a signed-in session; after Sign Out there's nothing to unlock, so you sign in with email again. "Sign in with Face ID" would mean storing the session (or credentials) in the keychain on sign-out instead of clearing it. Dan noticed the gap; decide whether we want it.
+  - Build and test: `eas build -p ios --profile production` → `eas submit -p ios --latest` → TestFlight. Board testers aren't App Store Connect users, so add them as **external testers** (public TestFlight link or by email). The first external build goes through Beta App Review (usually about a day) and needs: a feedback email, a short "what to test" note, a demo sign-in for the reviewer, and the privacy policy URL. Test on real iPhones: push permission prompt, Face ID lock, QR scanner, add to calendar, Stripe return (`d14://checkout-complete`), offline cache.
   - App Store review risks to settle before submitting:
     - **Membership payments through Stripe** in [renew.tsx](src/app/renew.tsx): Apple requires in-app purchase for digital content. A D14 membership is a real-world service (racing at events), which should qualify for the exemption, but say so clearly in the review notes.
-    - **Account deletion:** Apple requires in-app account deletion for any app that lets users create accounts. Right now the app only signs existing members in, but guest/prospect sign-up will create accounts, so it will need a "Delete my account" option.
+    - [x] **Account deletion:** Apple requires in-app account deletion for any app that lets users create accounts. Done: Profile → "Delete my account" (prospects deleted right away; members' requests go to the secretary).
     - Sign in with Apple isn't required as long as login stays email/password only (no Google/Facebook login).
     - Demo login for the reviewer, plus review notes explaining the gate-scanner and admin screens.
   - Store listing: App Store screenshots (6.9" iPhone), description (adapt [store-listing.md](documentation/play-store/store-listing.md)), privacy policy URL, App Privacy "nutrition label" answers, age rating, support URL.
@@ -99,7 +110,7 @@ The app needs two kinds of push notifications.
 - [ ] **Guest sign-up for notifications ("prospect" users)**. Built on staging 2026-11-12.
   - **How it works:** "Get race reminders" ([signup.tsx](src/app/signup.tsx)): name, email, divisions, separate push / marketing-email opt-ins → 6-digit email code (confirms the email) → real login with `member_type` NULL and no membership (the website's existing "registered, not paid" state; the website sends them to its membership page on login). Consents go to `communication_consents` (append-only, exact wording + source), divisions to `communication_preferences`. Members can also sign in with an emailed code. Profile → Communications toggles; Profile → Delete my account (prospects deleted immediately via `delete-account`; members send a request to the secretary). `member_directory` now members/chairmen/admins only.
   - [ ] Test on device: sign up with a real email (code arrives, profile/consents created), prospect Home/Wallet/Profile, toggles, delete account; member code sign-in.
-  - [ ] Prod: run `20261112_prospects_and_consents.sql`, apply [auth email templates](supabase/templates/README.md) + rate limit, deploy `delete-account`.
+  - [x] Prod: migration, [auth email templates](supabase/templates/README.md) + rate limit, `delete-account` (2026-11-13).
   - [ ] Admin side: "Prospects only / Members only / Everyone" audience in send screens; prospect list + consent view on the website (see website parity item).
   - Original notes:
   - Collect name and email (phone optional?) and save them in the database as a **prospect** user type, so we can:

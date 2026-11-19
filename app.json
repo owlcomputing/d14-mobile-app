@@ -9,7 +9,10 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.owlcomputing.d14"
+      "bundleIdentifier": "com.owlcomputing.d14",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +25,9 @@
       "package": "com.owlcomputing.d14",
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "android.permission.CAMERA",
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -42,9 +47,17 @@
       ],
       "expo-secure-store",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow AMA District 14 to use Face ID to lock and unlock the app."
+        }
+      ],
+      [
         "expo-camera",
         {
-          "cameraPermission": "Allow AMA District 14 to use the camera to scan member QR codes and photograph documents for your wallet."
+          "cameraPermission": "Allow AMA District 14 to use the camera to scan member QR codes and photograph documents for your wallet.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [

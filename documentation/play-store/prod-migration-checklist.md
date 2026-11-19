@@ -7,8 +7,8 @@ on request; items marked 👤 need Dan.
 
 ## 1. Database (additive migrations)
 
-- [ ] `supabase/migrations/20260702_push_tokens.sql` — push_tokens table + RLS
-- [ ] `supabase/migrations/20260710_event_locations.sql` — events.location_name
+- [x] `supabase/migrations/20260702_push_tokens.sql` — push_tokens table + RLS (prod 2026-11-13)
+- [x] `supabase/migrations/20260710_event_locations.sql` (prod 2026-11-13) — events.location_name
       (events.address already exists in prod)
 
 ### Security fixes (shared with the website, not app-specific)
@@ -18,7 +18,7 @@ on request; items marked 👤 need Dan.
       readable/writable with the anon key). **Applied to staging and prod
       2026-11-12**, verified with anon REST checks and rolled-back
       parent/child/other-member/admin impersonation tests.
-- [ ] `supabase/migrations/20261112_rls_remaining_tables.sql` — enables RLS on
+- [x] `supabase/migrations/20261112_rls_remaining_tables.sql` — enables RLS on
       `division_media`, `rules`, `magazine_issues`, `emails` and the empty
       backup tables; adds missing read/admin/chairman policies and fixes
       UPDATE policies that had no USING clause. **Applied to staging and prod
@@ -38,22 +38,26 @@ on request; items marked 👤 need Dan.
 
 ### Prospect sign-up (pending)
 
-- [ ] `supabase/migrations/20261112_prospects_and_consents.sql`: consent log,
+- [x] `supabase/migrations/20261112_prospects_and_consents.sql`: consent log,
       preferences, members-only `member_directory`. Applied to staging
-      2026-11-12.
-- [ ] Auth email templates + email rate limit per
+      2026-11-12, **prod 2026-11-13** (same rolled-back prospect/member/admin
+      test and anon REST checks passed on prod).
+- [x] Auth email templates + email rate limit per
       [supabase/templates/README.md](../../supabase/templates/README.md)
-      (Management API). Applied to staging 2026-11-12.
+      (Management API). Applied to staging 2026-11-12, **prod 2026-11-13**
+      (prod's old templates were Supabase defaults; rate limit 2 → 100).
 
 ## 2. Edge functions
 
-- [ ] 👤 Commit the `create-checkout-session` change in d14-angular (adds
-      `uiMode: 'hosted'` — backward compatible) and deploy to prod
-- [ ] Deploy `send-push` (mobile repo) to prod
-- [ ] Deploy `delete-account` (mobile repo) to prod (staging deployed 2026-11-12)
-- [ ] Deploy `checkout-return` (mobile repo, `--no-verify-jwt`) to prod
-- [ ] Deploy `renewal-reminders` (mobile repo, `--no-verify-jwt`) to prod
-- [ ] Set prod `CRON_SECRET` function secret (generate a fresh one — do not
+- [x] `create-checkout-session` hosted mode (`uiMode: 'hosted'`, backward
+      compatible) on d14-angular `main` via PR #20 and deployed to prod
+      2026-11-13. Checked both modes on prod: hosted returns a Stripe URL,
+      the website's embedded mode still returns its client secret.
+- [x] Deploy `send-push` (mobile repo) to prod (2026-11-13)
+- [x] Deploy `delete-account` (mobile repo) to prod (staging 2026-11-12, prod 2026-11-13)
+- [x] Deploy `checkout-return` (mobile repo, `--no-verify-jwt`) to prod (2026-11-13)
+- [x] Deploy `renewal-reminders` (mobile repo, `--no-verify-jwt`) to prod (2026-11-13)
+- [ ] 👤 Set prod `CRON_SECRET` function secret (script ready: Dan runs it; the agent was blocked from setting prod secrets) (generate a fresh one — do not
       reuse staging's)
 - [ ] Schedule the daily pg_cron job on prod (15:00 UTC) pointing at prod's
       renewal-reminders URL with the prod secret

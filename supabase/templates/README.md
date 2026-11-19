@@ -23,4 +23,6 @@ Applied with the Supabase Management API
 `mailer_otp_exp` is left as is (staging 1 h, prod 24 h): it also controls how
 long password-reset links last, and the reset email promises 24 hours.
 
-Status: staging applied 2026-11-12; prod pending the prospect sign-up release.
+Status: staging applied 2026-11-12; prod applied 2026-11-13 (prod's previous
+templates were the Supabase defaults; a backup of the old auth config was
+taken before the change).
