@@ -37,9 +37,9 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 - [ ] Ship a new build to the board testers (Adam, James, etc.) for another feedback round, then go live shortly after (~15:09)
   - Decided 2026-11-13: testers use **production** (real accounts and data). Android testers get an APK install link (EAS `tester` profile in [eas.json](eas.json): production settings, internal distribution); iPhone testers get TestFlight once the Apple account exists.
   - [x] Prod rollout for the tester build (2026-11-13): app migrations, app edge functions, sign-in code emails + rate limit, `create-checkout-session` hosted mode (d14-angular PR #20). See [prod-migration-checklist.md](documentation/play-store/prod-migration-checklist.md).
-  - [ ] 👤 `CRON_SECRET` + daily jobs on prod: run `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx` (renewal reminders + event notifications).
+  - [x] `CRON_SECRET` + daily jobs on prod (2026-11-20, `setup-notification-cron.sh`): renewal reminders + event notifications.
   - [x] Dan smoke-tested the tester APK on prod (EAS build e9708de0, versionCode 2), 2026-11-13.
-  - [ ] 👤 Send the install link to the board testers.
+  - [ ] 👤 Send the install link to the board testers: **versionCode 4** (light mode, wallet crop), EAS build 3735d080.
   - [x] Block `SYSTEM_ALERT_WINDOW` and `DUMP` (added by libraries) in the Android manifest (2026-11-19, `android.blockedPermissions`).
   - Heads-up for testers: Join and Renew on prod are **real charges**.
 - [ ] **Launch on Apple devices (iOS / App Store)**: Android is already deployable; iOS isn't (~14:15). No iOS build has ever been run on EAS.
@@ -120,7 +120,7 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   - Safety switch `NOTIFY_EMAIL_MODE`: `off` (default), `allowlist` (only `NOTIFY_EMAIL_ALLOWLIST` addresses: staging uses this, since its database is a copy of real members), `live`.
   - Volume on prod: a district-wide members email ≈ 3,300 people.
   - [ ] Later: handle SendGrid bounces/spam reports (event webhook → mark the address).
-- [ ] 👤 **SendGrid keys are revoked on staging AND prod** (SendGrid 401 "authorization grant is invalid, expired, or revoked"; prod found 2026-11-20 by Dan's Send Test to Me). Everything that sends through `SENDGRID_API_KEY` is failing on prod: the website's `emails` function (contact form, admin emails) and the app's notification emails. **Prod fixed 2026-11-20** (Dan set a new key). [ ] Staging still has the old key `J46sz2eIQs-NY_XkTZihvQ` (the one committed to git); set a separate staging key if staging email is needed. [ ] Delete old keys `J46sz2eIQs-NY_XkTZihvQ` and `ZWMHLUALRIqMk6UTjXndww` from SendGrid if still listed. Also check Supabase Auth → SMTP on both projects in case it uses a SendGrid key (sign-in codes, password resets).
+- [x] 👤 **SendGrid keys were revoked on staging AND prod** (SendGrid 401 "authorization grant is invalid, expired, or revoked"; prod found 2026-11-20 by Dan's Send Test to Me). Everything that sends through `SENDGRID_API_KEY` is failing on prod: the website's `emails` function (contact form, admin emails) and the app's notification emails. **Prod fixed 2026-11-20** (Dan set a new key). [ ] Staging still has the old key `J46sz2eIQs-NY_XkTZihvQ` (the one committed to git); set a separate staging key if staging email is needed. [ ] Delete old keys `J46sz2eIQs-NY_XkTZihvQ` and `ZWMHLUALRIqMk6UTjXndww` from SendGrid if still listed. Also check Supabase Auth → SMTP on both projects in case it uses a SendGrid key (sign-in codes, password resets).
   - Likely cause: SendGrid keys were committed to d14-angular in 2024 (`supabase/functions/.env.staging`, still on main and staging; earlier in `emails/index.ts`). [ ] Remove `.env.staging` from the repo and add `.env*` to `.gitignore`.
 - **Rollout to prod** (Dan OK'd 2026-11-20):
   1. [x] Applied [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
@@ -130,11 +130,11 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   5. [x] d14-angular PR #22 merged (website `/unsubscribe`, also merged into staging); redeployed `send-push`, `event-notifications`, `email-unsubscribe` to prod (footer link → website page, GET redirect). Staging has this already (`SITE_URL=https://ama-d14-stg.web.app`).
   6. [x] Dan's Send Test to Me from APK versionCode 3 (2026-11-20): push arrived (FCM works on prod), link, email and unsubscribe page all good.
   7. [ ] **Hold `NOTIFY_EMAIL_MODE=live` until tester feedback** (Dan, 2026-11-20). Then switch it.
-- [ ] **Website admin: push + newsletter opt-outs** (Dan, 2026-11-20: many admins use the website). d14-angular **PR #23**: Admin › Emails → **Admin › Notifications** with tabs **Email newsletter** / **Push notification** (push tab = the app's sender via `send-push`, incl. test + history).
+- [x] **Website admin: push + newsletter opt-outs** (Dan, 2026-11-20: many admins use the website). d14-angular **PR #23**: Admin › Emails → **Admin › Notifications** with tabs **Email newsletter** / **Push notification** (push tab = the app's sender via `send-push`, incl. test + history).
   - Newsletters now go through [send-newsletter](supabase/functions/send-newsletter/index.ts) + [newsletter_recipients](supabase/migrations/20261121_newsletter_recipients.sql): division members who unsubscribed are skipped, the rest get an unsubscribe link + mailing address; members picked by name and charter clubs always get it. Same division selection as before (any profile with the discipline). Only `+childN` tags are stripped (the old code mangled 2 real `+` addresses). `NEWSLETTER_EMAIL_MODE` (default live; staging = allowlist).
   - Staging: migration applied, functions deployed, tested (see PR).
   - [x] Prod 2026-11-20: PR #23 merged (also into staging); migration applied; `send-newsletter`, `send-push`, `event-notifications` deployed and smoke-tested.
-  - [ ] 👤 Dan: on ama-d14.org › Admin › Notifications, Send Test to Me on both tabs.
+  - [x] Dan tested Send Test to Me from the website (2026-11-20).
 
 - [ ] **Guest sign-up for notifications ("prospect" users)**. Built on staging 2026-11-12.
   - **How it works:** "Get race reminders" ([signup.tsx](src/app/signup.tsx)): name, email, divisions, separate push / marketing-email opt-ins → 6-digit email code (confirms the email) → real login with `member_type` NULL and no membership (the website's existing "registered, not paid" state; the website sends them to its membership page on login). Consents go to `communication_consents` (append-only, exact wording + source), divisions to `communication_preferences`. Members can also sign in with an emailed code. Profile → Communications toggles; Profile → Delete my account (prospects deleted immediately via `delete-account`; members send a request to the secretary). `member_directory` now members/chairmen/admins only.
@@ -152,7 +152,7 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   - Current blocker: `push_tokens.profile_id` is required and RLS assumes a signed-in user, so guest devices can't register today.
   - To decide: is a prospect a real auth account (e.g. passwordless email link) with a `profiles` row, or a lighter contact record in its own table? `profiles` is shared with the website, so coordinate any schema change there.
 
-- [ ] **Back up every push with an email**
+- [x] **Back up every push with an email** (done 2026-11-20; see Push notifications above. Bounce handling is still open there.)
   - When a push goes out (automatic or manual), also email each recipient where we have an email address and they haven't opted out.
   - Reuse the website's SendGrid setup (`emails` edge function in d14-angular, sender `no-reply@em5910.ama-d14.org`) instead of adding a new provider.
   - Use one shared template: push title as the subject, body as the content, plus the same link/deep link as the push.
@@ -162,6 +162,7 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   - **Batch the emails** (agreed): when several automatic event pushes go out close together, send each person one combined email (e.g. a digest) instead of one email per push.
 
 - [ ] **Mirror all notification/email admin tools on the D14 website**
+  - Done 2026-11-20 (PR #23): compose/send with audience + divisions + link + email copy, Send Test, send history. Still open: scheduled sends (not built in the app either), automatic event notification settings, prospect list + consent records.
   - Everything admins can do in the app for push/email management should also be available in the website's admin area (d14-angular), so admins aren't forced onto their phones.
   - Scope: compose and send manual notifications (custom content, audience: district / divisions / prospects / members), schedule sends, view send history and delivery stats (push + email), manage automatic event notification settings, and view prospects and their consent records.
   - The app and website should call the **same** edge functions (e.g. `send-push`), so audience rules, consent checks, and email backup behave the same no matter where a notification is sent from.
