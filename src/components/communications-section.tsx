@@ -11,15 +11,35 @@ import {
   type ConsentChannel,
 } from '@/lib/prospect-signup';
 import { registerPushToken, unregisterPushToken } from '@/lib/push';
+import { useFamilyMembers } from '@/lib/queries';
+import { useAuth } from '@/providers/auth-provider';
+
+const isCurrent = (expiration: string | null | undefined) =>
+  !!expiration && new Date(expiration).getTime() >= Date.now();
+
+type MembershipJoin = { expiration: string } | { expiration: string }[] | null;
 
 /**
  * Push / marketing-email opt-ins for the signed-in user. Every change is a
  * new row in the consent log (communication_consents), with this wording.
  */
 export function CommunicationsSection({ profileId }: { profileId: string }) {
-  // Members who never chose default to push on, email off.
+  const { membership } = useAuth();
+  const family = useFamilyMembers(profileId);
+  // Same rule as the server (notification_email_targets): a household with a
+  // current membership gets email unless they opt out; everyone else only if
+  // they opt in. Push defaults to on.
+  const householdMember =
+    isCurrent(membership?.expiration) ||
+    (family.data ?? []).some((m) => {
+      const joined = m.memberships as MembershipJoin;
+      const rows = Array.isArray(joined) ? joined : joined ? [joined] : [];
+      return rows.some((r) => isCurrent(r.expiration));
+    });
   const [push, setPush] = useState(true);
-  const [email, setEmail] = useState(false);
+  // undefined = never chosen: show the default for their membership status
+  const [emailChoice, setEmail] = useState<boolean | undefined>(undefined);
+  const email = emailChoice ?? householdMember;
   const [saving, setSaving] = useState<ConsentChannel | null>(null);
 
   useEffect(() => {
@@ -65,7 +85,7 @@ export function CommunicationsSection({ profileId }: { profileId: string }) {
         onChange={(on) => change('push', on)}
       />
       <ConsentRow
-        label="Email news & offers"
+        label="Email news & event reminders"
         text={EMAIL_CONSENT_TEXT}
         value={email}
         disabled={saving === 'email_marketing'}

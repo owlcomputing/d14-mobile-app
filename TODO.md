@@ -37,15 +37,16 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 - [ ] Ship a new build to the board testers (Adam, James, etc.) for another feedback round, then go live shortly after (~15:09)
   - Decided 2026-11-13: testers use **production** (real accounts and data). Android testers get an APK install link (EAS `tester` profile in [eas.json](eas.json): production settings, internal distribution); iPhone testers get TestFlight once the Apple account exists.
   - [x] Prod rollout for the tester build (2026-11-13): app migrations, app edge functions, sign-in code emails + rate limit, `create-checkout-session` hosted mode (d14-angular PR #20). See [prod-migration-checklist.md](documentation/play-store/prod-migration-checklist.md).
-  - [ ] 👤 `CRON_SECRET` + daily renewal-reminders job on prod (script ready; Dan runs it).
+  - [ ] 👤 `CRON_SECRET` + daily jobs on prod: run `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx` (renewal reminders + event notifications).
   - [x] Dan smoke-tested the tester APK on prod (EAS build e9708de0, versionCode 2), 2026-11-13.
   - [ ] 👤 Send the install link to the board testers.
-  - [ ] Before the Play Store build: block `SYSTEM_ALERT_WINDOW` and `DUMP`, which libraries add to the Android manifest.
+  - [x] Block `SYSTEM_ALERT_WINDOW` and `DUMP` (added by libraries) in the Android manifest (2026-11-19, `android.blockedPermissions`).
   - Heads-up for testers: Join and Renew on prod are **real charges**.
 - [ ] **Launch on Apple devices (iOS / App Store)**: Android is already deployable; iOS isn't (~14:15). No iOS build has ever been run on EAS.
   - Already done: `ios.bundleIdentifier` is `com.owlcomputing.d14` in [app.json](app.json); `supportsTablet: false`.
-  - Apple account setup (decided 2026-11-13: **OWL Computing** accounts for both stores; being re-created under OWL's new EIN, Dan handling D-U-N-S + enrollment externally):
-    - [ ] 👤 Enroll in the Apple Developer Program ($99/yr) as OWL Computing. As an organization, Apple needs OWL's D-U-N-S number (look it up or request it free from Apple's D-U-N-S lookup; a new one can take ~5 business days), a legal entity name, and a website. Enrolling through the Apple Developer app on an iPhone is the fastest path.
+  - Store accounts (updated 2026-11-20): publish under **OWL Computing Inc.**, the parent company, which already has a D-U-N-S number and existing Apple and Google developer accounts that may have lapsed. Reactivate those rather than create new ones. OWL Computing Development LLC (the new subsidiary) has no D-U-N-S or store accounts, and we're not using it for this. The apps can be transferred to the LLC later if wanted (both stores support app transfers).
+    - [ ] 👤 Apple: sign in at developer.apple.com/account as the Account Holder, check membership status, entity name and expiration, and **Renew** ($99/yr) if expired. Note the Team ID.
+    - [ ] 👤 Google: sign in at play.google.com/console and check the account is **Organization** type, verified (D-U-N-S), and not closed for inactivity. If it was closed, create a new Organization account under OWL Computing Inc. ($25). Organization accounts skip the 12-tester / 14-day closed-test rule.
     - [ ] 👤 Once approved, create the app record in App Store Connect (name "AMA District 14", bundle ID `com.owlcomputing.d14`, SKU e.g. `d14-mobile`). Note the Apple ID number it shows (the `ascAppId`).
     - [ ] Put `ascAppId` and the Apple team ID in `submit.production.ios` in [eas.json](eas.json).
     - [ ] 👤 First iOS build must be run by Dan in a terminal (Apple sign-in + 2FA): `nvm use && npx eas-cli@latest build -p ios --profile production`. Answer **yes** to letting EAS create the distribution certificate and provisioning profile, and **yes** to setting up push notifications (creates the APNs key; iOS push doesn't work without it).
@@ -81,37 +82,49 @@ Fixed 2026-11-12 (staging + prod):
 - [x] `createUser` / `deleteUser` / `updateUser` edge functions had no auth at all: anyone could delete accounts, make themselves admin, or create free memberships. Fixed in d14-angular PR #19 (website sends the user token; functions check it).
 
 Still open:
-- [ ] **Child and club accounts are created with the password `password`** (membership form children and admin-created charter accounts, in d14-angular `membership.component.ts` and `organization-management.component.ts`). Child emails are predictable (`parent+child1@…`), so anyone who knows a parent's email can sign in as their child and see the family's profiles. Fix: have `createUser` generate a random password for these accounts. Then decide whether to reset existing ones (find out first whether children ever sign in themselves).
+- [x] **Accounts created with known passwords** (`password` for family members and charter accounts, `TemporaryPassword123` for admin-added members). Fixed in d14-angular PR #21: `createUser` now always sets a random password, except when a parent converts their own child into a standalone login. Live on prod 2026-11-20 (functions deployed, website merged, `main` merged into `staging`).
+  - Same PR fixes a #19 regression: fulfillment's server-to-server `createUser` call (adding a family member after signup) was rejected. No prod checkouts hit it.
+- [ ] **Later (Dan, 2026-11-20: hold for now): reset existing accounts still on default passwords.** Prod samples from 2026-11-19: ~40% of 1,534 family accounts (~600) still on `password`, 1 of 107 charter accounts, and ~5.5% of other members (~550) on `TemporaryPassword123`. None of the sampled accounts was ever signed into after creation, so they can be switched to random passwords without locking anyone out (they'd use "Forgot password"). Do it in batches, because each hash check is slow.
 - [x] **`member_directory` was readable by every signed-in user.** Now limited to members, chairmen and admins (`20261112_prospects_and_consents.sql`, staging; prod with the prospect release).
-- [ ] **The website's `emails` edge function is an open email relay**: `verify_jwt = false`, no caller check, and it sends to whatever `to` addresses the request gives, from `no-reply@em5910.ama-d14.org`. Anyone can send email that looks like it's from D14 (phishing risk, and it can hurt the domain's sending reputation). Fix in d14-angular: require an admin token when `to` is set (the contact form only needs the default secretary address), and/or add a server-side secret for internal callers like `delete-account`.
+- [x] **The website's `emails` edge function was an open email relay.** Fixed in d14-angular PR #21: only signed-in admins and our own functions (service-role key) choose recipients and HTML. Everyone else can only send an escaped contact-form message to the secretary (Reply-To = submitter, no CC copy). Live on prod 2026-11-20; smoke-tested (a relay attempt gets 400, `createUser` with no sign-in gets 401).
+  - Also fixed on prod: the live contact form was sending messages to the **submitter** instead of the secretary, and the app's member "Delete my account" request was failing.
+  - Note: the website's GitHub deploy does **not** deploy Supabase functions. Deploy them by hand (`supabase functions deploy <name> --project-ref …`) **before** merging website changes that depend on them.
 - [ ] `renewals` insert policy is `WITH CHECK (true)`; tighten to own/family rows after checking the website renewal flow.
 - [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
 
 ## Push notifications
 
-The app needs two kinds of push notifications.
+Built 2026-11-20 and tested on staging; **prod rollout pending Dan's OK** (see "Rollout" below).
 
-- [ ] **Automatic event notifications** (not built)
-  - Send pushes automatically for things on the district calendar (races, events, etc.).
-  - Target each one to the event's division, respecting each member's division preferences in [notification-settings.tsx](src/app/notification-settings.tsx).
-  - To decide: what triggers a push (new event posted, reminder X days before, day-of, cancellation/change?) and how far ahead.
-  - The pg_cron + edge function setup used by [renewal-reminders](supabase/functions/renewal-reminders/index.ts) works as a template. Track which pushes have gone out so nobody gets the same one twice.
-  - Note: the notification settings screen already tells users they'll get "event reminders," but nothing sends them yet.
-
-- [ ] **Manual admin notifications with custom content** (partly built)
-  - For one-off promotions and targeted announcements.
-  - Already works: [send-notification.tsx](src/app/send-notification.tsx) + [send-push](supabase/functions/send-push/index.ts) let an admin send a custom title/body to the entire district or to a single division.
-  - Still to do:
-    - Choose more than one division at a time (and possibly other audiences later).
-    - Attach a link or deep link (an event, division page, renewal screen, or external URL) so tapping the notification opens the right place.
-    - Save a history of sent notifications (who sent it, which audience, how many devices received it).
-    - Optionally schedule a send for later.
+- [x] **Automatic event notifications.** [event-notifications](supabase/functions/event-notifications/index.ts) runs daily at 14:00 UTC (9 AM Michigan in winter) via pg_cron. Rules (Dan, 2026-11-20):
+  - **Reminder 3 days before** each event (window of 1–3 days, so events added late or a missed run still get one): "Coming up Saturday: …", opens the event.
+  - **New events: one daily roundup per device** ("12 new events: Enduro (5), Motocross (7)"), so loading a season's schedule doesn't send a push per event. Events close enough for a reminder get the reminder instead.
+  - Only to people following the event's division; events with no division go to everyone. Sent items are tracked in `event_notification_log`, so nothing goes out twice; the first run only records the existing calendar.
+  - Not chosen for now: day-before reminder, date/location change alerts.
+- [x] **Manual admin notifications** ([send-notification.tsx](src/app/send-notification.tsx), [send-push](supabase/functions/send-push/index.ts)): audience **Everyone / Members / Prospects**, any number of divisions (none = district-wide), optional link (event, division page, renewal screen, or https URL) that opens when the notification is tapped, an "Also send as email" switch, **Send Test to Me**, and a **Sent Notifications** history screen ([notification-history.tsx](src/app/notification-history.tsx), `notification_sends` table: who, audience, push + email counts, problems).
+  - Member = the household has a current membership; prospect = everyone else (app sign-ups, registered-but-unpaid, expired members).
+  - `send-push` still accepts the old app's `{title, body, division}`, so the current tester APK keeps working.
+  - [ ] Later: schedule a send for later.
+- [x] **Email copy of every push** (built; **off on prod until Dan reviews a test email**, see Rollout)
+  - Who (Dan, 2026-11-20): **members unless they opted out; prospects only if they opted in.** Account holders only (family members share the holder's inbox). Divisions: their saved choice; members who never chose are matched on the disciplines from their membership form.
+  - Manual sends: one email per send (push title = subject). Daily event job: **one combined email per person per day** (reminders + new events).
+  - SendGrid direct from the edge function (same sender as the website, `no-reply@em5910.ama-d14.org`, Reply-To secretary). Each recipient gets their own **one-click unsubscribe** link ([email-unsubscribe](supabase/functions/email-unsubscribe/index.ts), signed; opening the link only shows a confirm button, so mail scanners can't unsubscribe people) plus the `List-Unsubscribe` headers. Footer has the mailing address (Dan chose the membership administrator's: 13785 Spring Creek Rd SW, Fife Lake, MI 49633; `D14_MAILING_ADDRESS` secret overrides it).
+  - Unsubscribing = an `email_marketing` off row in `communication_consents`, same as the app switch (now "Email news & event reminders"; shows ON for member households that never chose). Push is unaffected.
+  - Safety switch `NOTIFY_EMAIL_MODE`: `off` (default), `allowlist` (only `NOTIFY_EMAIL_ALLOWLIST` addresses: staging uses this, since its database is a copy of real members), `live`.
+  - Volume on prod: a district-wide members email ≈ 3,300 people.
+  - [ ] Later: handle SendGrid bounces/spam reports (event webhook → mark the address).
+- [ ] **Staging's SendGrid key is revoked** (SendGrid 401, found 2026-11-20): no email sends from staging at all, including the website's contact form there. Replace `SENDGRID_API_KEY` on staging if staging email testing is needed.
+- **Rollout to prod** (needs Dan's OK):
+  1. Apply [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
+  2. Deploy `send-push`, `event-notifications`, `email-unsubscribe`.
+  3. Email in test mode first: `NOTIFY_EMAIL_MODE=allowlist`, `NOTIFY_EMAIL_ALLOWLIST=<Dan's addresses>`; Dan does "Send Test to Me" from the new APK and reviews the email; then `NOTIFY_EMAIL_MODE=live`.
+  4. 👤 `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx`: sets `CRON_SECRET` and schedules both daily jobs (renewal reminders + event notifications). Replaces the earlier prod-cron-setup script.
 
 - [ ] **Guest sign-up for notifications ("prospect" users)**. Built on staging 2026-11-12.
   - **How it works:** "Get race reminders" ([signup.tsx](src/app/signup.tsx)): name, email, divisions, separate push / marketing-email opt-ins → 6-digit email code (confirms the email) → real login with `member_type` NULL and no membership (the website's existing "registered, not paid" state; the website sends them to its membership page on login). Consents go to `communication_consents` (append-only, exact wording + source), divisions to `communication_preferences`. Members can also sign in with an emailed code. Profile → Communications toggles; Profile → Delete my account (prospects deleted immediately via `delete-account`; members send a request to the secretary). `member_directory` now members/chairmen/admins only.
   - [ ] Test on device: sign up with a real email (code arrives, profile/consents created), prospect Home/Wallet/Profile, toggles, delete account; member code sign-in.
   - [x] Prod: migration, [auth email templates](supabase/templates/README.md) + rate limit, `delete-account` (2026-11-13).
-  - [ ] Admin side: "Prospects only / Members only / Everyone" audience in send screens; prospect list + consent view on the website (see website parity item).
+  - [x] Admin side (app): Everyone / Members / Prospects audience in the send screen (2026-11-20). Prospect list + consent view on the website: see website parity item.
   - Original notes:
   - Collect name and email (phone optional?) and save them in the database as a **prospect** user type, so we can:
     - send them push notifications and emails like any other audience, and

@@ -2,13 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { defaultShouldDehydrateQuery, QueryClient, type Query } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider, useRouter, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useState } from 'react';
 
 import { LockScreen } from '@/components/lock-screen';
 import { D14Colors } from '@/constants/theme';
+import { onNotificationTap } from '@/lib/push';
 import { AppLockProvider, useAppLock } from '@/providers/app-lock-provider';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
@@ -52,6 +54,31 @@ const d14Theme = {
   },
 };
 
+// Screens a notification may open (same list send-push accepts)
+const NOTIFICATION_LINK = /^\/(event|division)\/\d+$|^\/(renew|calendar)$/;
+
+/**
+ * Open the screen a tapped push notification links to. Waits until the app
+ * is showing its screens (not loading or on the lock screen).
+ */
+function useNotificationLinks(ready: boolean) {
+  const router = useRouter();
+  const [pending, setPending] = useState<string | null>(null);
+
+  useEffect(() => onNotificationTap(setPending), []);
+
+  useEffect(() => {
+    if (!ready || !pending) return;
+    const url = pending;
+    setPending(null);
+    if (url.startsWith('https://')) {
+      WebBrowser.openBrowserAsync(url).catch(() => {});
+    } else if (NOTIFICATION_LINK.test(url)) {
+      router.push(url as Href);
+    }
+  }, [ready, pending, router]);
+}
+
 function RootNavigator() {
   const { session, loading } = useAuth();
   const { locked } = useAppLock();
@@ -59,6 +86,8 @@ function RootNavigator() {
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
+
+  useNotificationLinks(!loading && !(locked && session));
 
   if (loading) return null;
   // App Lock protects a signed-in member's data; guests have nothing to lock.
@@ -133,6 +162,10 @@ function RootNavigator() {
         <Stack.Screen
           name="notification-settings"
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="notification-history"
+          options={{ headerShown: true, title: 'Sent Notifications', headerBackTitle: 'Back' }}
         />
       </Stack.Protected>
 

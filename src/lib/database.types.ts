@@ -273,6 +273,32 @@ export type Database = {
           },
         ]
       }
+      event_notification_log: {
+        Row: {
+          created_at: string
+          event_id: number
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: number
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: number
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_notification_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -529,6 +555,75 @@ export type Database = {
           profile_id?: string | null
         }
         Relationships: []
+      }
+      notification_sends: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          divisions: string[] | null
+          email_note: string | null
+          email_requested: boolean
+          email_sent: number
+          error: string | null
+          id: number
+          kind: string
+          link: string | null
+          push_sent: number
+          push_targeted: number
+          sent_by: string | null
+          title: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          created_at?: string
+          divisions?: string[] | null
+          email_note?: string | null
+          email_requested?: boolean
+          email_sent?: number
+          error?: string | null
+          id?: never
+          kind: string
+          link?: string | null
+          push_sent?: number
+          push_targeted?: number
+          sent_by?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          divisions?: string[] | null
+          email_note?: string | null
+          email_requested?: boolean
+          email_sent?: number
+          error?: string | null
+          id?: never
+          kind?: string
+          link?: string | null
+          push_sent?: number
+          push_targeted?: number
+          sent_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_sends_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "member_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_sends_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       old_members: {
         Row: {
@@ -1434,6 +1529,24 @@ export type Database = {
       http_set_curlopt: {
         Args: { curlopt: string; value: string }
         Returns: boolean
+      }
+      notification_email_targets: {
+        Args: { p_audience?: string; p_divisions?: string[] }
+        Returns: {
+          divisions: string[]
+          email: string
+          first_name: string
+          is_member: boolean
+          profile_id: string
+        }[]
+      }
+      notification_push_targets: {
+        Args: { p_audience?: string; p_divisions?: string[] }
+        Returns: {
+          divisions: string[]
+          profile_id: string
+          token: string
+        }[]
       }
       urlencode:
         | { Args: { data: Json }; Returns: string }

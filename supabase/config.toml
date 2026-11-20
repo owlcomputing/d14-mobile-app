@@ -20,3 +20,13 @@ verify_jwt = false
 # on the caller's own account; platform-level verification stays on too.
 [functions.delete-account]
 verify_jwt = true
+
+# event-notifications is invoked by pg_cron (no JWT); access is gated by the
+# x-cron-secret header checked against the CRON_SECRET function secret.
+[functions.event-notifications]
+verify_jwt = false
+
+# email-unsubscribe is opened from an email link (no sign-in). Each link is
+# signed (HMAC of the profile id), and only a POST changes anything.
+[functions.email-unsubscribe]
+verify_jwt = false

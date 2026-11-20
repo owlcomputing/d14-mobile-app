@@ -90,6 +90,43 @@ export async function getDevicePushToken(): Promise<string | null> {
   }
 }
 
+/**
+ * Call `open` with the link a tapped notification carries (`data.url`: an
+ * in-app path like '/event/12', or an https URL). Covers the tap that
+ * launched the app and taps while it's running. Returns an unsubscribe
+ * function. No-op where push isn't available.
+ */
+export function onNotificationTap(open: (url: string) => void): () => void {
+  if (!canUsePush()) return () => {};
+  let cancelled = false;
+  let subscription: { remove(): void } | null = null;
+
+  (async () => {
+    try {
+      const Notifications = await loadNotifications();
+      if (cancelled) return;
+      const handle = (response: { notification: { request: { content: { data?: unknown } } } }) => {
+        const data = response.notification.request.content.data as { url?: unknown } | undefined;
+        if (typeof data?.url === 'string' && data.url) open(data.url);
+      };
+      const launchedBy = await Notifications.getLastNotificationResponseAsync();
+      if (launchedBy && !cancelled) {
+        // Clear it so a later remount doesn't open the same link again
+        await Notifications.clearLastNotificationResponseAsync();
+        handle(launchedBy);
+      }
+      if (!cancelled) subscription = Notifications.addNotificationResponseReceivedListener(handle);
+    } catch {
+      // Best-effort: a failed listener just means taps open the app's home screen
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+    subscription?.remove();
+  };
+}
+
 /** Remove this device's token so a signed-out device stops receiving pushes. */
 export async function unregisterPushToken(): Promise<void> {
   const token = await getDevicePushToken();

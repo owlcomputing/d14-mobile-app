@@ -57,12 +57,14 @@ on request; items marked 👤 need Dan.
 - [x] Deploy `delete-account` (mobile repo) to prod (staging 2026-11-12, prod 2026-11-13)
 - [x] Deploy `checkout-return` (mobile repo, `--no-verify-jwt`) to prod (2026-11-13)
 - [x] Deploy `renewal-reminders` (mobile repo, `--no-verify-jwt`) to prod (2026-11-13)
-- [ ] 👤 Set prod `CRON_SECRET` function secret (script ready: Dan runs it; the agent was blocked from setting prod secrets) (generate a fresh one — do not
-      reuse staging's)
-- [ ] Schedule the daily pg_cron job on prod (15:00 UTC) pointing at prod's
-      renewal-reminders URL with the prod secret
-      - ⚠️ Verify pg_cron + pg_net are enabled on prod first (both were in the
-        prod schema dump, so they should be)
+- [ ] Apply `20261120_notifications.sql` to prod; deploy `send-push` (updated), `event-notifications`
+      and `email-unsubscribe` (both `verify_jwt = false`, see config.toml) to prod
+- [ ] Prod email secrets: `NOTIFY_EMAIL_MODE=allowlist` + `NOTIFY_EMAIL_ALLOWLIST=<Dan's addresses>`
+      until Dan reviews a test email, then `NOTIFY_EMAIL_MODE=live`
+- [ ] 👤 Run `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx`: generates a fresh
+      `CRON_SECRET` (never printed), schedules `renewal-reminders-daily` (15:00 UTC) and
+      `event-notifications-daily` (14:00 UTC), and dry-runs the event job. pg_cron + pg_net are
+      enabled on prod (checked 2026-11-20). Staging was set up with the same script 2026-11-20.
 
 ## 3. Push notifications
 
