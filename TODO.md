@@ -113,7 +113,8 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   - Safety switch `NOTIFY_EMAIL_MODE`: `off` (default), `allowlist` (only `NOTIFY_EMAIL_ALLOWLIST` addresses: staging uses this, since its database is a copy of real members), `live`.
   - Volume on prod: a district-wide members email ≈ 3,300 people.
   - [ ] Later: handle SendGrid bounces/spam reports (event webhook → mark the address).
-- [ ] **Staging's SendGrid key is revoked** (SendGrid 401, found 2026-11-20): no email sends from staging at all, including the website's contact form there. Replace `SENDGRID_API_KEY` on staging if staging email testing is needed.
+- [ ] 👤 **SendGrid keys are revoked on staging AND prod** (SendGrid 401 "authorization grant is invalid, expired, or revoked"; prod found 2026-11-20 by Dan's Send Test to Me). Everything that sends through `SENDGRID_API_KEY` is failing on prod: the website's `emails` function (contact form, admin emails) and the app's notification emails. Dan: create a new key in SendGrid (restricted, Mail Send only), set it on prod (and a separate one on staging), delete the old keys. Also check Supabase Auth → SMTP on both projects in case it uses a SendGrid key (sign-in codes, password resets).
+  - Likely cause: SendGrid keys were committed to d14-angular in 2024 (`supabase/functions/.env.staging`, still on main and staging; earlier in `emails/index.ts`). [ ] Remove `.env.staging` from the repo and add `.env*` to `.gitignore`.
 - **Rollout to prod** (Dan OK'd 2026-11-20):
   1. [x] Applied [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
   2. [x] Deployed `send-push`, `event-notifications`, `email-unsubscribe` (smoke-tested: no-auth/no-secret 401, bad unsubscribe link 400).
