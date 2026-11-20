@@ -205,7 +205,17 @@ async function sign(value: string) {
   return base64url(sig).slice(0, 32);
 }
 
+/**
+ * The email footer's unsubscribe link: a confirmation page on the website
+ * (Supabase serves function GET responses as plain text, so the function
+ * can't host the page itself). Its button posts to email-unsubscribe.
+ */
 export async function unsubscribeUrl(profileId: string) {
+  return `${SITE_URL}/unsubscribe?p=${profileId}&s=${await sign(profileId)}`;
+}
+
+/** The List-Unsubscribe target: mail apps' one-click unsubscribe POSTs here directly. */
+export async function unsubscribePostUrl(profileId: string) {
   return `${SUPABASE_URL}/functions/v1/email-unsubscribe?p=${profileId}&s=${await sign(profileId)}`;
 }
 
@@ -324,17 +334,16 @@ export async function sendEmail(
     const chunk = recipients.slice(i, i + 1000);
     const personalizations = await Promise.all(
       chunk.map(async (r) => {
-        const unsub = await unsubscribeUrl(r.profile_id);
         return {
           to: [{ email: r.email }],
           substitutions: {
-            [UNSUB_TAG]: unsub,
+            [UNSUB_TAG]: await unsubscribeUrl(r.profile_id),
             [REASON_TAG]: r.is_member
               ? "you're an AMA District 14 member"
               : 'you asked for AMA District 14 news and event emails',
           },
           headers: {
-            'List-Unsubscribe': `<${unsub}>`,
+            'List-Unsubscribe': `<${await unsubscribePostUrl(r.profile_id)}>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
         };

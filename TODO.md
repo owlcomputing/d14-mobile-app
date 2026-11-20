@@ -94,7 +94,7 @@ Still open:
 
 ## Push notifications
 
-Built 2026-11-20 and tested on staging; **prod rollout pending Dan's OK** (see "Rollout" below).
+Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in test mode (see "Rollout" below).
 
 - [x] **Automatic event notifications.** [event-notifications](supabase/functions/event-notifications/index.ts) runs daily at 14:00 UTC (9 AM Michigan in winter) via pg_cron. Rules (Dan, 2026-11-20):
   - **Reminder 3 days before** each event (window of 1–3 days, so events added late or a missed run still get one): "Coming up Saturday: …", opens the event.
@@ -108,17 +108,19 @@ Built 2026-11-20 and tested on staging; **prod rollout pending Dan's OK** (see "
 - [x] **Email copy of every push** (built; **off on prod until Dan reviews a test email**, see Rollout)
   - Who (Dan, 2026-11-20): **members unless they opted out; prospects only if they opted in.** Account holders only (family members share the holder's inbox). Divisions: their saved choice; members who never chose are matched on the disciplines from their membership form.
   - Manual sends: one email per send (push title = subject). Daily event job: **one combined email per person per day** (reminders + new events).
-  - SendGrid direct from the edge function (same sender as the website, `no-reply@em5910.ama-d14.org`, Reply-To secretary). Each recipient gets their own **one-click unsubscribe** link ([email-unsubscribe](supabase/functions/email-unsubscribe/index.ts), signed; opening the link only shows a confirm button, so mail scanners can't unsubscribe people) plus the `List-Unsubscribe` headers. Footer has the mailing address (Dan chose the membership administrator's: 13785 Spring Creek Rd SW, Fife Lake, MI 49633; `D14_MAILING_ADDRESS` secret overrides it).
+  - SendGrid direct from the edge function (same sender as the website, `no-reply@em5910.ama-d14.org`, Reply-To secretary). Each recipient gets their own **one-click unsubscribe** link ([email-unsubscribe](supabase/functions/email-unsubscribe/index.ts), signed). The email link goes to a confirm page on the website (`/unsubscribe`, d14-angular `email-unsubscribe-page` branch) whose button POSTs to the function; opening the link alone changes nothing, so mail scanners can't unsubscribe people. Supabase serves function GET responses as text/plain, so the function can't host that page; GET on the function redirects to it plus the `List-Unsubscribe` headers. Footer has the mailing address (Dan chose the membership administrator's: 13785 Spring Creek Rd SW, Fife Lake, MI 49633; `D14_MAILING_ADDRESS` secret overrides it).
   - Unsubscribing = an `email_marketing` off row in `communication_consents`, same as the app switch (now "Email news & event reminders"; shows ON for member households that never chose). Push is unaffected.
   - Safety switch `NOTIFY_EMAIL_MODE`: `off` (default), `allowlist` (only `NOTIFY_EMAIL_ALLOWLIST` addresses: staging uses this, since its database is a copy of real members), `live`.
   - Volume on prod: a district-wide members email ≈ 3,300 people.
   - [ ] Later: handle SendGrid bounces/spam reports (event webhook → mark the address).
 - [ ] **Staging's SendGrid key is revoked** (SendGrid 401, found 2026-11-20): no email sends from staging at all, including the website's contact form there. Replace `SENDGRID_API_KEY` on staging if staging email testing is needed.
-- **Rollout to prod** (needs Dan's OK):
-  1. Apply [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
-  2. Deploy `send-push`, `event-notifications`, `email-unsubscribe`.
-  3. Email in test mode first: `NOTIFY_EMAIL_MODE=allowlist`, `NOTIFY_EMAIL_ALLOWLIST=<Dan's addresses>`; Dan does "Send Test to Me" from the new APK and reviews the email; then `NOTIFY_EMAIL_MODE=live`.
-  4. 👤 `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx`: sets `CRON_SECRET` and schedules both daily jobs (renewal reminders + event notifications). Replaces the earlier prod-cron-setup script.
+- **Rollout to prod** (Dan OK'd 2026-11-20):
+  1. [x] Applied [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
+  2. [x] Deployed `send-push`, `event-notifications`, `email-unsubscribe` (smoke-tested: no-auth/no-secret 401, bad unsubscribe link 400).
+  3. [x] Email in test mode: `NOTIFY_EMAIL_MODE=allowlist`, `NOTIFY_EMAIL_ALLOWLIST=webmaster@ama-d14.org`.
+  4. [x] Ran `supabase/scripts/setup-notification-cron.sh qxoroicvatularpyltbx`: `CRON_SECRET` set; `event-notifications-daily` (14:00 UTC) and `renewal-reminders-daily` (15:00 UTC) scheduled; dry run OK (first run records the calendar baseline).
+  5. [ ] 👤 Merge the d14-angular unsubscribe-page PR (website `/unsubscribe`); then redeploy `send-push`, `event-notifications`, `email-unsubscribe` to prod (footer link → website page, GET redirect). Staging has this already (`SITE_URL=https://ama-d14-stg.web.app`).
+  6. [ ] 👤 Dan installs APK versionCode 3, does **Send Test to Me**: push arrives (confirms FCM credentials on prod), tap opens the link, email looks right, unsubscribe link shows the website page. Then `NOTIFY_EMAIL_MODE=live`.
 
 - [ ] **Guest sign-up for notifications ("prospect" users)**. Built on staging 2026-11-12.
   - **How it works:** "Get race reminders" ([signup.tsx](src/app/signup.tsx)): name, email, divisions, separate push / marketing-email opt-ins → 6-digit email code (confirms the email) → real login with `member_type` NULL and no membership (the website's existing "registered, not paid" state; the website sends them to its membership page on login). Consents go to `communication_consents` (append-only, exact wording + source), divisions to `communication_preferences`. Members can also sign in with an emailed code. Profile → Communications toggles; Profile → Delete my account (prospects deleted immediately via `delete-account`; members send a request to the secretary). `member_directory` now members/chairmen/admins only.
