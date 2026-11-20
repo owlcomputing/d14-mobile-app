@@ -144,6 +144,17 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="document/crop"
+          options={{
+            headerShown: true,
+            title: 'Crop Photo',
+            presentation: 'modal',
+            gestureEnabled: false,
+            headerStyle: { backgroundColor: '#000000' },
+            headerTintColor: '#FFFFFF',
+          }}
+        />
+        <Stack.Screen
           name="document/[id]"
           options={{ headerShown: true, title: 'Document', headerBackTitle: 'Wallet' }}
         />

@@ -32,9 +32,10 @@ export function WalletDocumentsSection({ profileId }: { profileId: string }) {
   const { docs } = useWalletDocs(profileId);
 
   // Hand the pick over in memory, not as route params (see setPendingPick).
-  const openAdd = (picked: Picked) => {
+  // Photos go through the crop screen first; it continues to Add Document.
+  const openAdd = (picked: Picked, crop = false) => {
     setPendingPick(picked);
-    router.push('/document/new');
+    router.push(crop ? '/document/crop' : '/document/new');
   };
 
   const takePhoto = async () => {
@@ -74,7 +75,7 @@ export function WalletDocumentsSection({ profileId }: { profileId: string }) {
     if (result.canceled) return;
     const asset = result.assets[0];
     if (!asset.base64) throw new Error('The picture could not be read. Please try again.');
-    openAdd({ uri: stageImageBase64(asset.base64), mimeType: 'image/jpeg', name: null });
+    openAdd({ uri: stageImageBase64(asset.base64), mimeType: 'image/jpeg', name: null }, true);
   };
 
   const chooseFile = () =>
@@ -82,11 +83,11 @@ export function WalletDocumentsSection({ profileId }: { profileId: string }) {
       const picked = await File.pickFileAsync({ mimeTypes: ['application/pdf', 'image/*'] });
       if (picked.canceled) return;
       const file = picked.result;
-      openAdd({
-        uri: await stagePickedFile(file),
-        mimeType: file.type || null,
-        name: file.name || null,
-      });
+      const mimeType = file.type || null;
+      openAdd(
+        { uri: await stagePickedFile(file), mimeType, name: file.name || null },
+        !!mimeType?.startsWith('image/'),
+      );
     });
 
   const run = async (fn: () => Promise<void>) => {
