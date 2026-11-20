@@ -92,6 +92,13 @@ Still open:
 - [ ] `renewals` insert policy is `WITH CHECK (true)`; tighten to own/family rows after checking the website renewal flow.
 - [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
 
+## Tester feedback (2026-11-20)
+
+- [x] **Light mode**: Profile › Appearance: Dark (default) / Light / Match phone, applies instantly ([theme.tsx](src/lib/theme.tsx), `useColors` / `makeStyles`; `D14Colors` is gone). Membership card and division banner stay dark in both modes. Dark mode pixel-identical to before on web.
+  - [ ] Check on a device (next build): Match phone (`userInterfaceStyle` is now `automatic`, native setting), alerts/pickers/keyboard follow the choice, status bar, lock screen, scanner, wallet documents.
+- [x] **Crop wallet photos**: camera, library and image files open [Crop Photo](src/app/document/crop.tsx) (drag corners/box, Rotate, Reset) before Add Document. expo-image-manipulator (new native module: needs the next build; also in Expo Go).
+  - [ ] Check on a device: a real camera photo isn't sideways (Android EXIF), dragging feels right.
+
 ## Push notifications
 
 Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in test mode (see "Rollout" below).
