@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles } from '@/lib/theme';
 
 type EventRowProps = {
   id: number;
@@ -15,6 +16,7 @@ type EventRowProps = {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function EventRow({ id, name, date, endDate, divisionName, locationName }: EventRowProps) {
+  const styles = useStyles();
   const router = useRouter();
   // Dates are date-only strings; avoid timezone shifts from Date parsing
   const [, monthStr, dayStr] = date.slice(0, 10).split('-');
@@ -48,7 +50,7 @@ export function EventRow({ id, name, date, endDate, divisionName, locationName }
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.7 },
   dateBadge: {
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     borderRadius: Radius.md,
     paddingVertical: 6,
     paddingHorizontal: 10,
@@ -65,15 +67,15 @@ const styles = StyleSheet.create({
     minWidth: 52,
   },
   dateMonth: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  dateDay: { color: D14Colors.white, fontSize: 17, fontWeight: '700' },
+  dateDay: { color: c.text, fontSize: 17, fontWeight: '700' },
   info: { flex: 1 },
-  name: { color: D14Colors.white, fontSize: 15, fontWeight: '600' },
-  meta: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  chevron: { color: D14Colors.textTertiary, fontSize: 22, fontWeight: '300' },
-});
+  name: { color: c.text, fontSize: 15, fontWeight: '600' },
+  meta: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
+  chevron: { color: c.textTertiary, fontSize: 22, fontWeight: '300' },
+}));

@@ -11,7 +11,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -19,9 +18,10 @@ import {
 } from 'react-native';
 
 import { Chips, PickerField } from '@/components/form-fields';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useUpcomingEvents } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 
 type Audience = 'everyone' | 'members' | 'prospects';
 type LinkKind = 'none' | 'event' | 'division' | 'renew' | 'web';
@@ -68,6 +68,8 @@ const shortDate = (iso: string) =>
   });
 
 export default function SendNotificationScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const divisions = useDivisions();
   const events = useUpcomingEvents(100);
   const [title, setTitle] = useState('');
@@ -198,7 +200,7 @@ export default function SendNotificationScreen() {
         value={title}
         onChangeText={setTitle}
         placeholder="MX Spring Opener — Today!"
-        placeholderTextColor={D14Colors.textTertiary}
+        placeholderTextColor={c.textTertiary}
         maxLength={100}
       />
       <Text style={styles.label}>Message</Text>
@@ -207,7 +209,7 @@ export default function SendNotificationScreen() {
         value={body}
         onChangeText={setBody}
         placeholder="Gates open at 7 AM…"
-        placeholderTextColor={D14Colors.textTertiary}
+        placeholderTextColor={c.textTertiary}
         multiline
         maxLength={1000}
       />
@@ -272,7 +274,7 @@ export default function SendNotificationScreen() {
           value={webLink}
           onChangeText={setWebLink}
           placeholder="https://…"
-          placeholderTextColor={D14Colors.textTertiary}
+          placeholderTextColor={c.textTertiary}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
@@ -297,8 +299,8 @@ export default function SendNotificationScreen() {
         <Switch
           value={email}
           onValueChange={setEmail}
-          trackColor={{ true: D14Colors.red, false: D14Colors.surfaceRaised }}
-          thumbColor={D14Colors.white}
+          trackColor={{ true: c.red, false: c.surfaceRaised }}
+          thumbColor={c.onAccent}
         />
       </View>
 
@@ -306,12 +308,12 @@ export default function SendNotificationScreen() {
         style={({ pressed }) => [
           styles.button,
           !ready && styles.buttonDisabled,
-          pressed && { backgroundColor: D14Colors.redDark },
+          pressed && { backgroundColor: c.redDark },
         ]}
         onPress={onSend}
         disabled={!!sending || !ready}>
         {sending === 'send' ? (
-          <ActivityIndicator color={D14Colors.white} />
+          <ActivityIndicator color={c.onAccent} />
         ) : (
           <Text style={styles.buttonText}>Send Notification</Text>
         )}
@@ -325,7 +327,7 @@ export default function SendNotificationScreen() {
         onPress={() => send(true)}
         disabled={!!sending || !ready}>
         {sending === 'test' ? (
-          <ActivityIndicator color={D14Colors.white} />
+          <ActivityIndicator color={c.text} />
         ) : (
           <Text style={styles.secondaryText}>Send Test to Me</Text>
         )}
@@ -336,15 +338,16 @@ export default function SendNotificationScreen() {
       </Text>
 
       <Pressable style={styles.historyRow} onPress={() => router.push('/notification-history')}>
-        <Ionicons name="time-outline" size={18} color={D14Colors.textSecondary} />
+        <Ionicons name="time-outline" size={18} color={c.textSecondary} />
         <Text style={styles.historyText}>Sent notifications</Text>
-        <Ionicons name="chevron-forward" size={16} color={D14Colors.textTertiary} />
+        <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
       </Pressable>
     </ScrollView>
   );
 }
 
 function Pill({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} style={[styles.pill, active && styles.pillActive]}>
       <Text style={[styles.pillText, active && styles.pillTextActive]}>{label}</Text>
@@ -352,11 +355,11 @@ function Pill({ label, active, onPress }: { label: string; active: boolean; onPr
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -364,11 +367,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
   },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 15,
     paddingHorizontal: Spacing.three,
     paddingVertical: 12,
@@ -376,46 +379,46 @@ const styles = StyleSheet.create({
   multiline: { minHeight: 100, textAlignVertical: 'top' },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   pill: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.full,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  pillActive: { backgroundColor: D14Colors.red },
-  pillText: { color: D14Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  pillTextActive: { color: D14Colors.white },
-  hint: { color: D14Colors.textTertiary, fontSize: 12, lineHeight: 17, marginTop: Spacing.two },
-  warn: { color: D14Colors.error, fontSize: 12, marginTop: Spacing.two },
+  pillActive: { backgroundColor: c.red },
+  pillText: { color: c.textSecondary, fontSize: 12, fontWeight: '600' },
+  pillTextActive: { color: c.onAccent },
+  hint: { color: c.textTertiary, fontSize: 12, lineHeight: 17, marginTop: Spacing.two },
+  warn: { color: c.error, fontSize: 12, marginTop: Spacing.two },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     marginTop: Spacing.four,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
   },
-  switchLabel: { color: D14Colors.white, fontSize: 15, fontWeight: '600' },
+  switchLabel: { color: c.text, fontSize: 15, fontWeight: '600' },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 15,
     marginTop: Spacing.four,
   },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
+  buttonText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
   secondary: {
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 13,
     marginTop: Spacing.two,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  secondaryText: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
+  secondaryText: { color: c.text, fontSize: 14, fontWeight: '600' },
   footnote: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 11,
     lineHeight: 16,
     marginTop: Spacing.three,
@@ -426,9 +429,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     marginTop: Spacing.four,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
   },
-  historyText: { flex: 1, color: D14Colors.white, fontSize: 14 },
-});
+  historyText: { flex: 1, color: c.text, fontSize: 14 },
+}));

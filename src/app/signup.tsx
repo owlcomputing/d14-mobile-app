@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -15,13 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import {
   EMAIL_CONSENT_TEXT,
   PUSH_CONSENT_TEXT,
   setPendingSignup,
 } from '@/lib/prospect-signup';
 import { useDivisions } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,6 +33,8 @@ const RESEND_SECONDS = 60;
  * AuthProvider then creates their profile, preferences and consent records.
  */
 export default function SignupScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { sendSignInCode, verifySignInCode } = useAuth();
   const divisions = useDivisions();
@@ -111,7 +113,7 @@ export default function SignupScreen() {
         hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="Close">
-        <Ionicons name="close" size={26} color={D14Colors.textSecondary} />
+        <Ionicons name="close" size={26} color={c.textSecondary} />
       </Pressable>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -119,7 +121,7 @@ export default function SignupScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {step === 'details' ? (
             <>
-              <Ionicons name="notifications" size={34} color={D14Colors.red} />
+              <Ionicons name="notifications" size={34} color={c.red} />
               <Text style={styles.title}>Get race reminders</Text>
               <Text style={styles.subtitle}>
                 Free, no membership needed. Hear about races, events and news from the divisions
@@ -135,7 +137,7 @@ export default function SignupScreen() {
                     onChangeText={setFirstName}
                     autoComplete="given-name"
                     textContentType="givenName"
-                    placeholderTextColor={D14Colors.textTertiary}
+                    placeholderTextColor={c.textTertiary}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -146,7 +148,7 @@ export default function SignupScreen() {
                     onChangeText={setLastName}
                     autoComplete="family-name"
                     textContentType="familyName"
-                    placeholderTextColor={D14Colors.textTertiary}
+                    placeholderTextColor={c.textTertiary}
                   />
                 </View>
               </View>
@@ -161,7 +163,7 @@ export default function SignupScreen() {
                 keyboardType="email-address"
                 textContentType="emailAddress"
                 placeholder="you@example.com"
-                placeholderTextColor={D14Colors.textTertiary}
+                placeholderTextColor={c.textTertiary}
               />
 
               <Text style={styles.label}>Divisions you follow</Text>
@@ -187,8 +189,8 @@ export default function SignupScreen() {
                 <Switch
                   value={push}
                   onValueChange={setPush}
-                  trackColor={{ true: D14Colors.red, false: D14Colors.surfaceSelected }}
-                  thumbColor={D14Colors.white}
+                  trackColor={{ true: c.red, false: c.surfaceSelected }}
+                  thumbColor={c.onAccent}
                   accessibilityLabel="Push notifications"
                 />
               </View>
@@ -197,8 +199,8 @@ export default function SignupScreen() {
                 <Switch
                   value={emailMarketing}
                   onValueChange={setEmailMarketing}
-                  trackColor={{ true: D14Colors.red, false: D14Colors.surfaceSelected }}
-                  thumbColor={D14Colors.white}
+                  trackColor={{ true: c.red, false: c.surfaceSelected }}
+                  thumbColor={c.onAccent}
                   accessibilityLabel="Email news and offers"
                 />
               </View>
@@ -217,11 +219,11 @@ export default function SignupScreen() {
             </>
           ) : (
             <>
-              <Ionicons name="mail-unread" size={34} color={D14Colors.red} />
+              <Ionicons name="mail-unread" size={34} color={c.red} />
               <Text style={styles.title}>Check your email</Text>
               <Text style={styles.subtitle}>
                 Enter the 6-digit code we sent to{'\n'}
-                <Text style={{ color: D14Colors.white, fontWeight: '600' }}>{email.trim()}</Text>
+                <Text style={{ color: c.text, fontWeight: '600' }}>{email.trim()}</Text>
               </Text>
               <TextInput
                 style={[styles.input, styles.codeInput]}
@@ -234,12 +236,12 @@ export default function SignupScreen() {
                 autoFocus
                 onSubmitEditing={verify}
                 placeholder="000000"
-                placeholderTextColor={D14Colors.textTertiary}
+                placeholderTextColor={c.textTertiary}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <PrimaryButton label="Verify & Finish" busy={busy} onPress={verify} />
               <Pressable onPress={resend} disabled={resendIn > 0} style={styles.linkRow}>
-                <Text style={[styles.link, resendIn > 0 && { color: D14Colors.textTertiary }]}>
+                <Text style={[styles.link, resendIn > 0 && { color: c.textTertiary }]}>
                   {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
                 </Text>
               </Pressable>
@@ -261,13 +263,15 @@ export default function SignupScreen() {
 }
 
 function PrimaryButton({ label, busy, onPress }: { label: string; busy: boolean; onPress: () => void }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
-      style={({ pressed }) => [styles.button, pressed && { backgroundColor: D14Colors.redDark }]}
+      style={({ pressed }) => [styles.button, pressed && { backgroundColor: c.redDark }]}
       onPress={onPress}
       disabled={busy}>
       {busy ? (
-        <ActivityIndicator color={D14Colors.white} />
+        <ActivityIndicator color={c.onAccent} />
       ) : (
         <Text style={styles.buttonText}>{label}</Text>
       )}
@@ -275,13 +279,13 @@ function PrimaryButton({ label, busy, onPress }: { label: string; busy: boolean;
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   close: { position: 'absolute', top: Spacing.five, right: Spacing.four, zIndex: 1 },
   content: { padding: Spacing.four, paddingTop: Spacing.five + Spacing.four },
-  title: { color: D14Colors.white, fontSize: 26, fontWeight: '800', marginTop: Spacing.two },
+  title: { color: c.text, fontSize: 26, fontWeight: '800', marginTop: Spacing.two },
   subtitle: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     marginTop: Spacing.two,
@@ -289,20 +293,20 @@ const styles = StyleSheet.create({
   },
   row2: { flexDirection: 'row', gap: Spacing.two },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginTop: Spacing.three,
     marginBottom: Spacing.two,
   },
-  hint: { color: D14Colors.textTertiary, fontSize: 12, marginTop: -4, marginBottom: Spacing.two },
+  hint: { color: c.textTertiary, fontSize: 12, marginTop: -4, marginBottom: Spacing.two },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
     paddingVertical: 14,
@@ -313,39 +317,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: Radius.full,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  chipActive: { backgroundColor: D14Colors.red, borderColor: D14Colors.red },
-  chipText: { color: D14Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  chipTextActive: { color: D14Colors.white },
+  chipActive: { backgroundColor: c.red, borderColor: c.red },
+  chipText: { color: c.textSecondary, fontSize: 12, fontWeight: '600' },
+  chipTextActive: { color: c.onAccent },
   consent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
     marginTop: Spacing.three,
   },
-  consentText: { flex: 1, color: D14Colors.white, fontSize: 13, lineHeight: 18 },
-  error: { color: D14Colors.error, marginTop: Spacing.three },
+  consentText: { flex: 1, color: c.text, fontSize: 13, lineHeight: 18 },
+  error: { color: c.error, marginTop: Spacing.three },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 16,
     marginTop: Spacing.four,
   },
-  buttonText: { color: D14Colors.white, fontSize: 16, fontWeight: '700' },
+  buttonText: { color: c.onAccent, fontSize: 16, fontWeight: '700' },
   fine: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     lineHeight: 17,
     marginTop: Spacing.three,
     textAlign: 'center',
   },
   linkRow: { alignItems: 'center', paddingVertical: Spacing.two, marginTop: Spacing.one },
-  link: { color: D14Colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center' },
-});
+  link: { color: c.red, fontSize: 13, fontWeight: '600', textAlign: 'center' },
+}));

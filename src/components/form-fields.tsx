@@ -5,7 +5,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -13,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 
 export function Field({
   label,
@@ -22,6 +22,8 @@ export function Field({
   style,
   ...input
 }: TextInputProps & { label: string; required?: boolean; error?: string | null }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <View style={[styles.field, style]}>
       <Text style={styles.label}>
@@ -30,7 +32,7 @@ export function Field({
       </Text>
       <TextInput
         style={[styles.input, error ? styles.inputError : null]}
-        placeholderTextColor={D14Colors.textTertiary}
+        placeholderTextColor={c.textTertiary}
         {...input}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -47,6 +49,7 @@ export function Chips({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.chips}>
       {options.map((o) => {
@@ -79,6 +82,8 @@ export function PickerField({
   error?: string | null;
   placeholder?: string;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const filtered = options.filter((o) => o.toLowerCase().includes(query.trim().toLowerCase()));
@@ -96,7 +101,7 @@ export function PickerField({
         <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
           {value || placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={16} color={D14Colors.textTertiary} />
+        <Ionicons name="chevron-down" size={16} color={c.textTertiary} />
       </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -104,7 +109,7 @@ export function PickerField({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{label}</Text>
             <Pressable onPress={() => setOpen(false)} hitSlop={12}>
-              <Ionicons name="close" size={24} color={D14Colors.textSecondary} />
+              <Ionicons name="close" size={24} color={c.textSecondary} />
             </Pressable>
           </View>
           <TextInput
@@ -112,7 +117,7 @@ export function PickerField({
             value={query}
             onChangeText={setQuery}
             placeholder="Search"
-            placeholderTextColor={D14Colors.textTertiary}
+            placeholderTextColor={c.textTertiary}
             autoFocus
           />
           <FlatList
@@ -129,7 +134,7 @@ export function PickerField({
                 }}>
                 <Text style={styles.optionText}>{item}</Text>
                 {item === value ? (
-                  <Ionicons name="checkmark" size={18} color={D14Colors.red} />
+                  <Ionicons name="checkmark" size={18} color={c.red} />
                 ) : null}
               </Pressable>
             )}
@@ -181,58 +186,58 @@ export function formatPhoneInput(text: string) {
 
 export const isPhone = (text: string) => text.replace(/\D/g, '').length === 10;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   field: { marginTop: Spacing.three },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: Spacing.two,
   },
-  required: { color: D14Colors.red },
+  required: { color: c.red },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
     paddingVertical: 13,
   },
-  inputError: { borderColor: D14Colors.error },
-  error: { color: D14Colors.error, fontSize: 12, marginTop: 4 },
+  inputError: { borderColor: c.error },
+  error: { color: c.error, fontSize: 12, marginTop: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: Radius.full,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  chipOn: { backgroundColor: D14Colors.red, borderColor: D14Colors.red },
-  chipText: { color: D14Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  chipTextOn: { color: D14Colors.white },
+  chipOn: { backgroundColor: c.red, borderColor: c.red },
+  chipText: { color: c.textSecondary, fontSize: 12, fontWeight: '600' },
+  chipTextOn: { color: c.onAccent },
   pickerInput: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  pickerValue: { color: D14Colors.white, fontSize: 16 },
-  pickerPlaceholder: { color: D14Colors.textTertiary, fontSize: 16 },
-  modal: { flex: 1, backgroundColor: D14Colors.black },
+  pickerValue: { color: c.text, fontSize: 16 },
+  pickerPlaceholder: { color: c.textTertiary, fontSize: 16 },
+  modal: { flex: 1, backgroundColor: c.background },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: Spacing.three,
   },
-  modalTitle: { color: D14Colors.white, fontSize: 18, fontWeight: '700' },
+  modalTitle: { color: c.text, fontSize: 18, fontWeight: '700' },
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: D14Colors.border,
+    borderBottomColor: c.border,
   },
-  optionText: { color: D14Colors.white, fontSize: 15 },
-});
+  optionText: { color: c.text, fontSize: 15 },
+}));

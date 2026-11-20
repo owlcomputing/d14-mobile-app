@@ -9,13 +9,13 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 import {
   addWalletDoc,
   clearPendingPick,
@@ -27,6 +27,8 @@ import { useAuth } from '@/providers/auth-provider';
 
 /** Name and save a picked photo/PDF into the wallet. Reached from WalletDocumentsSection. */
 export default function NewDocumentScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { profile, isMember } = useAuth();
   // Picked file handed over in memory by WalletDocumentsSection
@@ -75,7 +77,7 @@ export default function NewDocumentScreen() {
             <Image source={{ uri }} style={styles.previewImage} contentFit="contain" />
           ) : (
             <View style={styles.pdfPreview}>
-              <Ionicons name="document-text" size={56} color={D14Colors.red} />
+              <Ionicons name="document-text" size={56} color={c.red} />
               <Text style={styles.pdfName} numberOfLines={2}>
                 {name || 'PDF document'}
               </Text>
@@ -89,7 +91,7 @@ export default function NewDocumentScreen() {
           value={title}
           onChangeText={setTitle}
           placeholder="e.g. AMA Card"
-          placeholderTextColor={D14Colors.textTertiary}
+          placeholderTextColor={c.textTertiary}
           returnKeyType="done"
           maxLength={60}
         />
@@ -110,11 +112,11 @@ export default function NewDocumentScreen() {
         </Text>
 
         <Pressable
-          style={({ pressed }) => [styles.save, pressed && { backgroundColor: D14Colors.redDark }]}
+          style={({ pressed }) => [styles.save, pressed && { backgroundColor: c.redDark }]}
           onPress={save}
           disabled={saving}>
           {saving ? (
-            <ActivityIndicator color={D14Colors.white} />
+            <ActivityIndicator color={c.onAccent} />
           ) : (
             <Text style={styles.saveText}>Save to Wallet</Text>
           )}
@@ -124,36 +126,36 @@ export default function NewDocumentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   missing: { alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
-  missingText: { color: D14Colors.textSecondary, fontSize: 14, textAlign: 'center' },
+  missingText: { color: c.textSecondary, fontSize: 14, textAlign: 'center' },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   preview: {
     height: 260,
     borderRadius: Radius.lg,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     overflow: 'hidden',
     marginBottom: Spacing.four,
   },
   previewImage: { flex: 1 },
   pdfPreview: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.three },
-  pdfName: { color: D14Colors.textSecondary, fontSize: 13, marginTop: Spacing.two, textAlign: 'center' },
+  pdfName: { color: c.textSecondary, fontSize: 13, marginTop: Spacing.two, textAlign: 'center' },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: Spacing.two,
   },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
     paddingVertical: 14,
@@ -163,25 +165,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: Radius.full,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  chipActive: { backgroundColor: D14Colors.red, borderColor: D14Colors.red },
-  chipText: { color: D14Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  chipTextActive: { color: D14Colors.white },
+  chipActive: { backgroundColor: c.red, borderColor: c.red },
+  chipText: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipTextActive: { color: c.onAccent },
   note: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     lineHeight: 17,
     marginTop: Spacing.four,
   },
   save: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 16,
     marginTop: Spacing.four,
   },
-  saveText: { color: D14Colors.white, fontSize: 16, fontWeight: '700' },
-});
+  saveText: { color: c.onAccent, fontSize: 16, fontWeight: '700' },
+}));

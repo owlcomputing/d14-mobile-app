@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { D14Colors } from '@/constants/theme';
+import { useColors } from '@/lib/theme';
 
 type MCIName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -32,11 +32,13 @@ export function divisionIconName(divisionName: string | null | undefined): MCINa
 export function DivisionIcon({
   name,
   size = 24,
-  color = D14Colors.red,
+  color,
 }: {
   name: string | null | undefined;
   size?: number;
+  /** Defaults to brand red */
   color?: string;
 }) {
-  return <MaterialCommunityIcons name={divisionIconName(name)} size={size} color={color} />;
+  const c = useColors();
+  return <MaterialCommunityIcons name={divisionIconName(name)} size={size} color={color ?? c.red} />;
 }

@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, withAlpha } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 
 export type MemberResultData = {
   id: string;
@@ -27,6 +28,8 @@ export function membershipActive(m: MemberResultData): boolean {
 }
 
 export function MemberResult({ member }: { member: MemberResultData }) {
+  const c = useColors();
+  const styles = useStyles();
   const active = membershipActive(member);
   const initials = [member.first_name?.[0], member.last_name?.[0]].filter(Boolean).join('');
   return (
@@ -44,7 +47,7 @@ export function MemberResult({ member }: { member: MemberResultData }) {
         </Text>
       </View>
       <View style={[styles.badge, active ? styles.badgeActive : styles.badgeExpired]}>
-        <Text style={[styles.badgeText, { color: active ? D14Colors.success : D14Colors.error }]}>
+        <Text style={[styles.badgeText, { color: active ? c.success : c.error }]}>
           {active ? 'Active' : 'Expired'}
         </Text>
       </View>
@@ -52,12 +55,12 @@ export function MemberResult({ member }: { member: MemberResultData }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
     marginBottom: Spacing.two,
@@ -66,21 +69,21 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: D14Colors.white, fontWeight: '800', fontSize: 15 },
+  avatarText: { color: c.onAccent, fontWeight: '800', fontSize: 15 },
   info: { flex: 1 },
-  name: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
-  meta: { color: D14Colors.textSecondary, fontSize: 11, marginTop: 2 },
+  name: { color: c.text, fontSize: 14, fontWeight: '600' },
+  meta: { color: c.textSecondary, fontSize: 11, marginTop: 2 },
   badge: {
     borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
   },
-  badgeActive: { borderColor: 'rgba(74,222,128,0.4)', backgroundColor: 'rgba(74,222,128,0.08)' },
-  badgeExpired: { borderColor: 'rgba(248,113,113,0.4)', backgroundColor: 'rgba(248,113,113,0.08)' },
+  badgeActive: { borderColor: withAlpha(c.success, 0.4), backgroundColor: withAlpha(c.success, 0.08) },
+  badgeExpired: { borderColor: withAlpha(c.error, 0.4), backgroundColor: withAlpha(c.error, 0.08) },
   badgeText: { fontSize: 11, fontWeight: '700' },
-});
+}));

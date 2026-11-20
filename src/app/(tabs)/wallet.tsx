@@ -4,7 +4,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -14,9 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SignInPrompt } from '@/components/sign-in-prompt';
 import { WalletDocumentsSection } from '@/components/wallet-documents-section';
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { darkPalette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useFamilyMembers } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
+
+/** Membership card colors: the same in Dark and Light. */
+const card = darkPalette;
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return '—';
@@ -28,12 +31,14 @@ function formatDate(iso: string | null | undefined) {
 }
 
 export default function WalletScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const { session, isMember, profileReady } = useAuth();
   if (!session) return <GuestWallet />;
   if (!profileReady) {
     return (
       <SafeAreaView style={[styles.safe, styles.loading]} edges={['top']}>
-        <ActivityIndicator color={D14Colors.red} />
+        <ActivityIndicator color={c.red} />
       </SafeAreaView>
     );
   }
@@ -43,6 +48,7 @@ export default function WalletScreen() {
 
 /** Signed in for race reminders, but not (yet) a D14 member. The Wallet is members-only. */
 function ProspectWallet() {
+  const styles = useStyles();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -60,6 +66,7 @@ function ProspectWallet() {
 }
 
 function GuestWallet() {
+  const styles = useStyles();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -76,6 +83,8 @@ function GuestWallet() {
 }
 
 function MemberWallet() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { profile, membership } = useAuth();
   const family = useFamilyMembers(profile?.id);
@@ -120,7 +129,7 @@ function MemberWallet() {
                 <Text
                   style={[
                     styles.cardDetailValue,
-                    { color: active ? D14Colors.success : D14Colors.error },
+                    { color: active ? card.success : card.error },
                   ]}>
                   {active ? 'Active' : 'Expired'}
                 </Text>
@@ -155,7 +164,7 @@ function MemberWallet() {
             pressed && { opacity: 0.85 },
           ]}
           onPress={() => router.push('/renew')}>
-          <Text style={styles.renewButtonText}>
+          <Text style={[styles.renewButtonText, active && !expiringSoon && styles.renewButtonTextQuiet]}>
             {!active
               ? 'Renew Membership'
               : expiringSoon
@@ -175,7 +184,7 @@ function MemberWallet() {
                   key={f.id}
                   label={[f.first_name, f.last_name].filter(Boolean).join(' ')}
                   value={fActive ? `Active thru ${formatDate(exp)}` : 'Expired'}
-                  valueColor={fActive ? D14Colors.success : D14Colors.error}
+                  valueColor={fActive ? c.success : c.error}
                   last={i === family.data.length - 1}
                 />
               );
@@ -198,6 +207,7 @@ function DetailRow({
   valueColor?: string;
   last?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <View style={[styles.detailRow, !last && styles.detailRowBorder]}>
       <Text style={styles.detailLabel}>{label}</Text>
@@ -206,26 +216,27 @@ function DetailRow({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   loading: { alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
-  title: { color: D14Colors.white, fontSize: 22, fontWeight: '700', textAlign: 'center' },
+  title: { color: c.text, fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textAlign: 'center',
     marginTop: 4,
     marginBottom: Spacing.four,
   },
+  // The membership card keeps its dark, branded look in both appearances
   card: {
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: card.surfaceRaised,
     borderRadius: Radius.xl,
     padding: Spacing.four,
     overflow: 'hidden',
     marginBottom: Spacing.four,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: card.border,
   },
   cardDecorCircle: {
     position: 'absolute',
@@ -235,7 +246,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 2,
-    borderColor: 'rgba(230,57,70,0.35)',
+    borderColor: withAlpha(card.red, 0.35),
   },
   cardDecorCircle2: {
     position: 'absolute',
@@ -245,18 +256,18 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 55,
     borderWidth: 2,
-    borderColor: 'rgba(230,57,70,0.18)',
+    borderColor: withAlpha(card.red, 0.18),
   },
   cardLogo: {
-    color: D14Colors.red,
+    color: card.red,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 3,
     marginBottom: Spacing.three,
   },
-  cardName: { color: D14Colors.white, fontSize: 20, fontWeight: '700' },
+  cardName: { color: card.text, fontSize: 20, fontWeight: '700' },
   cardNumber: {
-    color: D14Colors.textSecondary,
+    color: card.textSecondary,
     fontSize: 12,
     fontVariant: ['tabular-nums'],
     marginTop: 4,
@@ -266,12 +277,12 @@ const styles = StyleSheet.create({
   cardDetails: { gap: Spacing.two },
   cardDetail: {},
   cardDetailLabel: {
-    color: D14Colors.textTertiary,
+    color: card.textTertiary,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  cardDetailValue: { color: D14Colors.white, fontSize: 13, fontWeight: '600', marginTop: 1 },
+  cardDetailValue: { color: card.text, fontSize: 13, fontWeight: '600', marginTop: 1 },
   qrBox: { backgroundColor: '#FFFFFF', borderRadius: Radius.md, padding: 8 },
   detailRow: {
     flexDirection: 'row',
@@ -279,20 +290,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
   },
-  detailRowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
+  detailRowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
   renewButton: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 15,
     marginBottom: Spacing.three,
   },
   renewButtonQuiet: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  renewButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
-  detailLabel: { color: D14Colors.textSecondary, fontSize: 13 },
-  detailValue: { color: D14Colors.white, fontSize: 13, fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
-});
+  renewButtonText: { color: c.onAccent, fontSize: 14, fontWeight: '700' },
+  renewButtonTextQuiet: { color: c.text },
+  detailLabel: { color: c.textSecondary, fontSize: 13 },
+  detailValue: { color: c.text, fontSize: 13, fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
+}));

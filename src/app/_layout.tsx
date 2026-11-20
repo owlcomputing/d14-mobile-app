@@ -2,15 +2,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { defaultShouldDehydrateQuery, QueryClient, type Query } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { DarkTheme, Stack, ThemeProvider, useRouter, type Href } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  Stack,
+  ThemeProvider as NavigationThemeProvider,
+  useRouter,
+  type Href,
+  type Theme,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LockScreen } from '@/components/lock-screen';
-import { D14Colors } from '@/constants/theme';
 import { onNotificationTap } from '@/lib/push';
+import { ThemeProvider, useAppearance, useColors } from '@/lib/theme';
 import { AppLockProvider, useAppLock } from '@/providers/app-lock-provider';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
@@ -41,18 +49,26 @@ function shouldPersistQuery(query: Query) {
 
 SplashScreen.preventAutoHideAsync();
 
-const d14Theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: D14Colors.red,
-    background: D14Colors.black,
-    card: D14Colors.surface,
-    text: D14Colors.white,
-    border: D14Colors.border,
-    notification: D14Colors.red,
-  },
-};
+/** Navigation theme (headers, tab bar, screen backgrounds) from the active palette. */
+function useNavigationTheme(): Theme {
+  const { scheme } = useAppearance();
+  const c = useColors();
+  return useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: c.red,
+        background: c.background,
+        card: c.surface,
+        text: c.text,
+        border: c.border,
+        notification: c.red,
+      },
+    };
+  }, [scheme, c]);
+}
 
 // Screens a notification may open (same list send-push accepts)
 const NOTIFICATION_LINK = /^\/(event|division)\/\d+$|^\/(renew|calendar)$/;
@@ -82,14 +98,17 @@ function useNotificationLinks(ready: boolean) {
 function RootNavigator() {
   const { session, loading } = useAuth();
   const { locked } = useAppLock();
+  // The saved Appearance preference is read before any UI renders (no flash)
+  const { ready: themeReady } = useAppearance();
+  const starting = loading || !themeReady;
 
   useEffect(() => {
-    if (!loading) SplashScreen.hideAsync();
-  }, [loading]);
+    if (!starting) SplashScreen.hideAsync();
+  }, [starting]);
 
-  useNotificationLinks(!loading && !(locked && session));
+  useNotificationLinks(!starting && !(locked && session));
 
-  if (loading) return null;
+  if (starting) return null;
   // App Lock protects a signed-in member's data; guests have nothing to lock.
   if (locked && session) return <LockScreen />;
 
@@ -193,7 +212,17 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={d14Theme}>
+    <ThemeProvider>
+      <ThemedRoot />
+    </ThemeProvider>
+  );
+}
+
+function ThemedRoot() {
+  const navigationTheme = useNavigationTheme();
+  const { scheme } = useAppearance();
+  return (
+    <NavigationThemeProvider value={navigationTheme}>
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{
@@ -203,11 +232,11 @@ export default function RootLayout() {
         }}>
         <AuthProvider>
           <AppLockProvider>
-            <StatusBar style="light" />
+            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
             <RootNavigator />
           </AppLockProvider>
         </AuthProvider>
       </PersistQueryClientProvider>
-    </ThemeProvider>
+    </NavigationThemeProvider>
   );
 }

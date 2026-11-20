@@ -6,13 +6,13 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 
 const AUDIENCE_LABEL: Record<string, string> = {
   everyone: 'Everyone',
@@ -47,6 +47,8 @@ const when = (iso: string) =>
   });
 
 function SendRow({ item }: { item: Send }) {
+  const c = useColors();
+  const styles = useStyles();
   const sender = item.sender as { first_name: string | null; last_name: string | null } | null;
   const by =
     item.kind === 'event_auto'
@@ -61,7 +63,7 @@ function SendRow({ item }: { item: Send }) {
         <Ionicons
           name={item.kind === 'event_auto' ? 'calendar' : 'megaphone'}
           size={16}
-          color={D14Colors.red}
+          color={c.red}
         />
         <Text style={styles.meta}>
           {when(item.created_at)} · {by}
@@ -84,21 +86,25 @@ function SendRow({ item }: { item: Send }) {
 }
 
 function Stat({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.stat}>
-      <Ionicons name={icon} size={13} color={D14Colors.textSecondary} />
+      <Ionicons name={icon} size={13} color={c.textSecondary} />
       <Text style={styles.statText}>{text}</Text>
     </View>
   );
 }
 
 export default function NotificationHistoryScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const history = useSendHistory();
 
   if (history.isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={D14Colors.red} />
+        <ActivityIndicator color={c.red} />
       </View>
     );
   }
@@ -116,7 +122,7 @@ export default function NotificationHistoryScreen() {
           onRefresh={() => {
             history.refetch();
           }}
-          tintColor={D14Colors.red}
+          tintColor={c.red}
         />
       }
       ListEmptyComponent={
@@ -130,35 +136,35 @@ export default function NotificationHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six, gap: Spacing.three },
   center: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
     gap: 4,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  title: { color: D14Colors.white, fontSize: 15, fontWeight: '700', marginTop: 4 },
-  body: { color: D14Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  meta: { color: D14Colors.textTertiary, fontSize: 12 },
+  title: { color: c.text, fontSize: 15, fontWeight: '700', marginTop: 4 },
+  body: { color: c.textSecondary, fontSize: 13, lineHeight: 18 },
+  meta: { color: c.textTertiary, fontSize: 12 },
   stats: { flexDirection: 'row', gap: Spacing.three, marginTop: 6 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { color: D14Colors.textSecondary, fontSize: 12 },
-  note: { color: D14Colors.textTertiary, fontSize: 11, fontStyle: 'italic', marginTop: 2 },
-  error: { color: D14Colors.error, fontSize: 11, marginTop: 2 },
+  statText: { color: c.textSecondary, fontSize: 12 },
+  note: { color: c.textTertiary, fontSize: 11, fontStyle: 'italic', marginTop: 2 },
+  error: { color: c.error, fontSize: 11, marginTop: 2 },
   empty: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
     marginTop: Spacing.six,
   },
-});
+}));

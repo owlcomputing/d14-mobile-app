@@ -8,7 +8,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -23,7 +22,7 @@ import {
   PickerField,
 } from '@/components/form-fields';
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { COUNTRIES, US_STATES } from '@/constants/us-states';
 import {
   removeFamilyMember,
@@ -32,6 +31,7 @@ import {
   type MembershipOption,
 } from '@/lib/new-membership';
 import { useDivisions, useFamilyMembers } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 type Step = 'option' | 'details' | 'family' | 'review';
@@ -85,6 +85,8 @@ const newKid = (): KidDraft => ({
  * on the website.
  */
 export default function JoinScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { profile, session, isMember, profileReady, refreshProfile } = useAuth();
   const divisions = useDivisions();
@@ -133,7 +135,7 @@ export default function JoinScreen() {
   if (profileReady && isMember) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Ionicons name="checkmark-circle" size={48} color={D14Colors.success} />
+        <Ionicons name="checkmark-circle" size={48} color={c.success} />
         <Text style={styles.doneTitle}>You&apos;re already a member</Text>
         <Text style={styles.doneText}>
           To add family members or renew, use the Wallet or the D14 website.
@@ -321,7 +323,7 @@ export default function JoinScreen() {
                 onPress={() => setOption(o.value)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: option === o.value }}>
-                <Ionicons name={o.icon} size={22} color={D14Colors.red} />
+                <Ionicons name={o.icon} size={22} color={c.red} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.optionTitle}>{o.title}</Text>
                   <Text style={styles.optionDetail}>{o.detail}</Text>
@@ -329,7 +331,7 @@ export default function JoinScreen() {
                 <Ionicons
                   name={option === o.value ? 'radio-button-on' : 'radio-button-off'}
                   size={22}
-                  color={option === o.value ? D14Colors.red : D14Colors.textTertiary}
+                  color={option === o.value ? c.red : c.textTertiary}
                 />
               </Pressable>
             ))}
@@ -428,8 +430,8 @@ export default function JoinScreen() {
               label="Country"
               value={country}
               options={COUNTRIES}
-              onChange={(c) => {
-                setCountry(c);
+              onChange={(value) => {
+                setCountry(value);
                 setState('');
               }}
               required
@@ -520,7 +522,7 @@ export default function JoinScreen() {
                     <View key={f.id} style={styles.pendingRow}>
                       <Text style={styles.pendingName}>{name}</Text>
                       {removing === f.id ? (
-                        <ActivityIndicator color={D14Colors.textTertiary} />
+                        <ActivityIndicator color={c.textTertiary} />
                       ) : (
                         <Pressable onPress={() => removePending(f.id, name)} hitSlop={8}>
                           <Text style={styles.removeText}>Remove</Text>
@@ -606,7 +608,7 @@ export default function JoinScreen() {
             <Pressable
               style={styles.addKid}
               onPress={() => setKids((p) => [...p, { ...newKid(), lastName }])}>
-              <Ionicons name="add-circle" size={20} color={D14Colors.red} />
+              <Ionicons name="add-circle" size={20} color={c.red} />
               <Text style={styles.addKidText}>Add a family member</Text>
             </Pressable>
             {errors.family ? <Text style={styles.error}>{errors.family}</Text> : null}
@@ -660,13 +662,13 @@ export default function JoinScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.nextButton,
-                pressed && { backgroundColor: D14Colors.redDark },
+                pressed && { backgroundColor: c.redDark },
               ]}
               onPress={pay}
               disabled={!!working}>
               {working ? (
                 <View style={styles.workingRow}>
-                  <ActivityIndicator color={D14Colors.white} />
+                  <ActivityIndicator color={c.onAccent} />
                   <Text style={styles.nextText}>{working}</Text>
                 </View>
               ) : (
@@ -678,7 +680,7 @@ export default function JoinScreen() {
               style={({ pressed }) => [
                 styles.nextButton,
                 step === 'option' && !option && styles.disabled,
-                pressed && { backgroundColor: D14Colors.redDark },
+                pressed && { backgroundColor: c.redDark },
               ]}
               onPress={next}
               disabled={step === 'option' && !option}>
@@ -697,6 +699,7 @@ export default function JoinScreen() {
 }
 
 function ReviewRow({ name, detail }: { name: string; detail: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.pendingRow}>
       <Text style={styles.pendingName}>{name || '—'}</Text>
@@ -705,27 +708,27 @@ function ReviewRow({ name, detail }: { name: string; detail: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   center: { alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
   stepLabel: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  title: { color: D14Colors.white, fontSize: 24, fontWeight: '800', marginTop: Spacing.one },
+  title: { color: c.text, fontSize: 24, fontWeight: '800', marginTop: Spacing.one },
   subtitle: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     lineHeight: 19,
     marginTop: Spacing.two,
     marginBottom: Spacing.two,
   },
   section: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 2,
@@ -733,7 +736,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.four,
   },
   fieldLabel: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -744,18 +747,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     borderRadius: Radius.lg,
     padding: Spacing.three,
     marginTop: Spacing.three,
   },
-  optionCardOn: { borderColor: D14Colors.red },
-  optionTitle: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-  optionDetail: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  optionCardOn: { borderColor: c.red },
+  optionTitle: { color: c.text, fontSize: 15, fontWeight: '700' },
+  optionDetail: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
   note: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     lineHeight: 17,
     marginTop: Spacing.three,
@@ -767,9 +770,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
   },
-  pendingName: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
-  reviewDetail: { color: D14Colors.textTertiary, fontSize: 12 },
-  removeText: { color: D14Colors.error, fontSize: 13, fontWeight: '600' },
+  pendingName: { color: c.text, fontSize: 14, fontWeight: '600' },
+  reviewDetail: { color: c.textTertiary, fontSize: 12 },
+  removeText: { color: c.error, fontSize: 13, fontWeight: '600' },
   removeKid: { alignSelf: 'flex-end', marginTop: Spacing.three },
   addKid: {
     flexDirection: 'row',
@@ -778,13 +781,13 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     borderRadius: Radius.md,
     paddingVertical: 14,
     marginTop: Spacing.two,
   },
-  addKidText: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
-  error: { color: D14Colors.error, fontSize: 12, marginTop: Spacing.two, textAlign: 'center' },
+  addKidText: { color: c.text, fontSize: 14, fontWeight: '600' },
+  error: { color: c.error, fontSize: 12, marginTop: Spacing.two, textAlign: 'center' },
   nav: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.four },
   backButton: {
     flex: 1,
@@ -792,26 +795,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     paddingVertical: 15,
   },
-  backText: { color: D14Colors.white, fontSize: 15, fontWeight: '600' },
+  backText: { color: c.text, fontSize: 15, fontWeight: '600' },
   nextButton: {
     flex: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingVertical: 15,
   },
-  nextText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
+  nextText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
   disabled: { opacity: 0.4 },
   workingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  doneTitle: { color: D14Colors.white, fontSize: 20, fontWeight: '700', marginTop: Spacing.three },
+  doneTitle: { color: c.text, fontSize: 20, fontWeight: '700', marginTop: Spacing.three },
   doneText: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     textAlign: 'center',
     marginTop: Spacing.two,
   },
-});
+}));

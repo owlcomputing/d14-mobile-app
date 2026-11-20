@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import {
   Image as RNImage,
   Pressable,
-  StyleSheet,
   Text,
   View,
   useWindowDimensions,
@@ -15,27 +14,37 @@ import RenderHtml, {
   type MixedStyleRecord,
 } from 'react-native-render-html';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, withAlpha, type Palette } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 
 const COLLAPSED_HEIGHT = 220;
 
-const tagsStyles: MixedStyleRecord = {
-  body: { color: D14Colors.white, fontSize: 14, lineHeight: 21 },
-  p: { marginTop: 0, marginBottom: 12 },
-  a: { color: D14Colors.red, textDecorationColor: D14Colors.red },
-  h1: { fontSize: 20, marginBottom: 8, color: D14Colors.white },
-  h2: { fontSize: 18, marginBottom: 8, color: D14Colors.white },
-  h3: { fontSize: 16, marginBottom: 6, color: D14Colors.white },
-  li: { marginBottom: 4 },
-  strong: { color: D14Colors.white },
-  blockquote: {
-    borderLeftWidth: 3,
-    borderLeftColor: D14Colors.red,
-    paddingLeft: 12,
-    marginLeft: 0,
-    color: D14Colors.textSecondary,
-  },
-};
+/** Tag styles for the active palette (one object per palette, so RenderHtml can memoize). */
+const tagsStylesCache = new WeakMap<Palette, MixedStyleRecord>();
+function tagsStylesFor(c: Palette): MixedStyleRecord {
+  let styles = tagsStylesCache.get(c);
+  if (!styles) {
+    styles = {
+      body: { color: c.text, fontSize: 14, lineHeight: 21 },
+      p: { marginTop: 0, marginBottom: 12 },
+      a: { color: c.red, textDecorationColor: c.red },
+      h1: { fontSize: 20, marginBottom: 8, color: c.text },
+      h2: { fontSize: 18, marginBottom: 8, color: c.text },
+      h3: { fontSize: 16, marginBottom: 6, color: c.text },
+      li: { marginBottom: 4 },
+      strong: { color: c.text },
+      blockquote: {
+        borderLeftWidth: 3,
+        borderLeftColor: c.red,
+        paddingLeft: 12,
+        marginLeft: 0,
+        color: c.textSecondary,
+      },
+    };
+    tagsStylesCache.set(c, styles);
+  }
+  return styles;
+}
 
 /**
  * Replaces the default <img> renderer. The website's WYSIWYG editor embeds
@@ -43,6 +52,7 @@ const tagsStyles: MixedStyleRecord = {
  * decodes them off the JS thread and we size by intrinsic aspect ratio.
  */
 const HtmlImage: CustomBlockRenderer = ({ tnode }) => {
+  const c = useColors();
   const contentWidth = useContentWidth();
   const src = tnode.attributes.src ?? '';
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -65,7 +75,7 @@ const HtmlImage: CustomBlockRenderer = ({ tnode }) => {
         aspectRatio: aspectRatio ?? 4 / 3,
         borderRadius: Radius.sm,
         marginBottom: 12,
-        backgroundColor: D14Colors.surfaceRaised,
+        backgroundColor: c.surfaceRaised,
       }}
       contentFit="contain"
     />
@@ -82,10 +92,12 @@ type HtmlContentProps = {
 };
 
 /**
- * Renders CMS/TinyMCE HTML with dark-theme styling. Content taller than the
+ * Renders CMS/TinyMCE HTML styled for the active palette. Content taller than the
  * collapsed height gets a fade-out and a "See more" toggle.
  */
 export function HtmlContent({ html, width, collapsible = true }: HtmlContentProps) {
+  const c = useColors();
+  const styles = useStyles();
   const { width: windowWidth } = useWindowDimensions();
   const contentWidth = width ?? windowWidth - Spacing.three * 4;
   const [expanded, setExpanded] = useState(false);
@@ -100,7 +112,7 @@ export function HtmlContent({ html, width, collapsible = true }: HtmlContentProp
           <RenderHtml
             contentWidth={contentWidth}
             source={{ html }}
-            tagsStyles={tagsStyles}
+            tagsStyles={tagsStylesFor(c)}
             renderers={renderers}
             renderersProps={{
               a: {
@@ -122,7 +134,7 @@ export function HtmlContent({ html, width, collapsible = true }: HtmlContentProp
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   fade: {
     position: 'absolute',
     bottom: 0,
@@ -130,12 +142,12 @@ const styles = StyleSheet.create({
     right: 0,
     height: 48,
     // RN can't gradient without a lib; a translucent scrim reads as a fade
-    backgroundColor: 'rgba(22,22,22,0.75)',
+    backgroundColor: withAlpha(c.surface, 0.75),
   },
   toggle: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 13,
     fontWeight: '700',
     marginTop: Spacing.two,
   },
-});
+}));
