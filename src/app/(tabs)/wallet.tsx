@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -89,11 +90,13 @@ function MemberWallet() {
   const { profile, membership } = useAuth();
   const family = useFamilyMembers(profile?.id);
 
-  const active = membership ? new Date(membership.expiration) >= new Date() : false;
+  // The time the screen opened (reading the clock during render isn't allowed)
+  const [now] = useState(() => Date.now());
+  const active = membership ? new Date(membership.expiration).getTime() >= now : false;
   const expiringSoon =
     active &&
     membership != null &&
-    new Date(membership.expiration).getTime() - Date.now() < 90 * 24 * 60 * 60 * 1000;
+    new Date(membership.expiration).getTime() - now < 90 * 24 * 60 * 60 * 1000;
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
   // QR payload for gate verification — verified by the lookup/scanner screen
   const qrValue = JSON.stringify({ v: 1, t: 'd14-member', id: profile?.id, d14: profile?.d14_number });

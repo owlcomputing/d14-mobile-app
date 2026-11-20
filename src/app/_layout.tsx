@@ -14,7 +14,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LockScreen } from '@/components/lock-screen';
 import { onNotificationTap } from '@/lib/push';
@@ -79,14 +79,16 @@ const NOTIFICATION_LINK = /^\/(event|division)\/\d+$|^\/(renew|calendar)$/;
  */
 function useNotificationLinks(ready: boolean) {
   const router = useRouter();
-  const [pending, setPending] = useState<string | null>(null);
+  // Each tap gets an id, so the same link can be opened again by a later tap
+  const [pending, setPending] = useState<{ url: string; id: number } | null>(null);
+  const handled = useRef<number | null>(null);
 
-  useEffect(() => onNotificationTap(setPending), []);
+  useEffect(() => onNotificationTap((url) => setPending({ url, id: Date.now() })), []);
 
   useEffect(() => {
-    if (!ready || !pending) return;
-    const url = pending;
-    setPending(null);
+    if (!ready || !pending || handled.current === pending.id) return;
+    handled.current = pending.id;
+    const { url } = pending;
     if (url.startsWith('https://')) {
       WebBrowser.openBrowserAsync(url).catch(() => {});
     } else if (NOTIFICATION_LINK.test(url)) {
