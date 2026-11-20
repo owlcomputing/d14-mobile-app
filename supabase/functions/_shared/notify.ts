@@ -150,12 +150,20 @@ export async function sendPush(
 // Email
 // ---------------------------------------------------------------------------
 
-/** Apply NOTIFY_EMAIL_MODE. `note` explains anything skipped (stored in the send history). */
-export function applyEmailMode(targets: EmailTarget[]): {
-  targets: EmailTarget[];
+/**
+ * Apply an email safety switch (NOTIFY_EMAIL_MODE for notification emails,
+ * NEWSLETTER_EMAIL_MODE for website newsletters). `note` explains anything
+ * skipped (stored in the send history).
+ */
+export function applyEmailMode<T extends { email: string }>(
+  targets: T[],
+  modeVar = 'NOTIFY_EMAIL_MODE',
+  defaultMode = 'off',
+): {
+  targets: T[];
   note: string | null;
 } {
-  const mode = (Deno.env.get('NOTIFY_EMAIL_MODE') ?? 'off').trim().toLowerCase();
+  const mode = (Deno.env.get(modeVar) ?? defaultMode).trim().toLowerCase();
   if (mode === 'live') {
     return SENDGRID_API_KEY ? { targets, note: null } : { targets: [], note: 'SendGrid key missing' };
   }
@@ -321,34 +329,22 @@ export function renderEmail(opts: { heading: string; intro?: string; sections: E
   return { html, text };
 }
 
-/** Send one email (same content) to each recipient individually, with their own unsubscribe link. */
-export async function sendEmail(
-  recipients: EmailTarget[],
+type Personalization = {
+  to: { email: string }[];
+  substitutions?: Record<string, string>;
+  headers?: Record<string, string>;
+};
+
+/** One SendGrid request per 1,000 recipients (SendGrid's limit), same content for all. */
+async function postToSendGrid(
+  personalizations: Personalization[],
   subject: string,
   content: { html: string; text: string },
 ): Promise<{ sent: number; errors: string[] }> {
   let sent = 0;
   const errors: string[] = [];
-  // SendGrid allows up to 1,000 personalizations per request
-  for (let i = 0; i < recipients.length; i += 1000) {
-    const chunk = recipients.slice(i, i + 1000);
-    const personalizations = await Promise.all(
-      chunk.map(async (r) => {
-        return {
-          to: [{ email: r.email }],
-          substitutions: {
-            [UNSUB_TAG]: await unsubscribeUrl(r.profile_id),
-            [REASON_TAG]: r.is_member
-              ? "you're an AMA District 14 member"
-              : 'you asked for AMA District 14 news and event emails',
-          },
-          headers: {
-            'List-Unsubscribe': `<${await unsubscribePostUrl(r.profile_id)}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-        };
-      }),
-    );
+  for (let i = 0; i < personalizations.length; i += 1000) {
+    const chunk = personalizations.slice(i, i + 1000);
     try {
       const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
@@ -357,7 +353,7 @@ export async function sendEmail(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          personalizations,
+          personalizations: chunk,
           from: { email: FROM_EMAIL, name: 'AMA District 14' },
           reply_to: { email: REPLY_TO },
           subject,
@@ -376,6 +372,127 @@ export async function sendEmail(
     }
   }
   return { sent, errors };
+}
+
+const unsubscribeHeaders = async (profileId: string) => ({
+  'List-Unsubscribe': `<${await unsubscribePostUrl(profileId)}>`,
+  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+});
+
+/** Send one email (same content) to each recipient individually, with their own unsubscribe link. */
+export async function sendEmail(
+  recipients: EmailTarget[],
+  subject: string,
+  content: { html: string; text: string },
+): Promise<{ sent: number; errors: string[] }> {
+  const personalizations = await Promise.all(
+    recipients.map(async (r) => ({
+      to: [{ email: r.email }],
+      substitutions: {
+        [UNSUB_TAG]: await unsubscribeUrl(r.profile_id),
+        [REASON_TAG]: r.is_member
+          ? "you're an AMA District 14 member"
+          : 'you asked for AMA District 14 news and event emails',
+      },
+      headers: await unsubscribeHeaders(r.profile_id),
+    })),
+  );
+  return postToSendGrid(personalizations, subject, content);
+}
+
+// ---------------------------------------------------------------------------
+// Website newsletters (rich HTML written in Admin › Notifications)
+// ---------------------------------------------------------------------------
+
+export type NewsletterRecipient = {
+  email: string;
+  /** account holder whose unsubscribe link this recipient gets; null = no link */
+  unsubscribeProfileId: string | null;
+  is_member: boolean;
+};
+
+const FOOTER_HTML_TAG = '%footer_html%';
+const FOOTER_TEXT_TAG = '%footer_text%';
+
+/** Rough plain-text version of the editor's HTML (for the text/plain part). */
+function htmlToText(html: string) {
+  return html
+    .replace(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_m, href, label) => `${label} (${href})`)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|blockquote|pre)>/gi, '\n\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** Newsletter frame: the admin's HTML inside the D14 header and footer. */
+export function renderNewsletter(contentHtml: string) {
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden">
+  <tr><td style="background:#0A0A0A;padding:16px 24px;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px">AMA DISTRICT 14</td></tr>
+  <tr><td style="padding:24px;font-size:15px;line-height:1.6;color:#222">
+    ${contentHtml}
+  </td></tr>
+  <tr><td style="padding:16px 24px 24px;font-size:12px;line-height:1.6;color:#777;border-top:1px solid #eee">
+    ${FOOTER_HTML_TAG}<br>
+    ${escapeHtml(MAILING_ADDRESS)}
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+  const text = ['AMA DISTRICT 14', '', htmlToText(contentHtml), '', '--', FOOTER_TEXT_TAG, MAILING_ADDRESS].join(
+    '\n',
+  );
+  return { html, text };
+}
+
+/**
+ * Send a newsletter. Recipients with an unsubscribe profile get their own
+ * unsubscribe link (and List-Unsubscribe headers); the others (members picked
+ * by name, charter clubs) get the footer without one.
+ */
+export async function sendNewsletter(
+  recipients: NewsletterRecipient[],
+  subject: string,
+  content: { html: string; text: string },
+): Promise<{ sent: number; errors: string[] }> {
+  const personalizations = await Promise.all(
+    recipients.map(async (r): Promise<Personalization> => {
+      if (!r.unsubscribeProfileId) {
+        return {
+          to: [{ email: r.email }],
+          substitutions: {
+            [FOOTER_HTML_TAG]: 'Sent by AMA District 14.',
+            [FOOTER_TEXT_TAG]: 'Sent by AMA District 14.',
+          },
+        };
+      }
+      const url = await unsubscribeUrl(r.unsubscribeProfileId);
+      const reason = r.is_member
+        ? "you're an AMA District 14 member"
+        : "you're on the AMA District 14 mailing list";
+      return {
+        to: [{ email: r.email }],
+        substitutions: {
+          [FOOTER_HTML_TAG]: `You're getting this email because ${reason}. <a href="${escapeHtml(url)}" style="color:#777">Unsubscribe</a> from these emails, or change them in the D14 app under Profile &rsaquo; Communications.`,
+          [FOOTER_TEXT_TAG]: `You're getting this email because ${reason}.\nUnsubscribe: ${url}`,
+        },
+        headers: await unsubscribeHeaders(r.unsubscribeProfileId),
+      };
+    }),
+  );
+  return postToSendGrid(personalizations, subject, content);
 }
 
 // ---------------------------------------------------------------------------

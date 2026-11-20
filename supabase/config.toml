@@ -28,5 +28,8 @@ verify_jwt = false
 
 # email-unsubscribe is opened from an email link (no sign-in). Each link is
 # signed (HMAC of the profile id), and only a POST changes anything.
+[functions.send-newsletter]
+verify_jwt = true
+
 [functions.email-unsubscribe]
 verify_jwt = false
