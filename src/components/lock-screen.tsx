@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAppLock } from '@/providers/app-lock-provider';
 
 export function LockScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const { unlock } = useAppLock();
 
   // Prompt immediately when the lock screen appears
@@ -22,17 +25,17 @@ export function LockScreen() {
         contentFit="contain"
       />
       <Pressable style={styles.button} onPress={unlock}>
-        <Ionicons name="lock-open" size={18} color={D14Colors.white} />
+        <Ionicons name="lock-open" size={18} color={c.onAccent} />
         <Text style={styles.buttonText}>Unlock</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.five,
@@ -42,10 +45,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.five,
     paddingVertical: 14,
   },
-  buttonText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-});
+  buttonText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
+}));

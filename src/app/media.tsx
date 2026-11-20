@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 
 const SPOTIFY_SHOW_ID = '2FGA4qJb5k1Zbx5QA4DgJ0';
 const SPOTIFY_EMBED_URL = `https://open.spotify.com/embed/show/${SPOTIFY_SHOW_ID}?utm_source=generator&theme=0`;
@@ -22,6 +23,8 @@ const MAGAZINE_ARCHIVE: { label: string; url: string }[] = [
 ];
 
 export default function MediaScreen() {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>The Dirtbike Download</Text>
@@ -66,9 +69,9 @@ export default function MediaScreen() {
               pressed && { opacity: 0.7 },
             ]}
             onPress={() => WebBrowser.openBrowserAsync(issue.url)}>
-            <Ionicons name="book" size={15} color={D14Colors.textTertiary} />
+            <Ionicons name="book" size={15} color={c.textTertiary} />
             <Text style={styles.issueLabel}>{issue.label}</Text>
-            <Ionicons name="open-outline" size={14} color={D14Colors.textTertiary} />
+            <Ionicons name="open-outline" size={14} color={c.textTertiary} />
           </Pressable>
         ))}
       </Widget>
@@ -77,22 +80,24 @@ export default function MediaScreen() {
 }
 
 function OpenLink({ label, url, icon }: { label: string; url: string; icon: any }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       style={({ pressed }) => [styles.openLink, pressed && { opacity: 0.8 }]}
       onPress={() => WebBrowser.openBrowserAsync(url)}>
-      <Ionicons name={icon} size={15} color={D14Colors.white} />
+      <Ionicons name={icon} size={15} color={c.onAccent} />
       <Text style={styles.openLinkText}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
-  title: { color: D14Colors.white, fontSize: 22, fontWeight: '800' },
+  title: { color: c.text, fontSize: 22, fontWeight: '800' },
   subtitle: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 4,
@@ -102,7 +107,7 @@ const styles = StyleSheet.create({
     height: 352,
     borderRadius: Radius.md,
     overflow: 'hidden',
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
   },
   videoEmbed: { height: 220 },
   webview: { flex: 1, backgroundColor: 'transparent' },
@@ -111,14 +116,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingVertical: 12,
     marginTop: Spacing.two + 4,
   },
-  openLinkText: { color: D14Colors.white, fontSize: 13, fontWeight: '700' },
+  openLinkText: { color: c.onAccent, fontSize: 13, fontWeight: '700' },
   archiveNote: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     lineHeight: 17,
     marginBottom: Spacing.two,
@@ -129,6 +134,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two + 4,
     paddingVertical: 11,
   },
-  issueRowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
-  issueLabel: { color: D14Colors.white, fontSize: 14, flex: 1 },
-});
+  issueRowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
+  issueLabel: { color: c.text, fontSize: 14, flex: 1 },
+}));

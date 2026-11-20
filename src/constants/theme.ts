@@ -3,46 +3,91 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 /**
- * D14 brand palette — dark-first. Black/charcoal surfaces, D14 red accent,
- * white text. Matches the district website and the 2011 logo set.
+ * Semantic color roles. Components read the active palette with
+ * `useColors()` / `makeStyles()` from `@/lib/theme`, so every color here
+ * follows the user's Appearance setting (Dark / Light / Match phone).
  */
-export const D14Colors = {
+export type Palette = {
+  /** Screen background */
+  background: string;
+  /** Cards, widgets, tab bar, headers */
+  surface: string;
+  /** Chips, icon tiles, inputs: one step up from `surface` */
+  surfaceRaised: string;
+  /** Selected / pressed fills, switch tracks */
+  surfaceSelected: string;
+  border: string;
+  /** Primary text and icons on background / surfaces */
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  /** D14 brand red: accents, buttons, links */
+  red: string;
+  /** Pressed state of red buttons */
+  redDark: string;
+  /** Text / icons on red or other colored fills; white in both modes */
+  onAccent: string;
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+};
+
+/** Fixed brand values for code outside React (e.g. push notification channel color). */
+export const BrandColors = {
   red: '#E63946',
-  redDark: '#C1121F',
-  black: '#0A0A0A',
+} as const;
+
+/** The original dark-first D14 look. Values must not change. */
+export const darkPalette: Palette = {
+  background: '#0A0A0A',
   surface: '#161616',
   surfaceRaised: '#1F1F1F',
   surfaceSelected: '#2A2A2A',
   border: '#2E2E2E',
-  white: '#FFFFFF',
+  text: '#FFFFFF',
   textSecondary: '#A5A9B0',
   textTertiary: '#6E7278',
+  red: BrandColors.red,
+  redDark: '#C1121F',
+  onAccent: '#FFFFFF',
   success: '#4ADE80',
   warning: '#FBBF24',
   error: '#F87171',
   info: '#38BDF8',
-} as const;
+};
 
-export const Colors = {
-  light: {
-    text: D14Colors.black,
-    background: '#F4F4F5',
-    backgroundElement: '#FFFFFF',
-    backgroundSelected: '#E4E4E7',
-    textSecondary: '#60646C',
-    tint: D14Colors.red,
-  },
-  dark: {
-    text: D14Colors.white,
-    background: D14Colors.black,
-    backgroundElement: D14Colors.surface,
-    backgroundSelected: D14Colors.surfaceSelected,
-    textSecondary: D14Colors.textSecondary,
-    tint: D14Colors.red,
-  },
-} as const;
+/**
+ * Light look: light grey background, white cards, near-black text.
+ * Contrast (WCAG): text 17:1, textSecondary 6.8:1, textTertiary 4.7:1 on the
+ * background (higher on white surfaces); status colors are darker shades so
+ * they read on white (all >= 4.5:1 on white). Brand red is unchanged (4.2:1 on
+ * white, the same as white-on-red buttons in dark mode).
+ */
+export const lightPalette: Palette = {
+  background: '#F4F4F5',
+  surface: '#FFFFFF',
+  surfaceRaised: '#F0F0F2',
+  surfaceSelected: '#E4E4E7',
+  border: '#E0E0E4',
+  text: '#111113',
+  textSecondary: '#52555C',
+  textTertiary: '#696D74',
+  red: BrandColors.red,
+  redDark: '#C1121F',
+  onAccent: '#FFFFFF',
+  success: '#15803D',
+  warning: '#B45309',
+  error: '#C62828',
+  info: '#0369A1',
+};
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+/** `#RRGGBB` + alpha (0-1) → `rgba(r,g,b,a)`. */
+export function withAlpha(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 export const Fonts = Platform.select({
   ios: {

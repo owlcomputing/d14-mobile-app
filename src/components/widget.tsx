@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View, type ViewProps } from 'react-native';
+import { Text, View, type ViewProps } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles } from '@/lib/theme';
 
 type WidgetProps = ViewProps & {
   /** Small uppercase label shown above the content */
@@ -9,6 +10,8 @@ type WidgetProps = ViewProps & {
 };
 
 export function Widget({ header, variant = 'default', style, children, ...rest }: WidgetProps) {
+  const styles = useStyles();
+  const variants = useVariants();
   return (
     <View style={[styles.base, variants[variant], style]} {...rest}>
       {header ? (
@@ -19,29 +22,29 @@ export function Widget({ header, variant = 'default', style, children, ...rest }
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   base: {
     borderRadius: Radius.lg,
     padding: Spacing.three,
     marginBottom: Spacing.two + 4,
   },
   header: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: Spacing.two,
   },
-  headerOnRed: { color: D14Colors.white, opacity: 0.85 },
-});
+  headerOnRed: { color: c.onAccent, opacity: 0.85 },
+}));
 
-const variants = StyleSheet.create({
-  default: { backgroundColor: D14Colors.surface },
-  red: { backgroundColor: D14Colors.red },
+const useVariants = makeStyles((c) => ({
+  default: { backgroundColor: c.surface },
+  red: { backgroundColor: c.red },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-});
+}));

@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useUpcomingEvents } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 function membershipStatus(expiration: string | undefined) {
@@ -25,6 +26,8 @@ function membershipStatus(expiration: string | undefined) {
 }
 
 export default function HomeScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { session, profile, membership, isMember, profileReady } = useAuth();
   const events = useUpcomingEvents(3);
@@ -42,7 +45,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={D14Colors.red} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.red} />
         }>
         <View style={styles.topBar}>
           <Image
@@ -61,7 +64,7 @@ export default function HomeScreen() {
           /* Prospect: signed up for reminders, not a member yet */
           <Pressable onPress={() => router.push('/join')}>
             <Widget variant="red" style={styles.cardTeaser}>
-              <Ionicons name="ribbon" size={26} color={D14Colors.white} />
+              <Ionicons name="ribbon" size={26} color={c.onAccent} />
               <View style={styles.cardTeaserText}>
                 <Text style={styles.cardTeaserTitle}>Become a D14 member</Text>
                 <Text style={styles.cardTeaserSub}>
@@ -75,7 +78,7 @@ export default function HomeScreen() {
           /* Membership card teaser */
           <Pressable onPress={() => router.push('/wallet')}>
             <Widget variant="red" style={styles.cardTeaser}>
-              <Ionicons name="card" size={28} color={D14Colors.white} />
+              <Ionicons name="card" size={28} color={c.onAccent} />
               <View style={styles.cardTeaserText}>
                 <Text style={styles.cardTeaserTitle}>Membership Card</Text>
                 <Text style={styles.cardTeaserSub}>
@@ -90,7 +93,7 @@ export default function HomeScreen() {
           <>
             <Pressable onPress={() => router.push('/signup')}>
               <Widget variant="red" style={styles.cardTeaser}>
-                <Ionicons name="notifications" size={26} color={D14Colors.white} />
+                <Ionicons name="notifications" size={26} color={c.onAccent} />
                 <View style={styles.cardTeaserText}>
                   <Text style={styles.cardTeaserTitle}>Get race reminders</Text>
                   <Text style={styles.cardTeaserSub}>
@@ -136,7 +139,7 @@ export default function HomeScreen() {
         <Widget header="The Dirtbike Download">
           <View style={styles.podcastRow}>
             <View style={styles.podcastIcon}>
-              <Ionicons name="mic" size={24} color={D14Colors.red} />
+              <Ionicons name="mic" size={24} color={c.red} />
             </View>
             <Text style={styles.podcastText}>
               The official D14 podcast — riders, race recaps, and district news. Listen or watch
@@ -173,34 +176,34 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   topBar: { alignItems: 'center', marginBottom: Spacing.three },
   logo: { width: 150, height: 53 },
   greeting: {
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 22,
     fontWeight: '700',
     marginBottom: Spacing.three,
   },
   cardTeaser: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   cardTeaserText: { flex: 1 },
-  cardTeaserTitle: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-  cardTeaserSub: { color: D14Colors.white, opacity: 0.85, fontSize: 12, marginTop: 2 },
-  cardTeaserChevron: { color: D14Colors.white, opacity: 0.7, fontSize: 24, fontWeight: '300' },
+  cardTeaserTitle: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
+  cardTeaserSub: { color: c.onAccent, opacity: 0.85, fontSize: 12, marginTop: 2 },
+  cardTeaserChevron: { color: c.onAccent, opacity: 0.7, fontSize: 24, fontWeight: '300' },
   signInRow: { alignItems: 'center', marginTop: -4, marginBottom: Spacing.three },
-  signInText: { color: D14Colors.textSecondary, fontSize: 13 },
-  signInLink: { color: D14Colors.red, fontWeight: '700' },
-  empty: { color: D14Colors.textSecondary, paddingVertical: Spacing.two },
-  link: { color: D14Colors.red, fontSize: 13, fontWeight: '600', marginTop: Spacing.two },
+  signInText: { color: c.textSecondary, fontSize: 13 },
+  signInLink: { color: c.red, fontWeight: '700' },
+  empty: { color: c.textSecondary, paddingVertical: Spacing.two },
+  link: { color: c.red, fontSize: 13, fontWeight: '600', marginTop: Spacing.two },
   divisionGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   divisionItem: { width: '25%', alignItems: 'center', paddingVertical: Spacing.two },
   divisionCircle: {
     width: 52,
     height: 52,
     borderRadius: Radius.lg,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -210,24 +213,24 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Radius.md,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  podcastText: { flex: 1, color: D14Colors.textSecondary, fontSize: 12, lineHeight: 18 },
+  podcastText: { flex: 1, color: c.textSecondary, fontSize: 12, lineHeight: 18 },
   podcastButton: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 12,
     marginTop: Spacing.three,
   },
-  podcastButtonText: { color: D14Colors.white, fontSize: 13, fontWeight: '700' },
+  podcastButtonText: { color: c.onAccent, fontSize: 13, fontWeight: '700' },
   divisionLabel: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 10,
     textAlign: 'center',
     lineHeight: 13,
     paddingHorizontal: 2,
   },
-});
+}));

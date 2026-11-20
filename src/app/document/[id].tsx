@@ -3,10 +3,11 @@ import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 import {
   deleteWalletDoc,
   docUri,
@@ -18,6 +19,8 @@ import { useAuth } from '@/providers/auth-provider';
 
 /** Full-screen view of one wallet document, e.g. to show at the gate. */
 export default function DocumentScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile, isMember } = useAuth();
@@ -83,7 +86,7 @@ export default function DocumentScreen() {
           />
         ) : (
           <View style={styles.pdf}>
-            <Ionicons name="document-text" size={72} color={D14Colors.red} />
+            <Ionicons name="document-text" size={72} color={c.red} />
             <Text style={styles.pdfTitle}>{doc.title}</Text>
             <Pressable
               style={({ pressed }) => [styles.openPdf, pressed && { opacity: 0.85 }]}
@@ -105,7 +108,7 @@ export default function DocumentScreen() {
             maxLength={60}
             returnKeyType="done"
             onSubmitEditing={saveRename}
-            placeholderTextColor={D14Colors.textTertiary}
+            placeholderTextColor={c.textTertiary}
           />
           <Pressable style={styles.renameSave} onPress={saveRename}>
             <Text style={styles.renameSaveText}>Save</Text>
@@ -133,7 +136,9 @@ function Action({
   onPress: () => void;
   danger?: boolean;
 }) {
-  const color = danger ? D14Colors.error : D14Colors.white;
+  const c = useColors();
+  const styles = useStyles();
+  const color = danger ? c.error : c.text;
   return (
     <Pressable
       style={({ pressed }) => [styles.action, pressed && { opacity: 0.6 }]}
@@ -146,26 +151,26 @@ function Action({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   body: { flex: 1 },
   image: { flex: 1 },
   pdf: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
-  pdfTitle: { color: D14Colors.white, fontSize: 18, fontWeight: '700', marginTop: Spacing.three },
+  pdfTitle: { color: c.text, fontSize: 18, fontWeight: '700', marginTop: Spacing.three },
   openPdf: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingVertical: 14,
     paddingHorizontal: Spacing.five,
     marginTop: Spacing.four,
   },
-  openPdfText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-  pdfHint: { color: D14Colors.textTertiary, fontSize: 12, marginTop: Spacing.two },
+  openPdfText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
+  pdfHint: { color: c.textTertiary, fontSize: 12, marginTop: Spacing.two },
   actions: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: D14Colors.border,
-    backgroundColor: D14Colors.surface,
+    borderTopColor: c.border,
+    backgroundColor: c.surface,
   },
   action: { flex: 1, alignItems: 'center', paddingVertical: 12, gap: 3 },
   actionLabel: { fontSize: 11, fontWeight: '600' },
@@ -174,31 +179,31 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.three,
     borderTopWidth: 1,
-    borderTopColor: D14Colors.border,
-    backgroundColor: D14Colors.surface,
+    borderTopColor: c.border,
+    backgroundColor: c.surface,
   },
   renameInput: {
     flex: 1,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 15,
     paddingHorizontal: Spacing.three,
     paddingVertical: 10,
   },
   renameSave: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,
   },
-  renameSaveText: { color: D14Colors.white, fontWeight: '700' },
+  renameSaveText: { color: c.onAccent, fontWeight: '700' },
   missing: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing.four,
   },
-  missingText: { color: D14Colors.textSecondary, fontSize: 14, textAlign: 'center' },
-});
+  missingText: { color: c.textSecondary, fontSize: 14, textAlign: 'center' },
+}));

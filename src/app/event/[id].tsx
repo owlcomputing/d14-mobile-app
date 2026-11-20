@@ -9,15 +9,15 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { htmlToText } from '@/lib/html';
 import { useEvent } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 function openDirections(
@@ -95,6 +95,8 @@ function formatEventDate(date: string, endDate?: string | null) {
 }
 
 export default function EventDetailScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -103,7 +105,7 @@ export default function EventDetailScreen() {
   if (event.isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={D14Colors.red} />
+        <ActivityIndicator color={c.red} />
       </View>
     );
   }
@@ -122,20 +124,20 @@ export default function EventDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{e.name ?? 'Event'}</Text>
       <View style={styles.metaRow}>
-        <Ionicons name="calendar" size={15} color={D14Colors.red} />
+        <Ionicons name="calendar" size={15} color={c.red} />
         <Text style={styles.metaText}>{formatEventDate(e.date, e.end_date)}</Text>
       </View>
       {e.divisions ? (
         <Pressable
           style={styles.metaRow}
           onPress={() => router.push(`/division/${e.divisions!.id}`)}>
-          <Ionicons name="flag" size={15} color={D14Colors.red} />
+          <Ionicons name="flag" size={15} color={c.red} />
           <Text style={[styles.metaText, styles.linkText]}>{e.divisions.name}</Text>
         </Pressable>
       ) : null}
       {e.location_name || e.address ? (
         <View style={styles.metaRow}>
-          <Ionicons name="location" size={15} color={D14Colors.red} />
+          <Ionicons name="location" size={15} color={c.red} />
           <Text style={styles.metaText}>
             {[e.location_name, e.address].filter(Boolean).join(' • ')}
           </Text>
@@ -154,7 +156,7 @@ export default function EventDetailScreen() {
               [e.location_name, e.address].filter(Boolean).join(', ') || undefined,
             )
           }>
-          <Ionicons name="calendar" size={16} color={D14Colors.white} />
+          <Ionicons name="calendar" size={16} color={c.onAccent} />
           <Text style={styles.calendarButtonText}>Add to Calendar</Text>
         </Pressable>
         {e.location_name || e.address ? (
@@ -165,8 +167,8 @@ export default function EventDetailScreen() {
               pressed && { opacity: 0.85 },
             ]}
             onPress={() => openDirections(e.location_name, e.address, e.latitude, e.longitude)}>
-            <Ionicons name="navigate" size={16} color={D14Colors.white} />
-            <Text style={styles.calendarButtonText}>Directions</Text>
+            <Ionicons name="navigate" size={16} color={c.text} />
+            <Text style={[styles.calendarButtonText, styles.directionsButtonText]}>Directions</Text>
           </Pressable>
         ) : null}
       </View>
@@ -182,7 +184,7 @@ export default function EventDetailScreen() {
         <Pressable
           style={({ pressed }) => [styles.reminderCta, pressed && { opacity: 0.85 }]}
           onPress={() => router.push('/signup')}>
-          <Ionicons name="notifications" size={20} color={D14Colors.red} />
+          <Ionicons name="notifications" size={20} color={c.red} />
           <View style={{ flex: 1 }}>
             <Text style={styles.reminderTitle}>Never miss a race</Text>
             <Text style={styles.reminderText}>
@@ -196,39 +198,39 @@ export default function EventDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   reminderCta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.red,
+    borderColor: c.red,
     borderRadius: Radius.lg,
     padding: Spacing.three,
     marginTop: Spacing.three,
   },
-  reminderTitle: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
-  reminderText: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  reminderChevron: { color: D14Colors.textTertiary, fontSize: 22, fontWeight: '300' },
-  container: { flex: 1, backgroundColor: D14Colors.black },
+  reminderTitle: { color: c.text, fontSize: 14, fontWeight: '700' },
+  reminderText: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
+  reminderChevron: { color: c.textTertiary, fontSize: 22, fontWeight: '300' },
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   center: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  empty: { color: D14Colors.textSecondary },
-  title: { color: D14Colors.white, fontSize: 24, fontWeight: '800', marginBottom: Spacing.three },
+  empty: { color: c.textSecondary },
+  title: { color: c.text, fontSize: 24, fontWeight: '800', marginBottom: Spacing.three },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
     marginBottom: Spacing.two,
   },
-  metaText: { color: D14Colors.textSecondary, fontSize: 14 },
-  linkText: { color: D14Colors.red, fontWeight: '600' },
+  metaText: { color: c.textSecondary, fontSize: 14 },
+  linkText: { color: c.red, fontWeight: '600' },
   buttonRow: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.three },
   calendarButton: {
     flex: 1,
@@ -236,15 +238,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingVertical: 13,
   },
   directionsButton: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
   },
-  calendarButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
-  description: { color: D14Colors.white, fontSize: 14, lineHeight: 22 },
-});
+  calendarButtonText: { color: c.onAccent, fontSize: 14, fontWeight: '700' },
+  directionsButtonText: { color: c.text },
+  description: { color: c.text, fontSize: 14, lineHeight: 22 },
+}));

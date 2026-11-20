@@ -3,10 +3,11 @@ import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Text, View } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 import {
   docUri,
   setPendingPick,
@@ -28,6 +29,7 @@ function formatAdded(iso: string) {
 
 /** "My Documents" on the member wallet: AMA card, minor release, etc., kept on this device. */
 export function WalletDocumentsSection({ profileId }: { profileId: string }) {
+  const styles = useStyles();
   const router = useRouter();
   const { docs } = useWalletDocs(profileId);
 
@@ -136,6 +138,8 @@ function DocRow({
   last: boolean;
   onPress: () => void;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       style={({ pressed }) => [styles.row, !last && styles.rowBorder, pressed && { opacity: 0.7 }]}
@@ -146,7 +150,7 @@ function DocRow({
         <Image source={{ uri }} style={styles.thumb} contentFit="cover" />
       ) : (
         <View style={[styles.thumb, styles.pdfThumb]}>
-          <Ionicons name="document-text" size={22} color={D14Colors.red} />
+          <Ionicons name="document-text" size={22} color={c.red} />
           <Text style={styles.pdfLabel}>PDF</Text>
         </View>
       )}
@@ -170,34 +174,36 @@ function AddButton({
   label: string;
   onPress: () => void;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       style={({ pressed }) => [styles.addButton, pressed && { opacity: 0.7 }]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Add document from ${label}`}>
-      <Ionicons name={icon} size={18} color={D14Colors.red} />
+      <Ionicons name={icon} size={18} color={c.red} />
       <Text style={styles.addLabel}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  empty: { color: D14Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingVertical: 4 },
+const useStyles = makeStyles((c) => ({
+  empty: { color: c.textSecondary, fontSize: 13, lineHeight: 19, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: 10 },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
   thumb: {
     width: 48,
     height: 48,
     borderRadius: Radius.sm,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
   },
   pdfThumb: { alignItems: 'center', justifyContent: 'center' },
-  pdfLabel: { color: D14Colors.textSecondary, fontSize: 9, fontWeight: '700', marginTop: 1 },
+  pdfLabel: { color: c.textSecondary, fontSize: 9, fontWeight: '700', marginTop: 1 },
   rowText: { flex: 1 },
-  rowTitle: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
-  rowMeta: { color: D14Colors.textTertiary, fontSize: 11, marginTop: 2 },
-  chevron: { color: D14Colors.textTertiary, fontSize: 20, fontWeight: '300' },
+  rowTitle: { color: c.text, fontSize: 14, fontWeight: '600' },
+  rowMeta: { color: c.textTertiary, fontSize: 11, marginTop: 2 },
+  chevron: { color: c.textTertiary, fontSize: 20, fontWeight: '300' },
   addRow: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.three },
   addButton: {
     flex: 1,
@@ -208,8 +214,8 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: D14Colors.border,
-    backgroundColor: D14Colors.surfaceRaised,
+    borderColor: c.border,
+    backgroundColor: c.surfaceRaised,
   },
-  addLabel: { color: D14Colors.white, fontSize: 13, fontWeight: '600' },
-});
+  addLabel: { color: c.text, fontSize: 13, fontWeight: '600' },
+}));

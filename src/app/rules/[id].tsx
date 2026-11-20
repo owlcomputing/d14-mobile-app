@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { HtmlContent } from '@/components/html-content';
-import { D14Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 
 function useRule(id: number) {
   return useQuery({
@@ -18,13 +19,15 @@ function useRule(id: number) {
 }
 
 export default function RuleScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const rule = useRule(Number(id));
 
   if (rule.isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={D14Colors.red} />
+        <ActivityIndicator color={c.red} />
       </View>
     );
   }
@@ -46,14 +49,14 @@ export default function RuleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
   center: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  empty: { color: D14Colors.textSecondary, lineHeight: 21 },
-});
+  empty: { color: c.textSecondary, lineHeight: 21 },
+}));

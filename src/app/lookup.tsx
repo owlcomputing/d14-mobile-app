@@ -5,7 +5,6 @@ import { useState } from 'react';
 import {
   FlatList,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -17,8 +16,9 @@ import {
   MemberResult,
   type MemberResultData,
 } from '@/components/member-result';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 
 function useMemberSearch(query: string) {
   const q = query.trim();
@@ -49,6 +49,8 @@ function useMemberSearch(query: string) {
 }
 
 export default function LookupScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const [query, setQuery] = useState('');
   const search = useMemberSearch(query);
@@ -56,20 +58,20 @@ export default function LookupScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color={D14Colors.textTertiary} />
+        <Ionicons name="search" size={16} color={c.textTertiary} />
         <TextInput
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
           placeholder="Search by name or D14 number…"
-          placeholderTextColor={D14Colors.textTertiary}
+          placeholderTextColor={c.textTertiary}
           autoCapitalize="words"
           autoCorrect={false}
           autoFocus
         />
         {query ? (
           <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={D14Colors.textTertiary} />
+            <Ionicons name="close-circle" size={16} color={c.textTertiary} />
           </Pressable>
         ) : null}
       </View>
@@ -101,31 +103,31 @@ export default function LookupScreen() {
       <Pressable
         style={({ pressed }) => [styles.scanButton, pressed && { opacity: 0.85 }]}
         onPress={() => router.push('/scanner')}>
-        <Ionicons name="qr-code" size={18} color={D14Colors.white} />
+        <Ionicons name="qr-code" size={18} color={c.onAccent} />
         <Text style={styles.scanButtonText}>Scan QR Code</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black, padding: Spacing.three },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background, padding: Spacing.three },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     paddingHorizontal: Spacing.three,
     paddingVertical: 10,
     marginBottom: Spacing.three,
   },
-  searchInput: { flex: 1, color: D14Colors.white, fontSize: 14, padding: 0 },
+  searchInput: { flex: 1, color: c.text, fontSize: 14, padding: 0 },
   list: { paddingBottom: 90 },
-  count: { color: D14Colors.textTertiary, fontSize: 12, marginBottom: Spacing.two },
-  hint: { color: D14Colors.textTertiary, textAlign: 'center', marginTop: Spacing.five },
+  count: { color: c.textTertiary, fontSize: 12, marginBottom: Spacing.two },
+  hint: { color: c.textTertiary, textAlign: 'center', marginTop: Spacing.five },
   scanButton: {
     position: 'absolute',
     bottom: Spacing.four,
@@ -135,9 +137,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.two,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     paddingVertical: 14,
   },
-  scanButtonText: { color: D14Colors.white, fontSize: 14, fontWeight: '700' },
-});
+  scanButtonText: { color: c.onAccent, fontSize: 14, fontWeight: '700' },
+}));

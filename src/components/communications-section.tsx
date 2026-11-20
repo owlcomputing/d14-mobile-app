@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Switch, Text, View } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import {
   EMAIL_CONSENT_TEXT,
   fetchMyConsents,
@@ -12,6 +12,7 @@ import {
 } from '@/lib/prospect-signup';
 import { registerPushToken, unregisterPushToken } from '@/lib/push';
 import { useFamilyMembers } from '@/lib/queries';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 const isCurrent = (expiration: string | null | undefined) =>
@@ -111,6 +112,8 @@ function ConsentRow({
   onChange: (on: boolean) => void;
   last?: boolean;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <View style={[styles.row, !last && styles.rowBorder]}>
       <View style={{ flex: 1 }}>
@@ -121,17 +124,17 @@ function ConsentRow({
         value={value}
         onValueChange={onChange}
         disabled={disabled}
-        trackColor={{ true: D14Colors.red, false: D14Colors.surfaceSelected }}
-        thumbColor={D14Colors.white}
+        trackColor={{ true: c.red, false: c.surfaceSelected }}
+        thumbColor={c.onAccent}
         accessibilityLabel={label}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: 12 },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
-  label: { color: D14Colors.white, fontSize: 14 },
-  text: { color: D14Colors.textTertiary, fontSize: 11, lineHeight: 15, marginTop: 2 },
-});
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
+  label: { color: c.text, fontSize: 14 },
+  text: { color: c.textTertiary, fontSize: 11, lineHeight: 15, marginTop: 2 },
+}));

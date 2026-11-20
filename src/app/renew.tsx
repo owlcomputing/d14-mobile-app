@@ -6,16 +6,16 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { runHostedCheckout } from '@/lib/checkout';
 import { useFamilyMembers } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 function formatDate(iso: string | null | undefined) {
@@ -28,6 +28,8 @@ function formatDate(iso: string | null | undefined) {
 }
 
 export default function RenewScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { session, profile, membership, refreshProfile } = useAuth();
   const family = useFamilyMembers(profile?.id);
@@ -133,13 +135,13 @@ export default function RenewScreen() {
         style={({ pressed }) => [
           styles.button,
           (selected.size === 0 || !!working) && styles.buttonDisabled,
-          pressed && { backgroundColor: D14Colors.redDark },
+          pressed && { backgroundColor: c.redDark },
         ]}
         onPress={startCheckout}
         disabled={selected.size === 0 || !!working}>
         {working ? (
           <View style={styles.workingRow}>
-            <ActivityIndicator color={D14Colors.white} />
+            <ActivityIndicator color={c.onAccent} />
             <Text style={styles.buttonText}>{working}</Text>
           </View>
         ) : (
@@ -166,12 +168,14 @@ function SelectableRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable style={styles.row} onPress={onToggle}>
       <Ionicons
         name={selected ? 'checkbox' : 'square-outline'}
         size={22}
-        color={selected ? D14Colors.red : D14Colors.textTertiary}
+        color={selected ? c.red : c.textTertiary}
       />
       <View style={{ flex: 1 }}>
         <Text style={styles.rowName}>{name}</Text>
@@ -181,32 +185,32 @@ function SelectableRow({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
-  intro: { color: D14Colors.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: Spacing.three },
+  intro: { color: c.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: Spacing.three },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     paddingVertical: 12,
   },
-  rowName: { color: D14Colors.white, fontSize: 15, fontWeight: '600' },
-  rowDetail: { color: D14Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  rowName: { color: c.text, fontSize: 15, fontWeight: '600' },
+  rowDetail: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 15,
     marginTop: Spacing.three,
   },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
+  buttonText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
   workingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   hint: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 11,
     textAlign: 'center',
     marginTop: Spacing.three,
   },
-});
+}));

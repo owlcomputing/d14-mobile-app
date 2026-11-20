@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EventRow } from '@/components/event-row';
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useEventsForMonth } from '@/lib/queries';
+import { makeStyles } from '@/lib/theme';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -14,6 +15,7 @@ const MONTH_NAMES = [
 const DAY_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export default function CalendarScreen() {
+  const styles = useStyles();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -101,6 +103,8 @@ export default function CalendarScreen() {
                   style={[
                     styles.dayText,
                     day === today && styles.todayText,
+                    // White on the red "today" fill (a selected cell drops the fill)
+                    day === today && day !== selectedDay && styles.onRedText,
                   ]}>
                   {day ?? ''}
                 </Text>
@@ -170,6 +174,7 @@ function FilterPill({
   active: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} style={[styles.pill, active && styles.pillActive]}>
       <Text style={[styles.pillText, active && styles.pillTextActive]}>{label}</Text>
@@ -177,8 +182,8 @@ function FilterPill({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   monthHeader: {
     flexDirection: 'row',
@@ -187,13 +192,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
     paddingHorizontal: Spacing.two,
   },
-  monthArrow: { color: D14Colors.red, fontSize: 28, fontWeight: '300', paddingHorizontal: 8 },
-  monthTitle: { color: D14Colors.white, fontSize: 17, fontWeight: '700' },
+  monthArrow: { color: c.red, fontSize: 28, fontWeight: '300', paddingHorizontal: 8 },
+  monthTitle: { color: c.text, fontSize: 17, fontWeight: '700' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   dayHeader: {
     width: `${100 / 7}%`,
     textAlign: 'center',
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 11,
     fontWeight: '700',
     paddingVertical: 4,
@@ -204,37 +209,38 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: Radius.sm,
   },
-  todayCell: { backgroundColor: D14Colors.red },
+  todayCell: { backgroundColor: c.red },
   selectedCell: {
     borderWidth: 1.5,
-    borderColor: D14Colors.red,
-    backgroundColor: D14Colors.surfaceRaised,
+    borderColor: c.red,
+    backgroundColor: c.surfaceRaised,
   },
-  dayText: { color: D14Colors.white, fontSize: 13 },
+  dayText: { color: c.text, fontSize: 13 },
   clearFilter: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 13,
     fontWeight: '600',
     marginTop: Spacing.two,
   },
   todayText: { fontWeight: '800' },
+  onRedText: { color: c.onAccent },
   eventDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     marginTop: 2,
   },
   pills: { marginBottom: Spacing.three, flexGrow: 0 },
   pill: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.full,
     paddingHorizontal: 14,
     paddingVertical: 7,
     marginRight: 8,
   },
-  pillActive: { backgroundColor: D14Colors.red },
-  pillText: { color: D14Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  pillTextActive: { color: D14Colors.white },
-  empty: { color: D14Colors.textSecondary, paddingVertical: Spacing.two },
-});
+  pillActive: { backgroundColor: c.red },
+  pillText: { color: c.textSecondary, fontSize: 12, fontWeight: '600' },
+  pillTextActive: { color: c.onAccent },
+  empty: { color: c.textSecondary, paddingVertical: Spacing.two },
+}));

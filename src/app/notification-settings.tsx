@@ -5,19 +5,21 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { getDevicePushToken } from '@/lib/push';
 import { useDivisions } from '@/lib/queries';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function NotificationSettingsScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const { profile } = useAuth();
   const divisions = useDivisions();
   const [token, setToken] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export default function NotificationSettingsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={D14Colors.red} />
+        <ActivityIndicator color={c.red} />
       </View>
     );
   }
@@ -94,7 +96,7 @@ export default function NotificationSettingsScreen() {
       </Text>
       {!token ? (
         <View style={styles.notice}>
-          <Ionicons name="notifications-off" size={18} color={D14Colors.textTertiary} />
+          <Ionicons name="notifications-off" size={18} color={c.textTertiary} />
           <Text style={styles.noticeText}>
             Push notifications aren&apos;t available on this device or haven&apos;t been allowed
             yet. Your choices are still saved to your account for emails and your other devices.
@@ -106,7 +108,7 @@ export default function NotificationSettingsScreen() {
           <Ionicons
             name={allSelected ? 'checkbox' : 'square-outline'}
             size={22}
-            color={allSelected ? D14Colors.red : D14Colors.textTertiary}
+            color={allSelected ? c.red : c.textTertiary}
           />
           <Text style={styles.rowText}>All Divisions</Text>
         </Pressable>
@@ -118,7 +120,7 @@ export default function NotificationSettingsScreen() {
               <Ionicons
                 name={checked ? 'checkbox' : 'square-outline'}
                 size={22}
-                color={checked ? D14Colors.red : D14Colors.textTertiary}
+                color={checked ? c.red : c.textTertiary}
               />
               <Text style={styles.rowText}>{d.name}</Text>
             </Pressable>
@@ -126,11 +128,11 @@ export default function NotificationSettingsScreen() {
         })}
       </Widget>
       <Pressable
-        style={({ pressed }) => [styles.button, pressed && { backgroundColor: D14Colors.redDark }]}
+        style={({ pressed }) => [styles.button, pressed && { backgroundColor: c.redDark }]}
         onPress={save}
         disabled={saving}>
         {saving ? (
-          <ActivityIndicator color={D14Colors.white} />
+          <ActivityIndicator color={c.onAccent} />
         ) : (
           <Text style={styles.buttonText}>Save Preferences</Text>
         )}
@@ -139,41 +141,41 @@ export default function NotificationSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
   notice: {
     flexDirection: 'row',
     gap: Spacing.two,
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.three,
     marginBottom: Spacing.three,
   },
-  noticeText: { flex: 1, color: D14Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  noticeText: { flex: 1, color: c.textSecondary, fontSize: 12, lineHeight: 17 },
   center: {
     flex: 1,
-    backgroundColor: D14Colors.black,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing.four,
     gap: Spacing.three,
   },
-  unavailable: { color: D14Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  intro: { color: D14Colors.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: Spacing.three },
+  unavailable: { color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
+  intro: { color: c.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: Spacing.three },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     paddingVertical: 11,
   },
-  rowText: { color: D14Colors.white, fontSize: 14 },
+  rowText: { color: c.text, fontSize: 14 },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 15,
     marginTop: Spacing.three,
   },
-  buttonText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-});
+  buttonText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
+}));

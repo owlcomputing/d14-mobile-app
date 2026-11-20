@@ -7,14 +7,14 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 type FormField = {
@@ -46,6 +46,8 @@ const FIELDS: FormField[] = [
 ];
 
 export default function EditProfileScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { profile, refreshProfile } = useAuth();
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -86,16 +88,16 @@ export default function EditProfileScreen() {
               onChangeText={(t) => setValues((v) => ({ ...v, [f.key]: t }))}
               keyboardType={f.keyboard ?? 'default'}
               autoCapitalize={f.autoCapitalize ?? 'none'}
-              placeholderTextColor={D14Colors.textTertiary}
+              placeholderTextColor={c.textTertiary}
             />
           </View>
         ))}
         <Pressable
-          style={({ pressed }) => [styles.button, pressed && { backgroundColor: D14Colors.redDark }]}
+          style={({ pressed }) => [styles.button, pressed && { backgroundColor: c.redDark }]}
           onPress={onSave}
           disabled={saving}>
           {saving ? (
-            <ActivityIndicator color={D14Colors.white} />
+            <ActivityIndicator color={c.onAccent} />
           ) : (
             <Text style={styles.buttonText}>Save Changes</Text>
           )}
@@ -105,17 +107,17 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.six },
   note: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     lineHeight: 18,
     marginBottom: Spacing.three,
   },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -123,21 +125,21 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 15,
     paddingHorizontal: Spacing.three,
     paddingVertical: 12,
   },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 15,
     marginTop: Spacing.four,
   },
-  buttonText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
-});
+  buttonText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
+}));

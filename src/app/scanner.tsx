@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import {
   hasId,
@@ -10,8 +10,9 @@ import {
   MemberResult,
   type MemberResultData,
 } from '@/components/member-result';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, withAlpha } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 
 type ScannedMember = { id: string };
 
@@ -42,6 +43,8 @@ function useScannedMember(id: string | null) {
 }
 
 export default function ScannerScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const [permission, requestPermission] = useCameraPermissions();
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [badScan, setBadScan] = useState(false);
@@ -52,7 +55,7 @@ export default function ScannerScreen() {
   if (!permission.granted) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Ionicons name="camera" size={40} color={D14Colors.textTertiary} />
+        <Ionicons name="camera" size={40} color={c.textTertiary} />
         <Text style={styles.permissionText}>
           Camera access is needed to scan member QR codes at the gate.
         </Text>
@@ -114,8 +117,8 @@ export default function ScannerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.background },
   center: { alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
   camera: { flex: 1 },
   overlay: {
@@ -131,12 +134,13 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderWidth: 3,
-    borderColor: D14Colors.red,
+    borderColor: c.red,
     borderRadius: Radius.xl,
     backgroundColor: 'transparent',
   },
+  // Over the live camera image: always white with a shadow
   overlayHint: {
-    color: D14Colors.white,
+    color: c.onAccent,
     fontSize: 13,
     marginTop: Spacing.three,
     textShadowColor: 'rgba(0,0,0,0.8)',
@@ -149,22 +153,22 @@ const styles = StyleSheet.create({
     right: 0,
     padding: Spacing.three,
     paddingBottom: Spacing.five,
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: withAlpha(c.background, 0.92),
   },
   permissionText: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     marginVertical: Spacing.three,
     lineHeight: 20,
   },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 13,
     marginTop: Spacing.two,
   },
-  buttonText: { color: D14Colors.white, fontWeight: '700', fontSize: 14 },
-  badScan: { color: D14Colors.warning, textAlign: 'center', marginBottom: Spacing.two },
-  loading: { color: D14Colors.textSecondary, textAlign: 'center', marginBottom: Spacing.two },
-});
+  buttonText: { color: c.onAccent, fontWeight: '700', fontSize: 14 },
+  badScan: { color: c.warning, textAlign: 'center', marginBottom: Spacing.two },
+  loading: { color: c.textSecondary, textAlign: 'center', marginBottom: Spacing.two },
+}));

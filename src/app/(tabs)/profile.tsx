@@ -6,18 +6,19 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppearanceSection } from '@/components/appearance-section';
 import { CommunicationsSection } from '@/components/communications-section';
 import { SignInPrompt } from '@/components/sign-in-prompt';
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAppLock } from '@/providers/app-lock-provider';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -28,13 +29,15 @@ export default function ProfileScreen() {
 }
 
 function GuestProfile() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={[styles.avatar, styles.guestAvatar]}>
-            <Ionicons name="person" size={30} color={D14Colors.textSecondary} />
+            <Ionicons name="person" size={30} color={c.textSecondary} />
           </View>
           <Text style={styles.name}>Guest</Text>
           <Text style={styles.meta}>Browsing AMA District 14</Text>
@@ -61,12 +64,16 @@ function GuestProfile() {
             last
           />
         </Widget>
+
+        <AppearanceSection />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 function MemberProfile() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { session, profile, signOut, isAdmin, isChairman, isMember, profileReady } = useAuth();
   const appLock = useAppLock();
@@ -212,6 +219,8 @@ function MemberProfile() {
 
         {session && profile ? <CommunicationsSection profileId={profile.id} /> : null}
 
+        <AppearanceSection />
+
         <Widget header="Settings">
           <MenuRow
             icon="notifications"
@@ -227,7 +236,7 @@ function MemberProfile() {
           />
           <View style={[styles.row]}>
             <View style={styles.menuIcon}>
-              <Ionicons name="finger-print" size={16} color={D14Colors.red} />
+              <Ionicons name="finger-print" size={16} color={c.red} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowText}>App Lock</Text>
@@ -243,8 +252,8 @@ function MemberProfile() {
                 void appLock.setEnabled(on);
               }}
               disabled={!appLock.biometricsAvailable}
-              trackColor={{ true: D14Colors.red, false: D14Colors.surfaceSelected }}
-              thumbColor={D14Colors.white}
+              trackColor={{ true: c.red, false: c.surfaceSelected }}
+              thumbColor={c.onAccent}
             />
           </View>
         </Widget>
@@ -254,7 +263,7 @@ function MemberProfile() {
         </Pressable>
         <Pressable style={styles.deleteAccount} onPress={confirmDelete} disabled={deleting}>
           {deleting ? (
-            <ActivityIndicator color={D14Colors.textTertiary} />
+            <ActivityIndicator color={c.textTertiary} />
           ) : (
             <Text style={styles.deleteAccountText}>Delete my account</Text>
           )}
@@ -265,9 +274,11 @@ function MemberProfile() {
 }
 
 function InfoRow({ icon, label, last }: { icon: any; label: string; last?: boolean }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <View style={[styles.row, !last && styles.rowBorder]}>
-      <Ionicons name={icon} size={16} color={D14Colors.textTertiary} />
+      <Ionicons name={icon} size={16} color={c.textTertiary} />
       <Text style={styles.rowText}>{label}</Text>
     </View>
   );
@@ -286,12 +297,14 @@ function MenuRow({
   onPress: () => void;
   last?: boolean;
 }) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       style={({ pressed }) => [styles.row, !last && styles.rowBorder, pressed && { opacity: 0.7 }]}
       onPress={onPress}>
       <View style={styles.menuIcon}>
-        <Ionicons name={icon} size={16} color={D14Colors.red} />
+        <Ionicons name={icon} size={16} color={c.red} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowText}>{label}</Text>
@@ -302,53 +315,53 @@ function MenuRow({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
   header: { alignItems: 'center', marginVertical: Spacing.four },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.two,
   },
-  avatarText: { color: D14Colors.white, fontSize: 26, fontWeight: '800' },
-  guestAvatar: { backgroundColor: D14Colors.surfaceRaised },
-  name: { color: D14Colors.white, fontSize: 20, fontWeight: '700' },
-  meta: { color: D14Colors.textSecondary, fontSize: 13, marginTop: 2 },
+  avatarText: { color: c.onAccent, fontSize: 26, fontWeight: '800' },
+  guestAvatar: { backgroundColor: c.surfaceRaised },
+  name: { color: c.text, fontSize: 20, fontWeight: '700' },
+  meta: { color: c.textSecondary, fontSize: 13, marginTop: 2 },
   roleBadge: {
-    backgroundColor: D14Colors.surfaceRaised,
-    borderColor: D14Colors.red,
+    backgroundColor: c.surfaceRaised,
+    borderColor: c.red,
     borderWidth: 1,
     borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 3,
     marginTop: Spacing.two,
   },
-  roleBadgeText: { color: D14Colors.red, fontSize: 11, fontWeight: '700' },
+  roleBadgeText: { color: c.red, fontSize: 11, fontWeight: '700' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     paddingVertical: 12,
   },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: D14Colors.border },
-  rowText: { color: D14Colors.white, fontSize: 14 },
-  rowHint: { color: D14Colors.textTertiary, fontSize: 11, marginTop: 1 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
+  rowText: { color: c.text, fontSize: 14 },
+  rowHint: { color: c.textTertiary, fontSize: 11, marginTop: 1 },
   menuIcon: {
     width: 32,
     height: 32,
     borderRadius: Radius.sm,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chevron: { color: D14Colors.textTertiary, fontSize: 20, fontWeight: '300' },
+  chevron: { color: c.textTertiary, fontSize: 20, fontWeight: '300' },
   signOut: { alignItems: 'center', paddingVertical: Spacing.three },
-  signOutText: { color: D14Colors.error, fontSize: 14, fontWeight: '600' },
+  signOutText: { color: c.error, fontSize: 14, fontWeight: '600' },
   deleteAccount: { alignItems: 'center', paddingBottom: Spacing.three },
-  deleteAccountText: { color: D14Colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
-});
+  deleteAccountText: { color: c.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
+}));

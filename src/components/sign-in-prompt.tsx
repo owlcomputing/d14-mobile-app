@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { Widget } from '@/components/widget';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 
 const WEBSITE_URL = process.env.EXPO_PUBLIC_WEBSITE_URL ?? 'https://ama-d14.org';
 
@@ -29,18 +30,20 @@ type SignInPromptProps = {
  * a way to join, and to prospects with a way to join.
  */
 export function SignInPrompt({ icon, title, message, variant = 'guest' }: SignInPromptProps) {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   return (
     <Widget style={styles.card}>
       <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={28} color={D14Colors.red} />
+        <Ionicons name={icon} size={28} color={c.red} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {variant === 'guest' ? (
         <>
           <Pressable
-            style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
+            style={({ pressed }) => [styles.primary, pressed && { backgroundColor: c.redDark }]}
             onPress={() => router.push('/login')}>
             <Text style={styles.primaryText}>Sign In</Text>
           </Pressable>
@@ -53,7 +56,7 @@ export function SignInPrompt({ icon, title, message, variant = 'guest' }: SignIn
         </>
       ) : (
         <Pressable
-          style={({ pressed }) => [styles.primary, pressed && { backgroundColor: D14Colors.redDark }]}
+          style={({ pressed }) => [styles.primary, pressed && { backgroundColor: c.redDark }]}
           onPress={() => router.push('/join')}>
           <Text style={styles.primaryText}>Become a Member</Text>
         </Pressable>
@@ -62,11 +65,11 @@ export function SignInPrompt({ icon, title, message, variant = 'guest' }: SignIn
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   card: {
-    backgroundColor: D14Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     paddingVertical: Spacing.four,
   },
@@ -74,14 +77,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: D14Colors.surfaceRaised,
+    backgroundColor: c.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.three,
   },
-  title: { color: D14Colors.white, fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  title: { color: c.text, fontSize: 18, fontWeight: '700', textAlign: 'center' },
   message: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -90,20 +93,20 @@ const styles = StyleSheet.create({
   },
   primary: {
     alignSelf: 'stretch',
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 14,
   },
-  primaryText: { color: D14Colors.white, fontSize: 15, fontWeight: '700' },
+  primaryText: { color: c.onAccent, fontSize: 15, fontWeight: '700' },
   secondary: {
     alignSelf: 'stretch',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: D14Colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     paddingVertical: 13,
     marginTop: Spacing.two,
   },
-  secondaryText: { color: D14Colors.white, fontSize: 14, fontWeight: '600' },
-});
+  secondaryText: { color: c.text, fontSize: 14, fontWeight: '600' },
+}));

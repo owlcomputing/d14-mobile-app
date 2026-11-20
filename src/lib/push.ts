@@ -2,6 +2,8 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
+import { BrandColors } from '@/constants/theme';
+
 import { supabase } from './supabase';
 
 // Remote push was removed from Expo Go (SDK 53+) on Android — importing or
@@ -45,7 +47,7 @@ export async function registerPushToken(
         name: 'D14 Notifications',
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#E63946',
+        lightColor: BrandColors.red,
       });
     }
 

@@ -8,7 +8,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -16,10 +15,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { openMembershipSignup } from '@/components/sign-in-prompt';
-import { D14Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function LoginScreen() {
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { signIn, sendSignInCode, verifySignInCode } = useAuth();
   // Guests can browse without signing in, so this sheet is always dismissible.
@@ -75,7 +77,7 @@ export default function LoginScreen() {
         hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="Close sign in">
-        <Ionicons name="close" size={26} color={D14Colors.textSecondary} />
+        <Ionicons name="close" size={26} color={c.textSecondary} />
       </Pressable>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -101,7 +103,7 @@ export default function LoginScreen() {
               autoComplete="email"
               keyboardType="email-address"
               placeholder="you@example.com"
-              placeholderTextColor={D14Colors.textTertiary}
+              placeholderTextColor={c.textTertiary}
               onSubmitEditing={mode === 'code' ? onSubmit : undefined}
             />
             {mode === 'password' ? (
@@ -114,7 +116,7 @@ export default function LoginScreen() {
                   secureTextEntry
                   autoComplete="password"
                   placeholder="••••••••"
-                  placeholderTextColor={D14Colors.textTertiary}
+                  placeholderTextColor={c.textTertiary}
                   onSubmitEditing={onSubmit}
                 />
               </>
@@ -132,7 +134,7 @@ export default function LoginScreen() {
                   maxLength={6}
                   autoFocus
                   placeholder="000000"
-                  placeholderTextColor={D14Colors.textTertiary}
+                  placeholderTextColor={c.textTertiary}
                   onSubmitEditing={onSubmit}
                 />
               </>
@@ -145,7 +147,7 @@ export default function LoginScreen() {
               onPress={onSubmit}
               disabled={submitting}>
               {submitting ? (
-                <ActivityIndicator color={D14Colors.white} />
+                <ActivityIndicator color={c.onAccent} />
               ) : (
                 <Text style={styles.buttonText}>{buttonLabel}</Text>
               )}
@@ -178,8 +180,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: D14Colors.black },
+const useStyles = makeStyles((c) => ({
+  safe: { flex: 1, backgroundColor: c.background },
   close: {
     position: 'absolute',
     top: Spacing.five,
@@ -188,12 +190,12 @@ const styles = StyleSheet.create({
   },
   guestLink: { alignItems: 'center', paddingVertical: Spacing.two },
   guestLinkText: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
   modeLink: {
-    color: D14Colors.red,
+    color: c.red,
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: Spacing.five },
   logo: { width: 260, height: 91 },
   tagline: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 13,
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -211,37 +213,37 @@ const styles = StyleSheet.create({
   },
   form: { gap: Spacing.two },
   label: {
-    color: D14Colors.textSecondary,
+    color: c.textSecondary,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginTop: Spacing.two,
   },
   input: {
-    backgroundColor: D14Colors.surface,
-    borderColor: D14Colors.border,
+    backgroundColor: c.surface,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: Radius.md,
-    color: D14Colors.white,
+    color: c.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
     paddingVertical: 14,
   },
-  error: { color: D14Colors.error, marginTop: Spacing.two },
+  error: { color: c.error, marginTop: Spacing.two },
   button: {
-    backgroundColor: D14Colors.red,
+    backgroundColor: c.red,
     borderRadius: Radius.md,
     alignItems: 'center',
     paddingVertical: 16,
     marginTop: Spacing.four,
   },
-  buttonPressed: { backgroundColor: D14Colors.redDark },
-  buttonText: { color: D14Colors.white, fontSize: 16, fontWeight: '700' },
+  buttonPressed: { backgroundColor: c.redDark },
+  buttonText: { color: c.onAccent, fontSize: 16, fontWeight: '700' },
   hint: {
-    color: D14Colors.textTertiary,
+    color: c.textTertiary,
     fontSize: 12,
     textAlign: 'center',
     marginTop: Spacing.three,
     lineHeight: 18,
   },
-});
+}));
