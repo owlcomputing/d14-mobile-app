@@ -30,19 +30,25 @@ const queryClient = new QueryClient({
 });
 
 // Saved query cache (offline support). Android AsyncStorage can't read back a
-// value over ~2 MB ("Row too big to fit into CursorWindow"), and division page
-// content from the website CMS embeds photos as base64 (5 MB+ for some
-// divisions), so division detail queries are never saved. Member lookup / QR
-// scan results aren't saved either: other members' data shouldn't stay on the
-// phone.
+// value over ~2 MB ("Row too big to fit into CursorWindow"). Division pages
+// used to embed photos as base64 (5 MB+ for some divisions); the website now
+// uploads them to Storage, but a division page is only saved if its text is
+// small. Member lookup / QR scan results aren't saved either: other members'
+// data shouldn't stay on the phone.
 const CACHE_KEY = 'd14-query-cache-v2';
+const MAX_SAVED_DIVISION_PAGE = 200_000; // characters
 AsyncStorage.removeItem('REACT_QUERY_OFFLINE_CACHE').catch(() => {}); // old, possibly oversized
 const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: CACHE_KEY });
 
 const NOT_PERSISTED = new Set(['member-search', 'scanned-member']);
 function shouldPersistQuery(query: Query) {
   const [root, id] = query.queryKey;
-  if (root === 'divisions' && id !== undefined) return false; // division detail (CMS content)
+  if (root === 'divisions' && id !== undefined) {
+    // Division detail: skip pages that still embed base64 photos
+    const content = (query.state.data as { cms?: { content?: string | null } | null } | undefined)
+      ?.cms?.content;
+    if ((content?.length ?? 0) > MAX_SAVED_DIVISION_PAGE) return false;
+  }
   if (typeof root === 'string' && NOT_PERSISTED.has(root)) return false;
   return defaultShouldDehydrateQuery(query);
 }

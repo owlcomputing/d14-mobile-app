@@ -1,8 +1,7 @@
 import { Image as ExpoImage } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Image as RNImage,
   Pressable,
   Text,
   View,
@@ -12,6 +11,7 @@ import RenderHtml, {
   useContentWidth,
   type CustomBlockRenderer,
   type MixedStyleRecord,
+  type TNode,
 } from 'react-native-render-html';
 
 import { Radius, Spacing, withAlpha, type Palette } from '@/constants/theme';
@@ -46,38 +46,65 @@ function tagsStylesFor(c: Palette): MixedStyleRecord {
   return styles;
 }
 
+/** Pixel size from an <img> width/height attribute ("354" or "354px"). */
+function sizeAttr(value: string | undefined) {
+  const n = value ? parseFloat(value) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Horizontal alignment from the editor's ql-align-* class on the image's paragraph. */
+function imageAlignment(tnode: TNode): 'flex-start' | 'center' | 'flex-end' {
+  for (let node: TNode | null = tnode; node; node = node.parent) {
+    if (node.classes.includes('ql-align-center')) return 'center';
+    if (node.classes.includes('ql-align-right')) return 'flex-end';
+  }
+  return 'flex-start';
+}
+
 /**
- * Replaces the default <img> renderer. The website's WYSIWYG editor embeds
- * images as base64 data URIs, which the default renderer mishandles; expo-image
- * decodes them off the JS thread and we size by intrinsic aspect ratio.
+ * Replaces the default <img> renderer. Like the website, a photo shows at its
+ * own size (or its width attribute) and is scaled down to fit the screen, so
+ * small logos aren't stretched to full width. Images that fail to load are
+ * hidden.
  */
 const HtmlImage: CustomBlockRenderer = ({ tnode }) => {
   const c = useColors();
   const contentWidth = useContentWidth();
   const src = tnode.attributes.src ?? '';
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const attrWidth = sizeAttr(tnode.attributes.width);
+  const attrHeight = sizeAttr(tnode.attributes.height);
+  const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    if (!src) return;
-    RNImage.getSize(
-      src,
-      (w, h) => setAspectRatio(h > 0 ? w / h : 4 / 3),
-      () => setAspectRatio(4 / 3),
-    );
-  }, [src]);
+  if (!src || failed) return null;
 
-  if (!src) return null;
+  // Before the photo loads: its width attribute, else full width at 16:9
+  const width = Math.min(attrWidth ?? natural?.width ?? contentWidth, contentWidth);
+  const aspectRatio = natural
+    ? natural.width / natural.height
+    : attrWidth && attrHeight
+      ? attrWidth / attrHeight
+      : 16 / 9;
+
   return (
     <ExpoImage
       source={{ uri: src }}
+      onLoad={(e) => {
+        const { width: w, height: h } = e.source;
+        if (w > 0 && h > 0) setNatural({ width: w, height: h });
+      }}
+      onError={() => setFailed(true)}
       style={{
-        width: contentWidth,
-        aspectRatio: aspectRatio ?? 4 / 3,
+        width,
+        maxWidth: '100%',
+        aspectRatio,
+        alignSelf: imageAlignment(tnode),
         borderRadius: Radius.sm,
         marginBottom: 12,
-        backgroundColor: c.surfaceRaised,
+        backgroundColor: natural ? undefined : c.surfaceRaised,
       }}
       contentFit="contain"
+      cachePolicy="memory-disk"
     />
   );
 };

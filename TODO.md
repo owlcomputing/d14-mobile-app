@@ -68,7 +68,8 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 
 ## Performance
 
-- [ ] **Division page content embeds photos as base64.** The website's CMS editor saves images inline in `division_cms_content.content`, so some divisions are huge (staging, 2026-11-12: division 18 = 5.1 MB, 41 = 2.8 MB, 16 = 1.0 MB). Each visit downloads it all, which is slow on mobile data, and it overflowed the app's offline cache on Android ("Row too big to fit into CursorWindow"; division details are no longer cached as a workaround). Fix in d14-angular: upload CMS images to Supabase Storage and store URLs, plus a one-time migration of existing content.
+- [ ] **Division page content embeds photos as base64.** The website's CMS editor saved images inline in `division_cms_content.content` (prod: division 18 = 5.1 MB, 41 = 2.8 MB, 16 = 1.0 MB, 15, 20; 9.75 MB in all). Fix (2026-11-21), d14-angular PR #24: the division and rules editors upload photos to the `Images` bucket (`cms/divisions/<id>`, `cms/rules/<id>`) and store links; base64 pasted as HTML is uploaded on save; photos over 1600 px are scaled down. `scripts/migrate-cms-images.mjs` moved the existing photos: **staging done** (42 photos, 9.75 MB → 28 KB). Remaining: merge PR #24, then run the migration on prod. The app saves division pages for offline use again (pages under 200K characters).
+  - [x] App: division photos show at their own size (or width attribute), scaled down to fit, centered when the paragraph is, like the website. Small logos were stretched to full width before. Broken images are hidden (division 20 links an old-site image that now returns a web page; the division chair should re-upload it).
 
 ## Security follow-ups (shared database)
 
@@ -94,7 +95,7 @@ Still open:
 
 ## Tester feedback (2026-11-20)
 
-- [x] **Light mode**: Profile › Appearance: Dark (default) / Light / Match phone, applies instantly ([theme.tsx](src/lib/theme.tsx), `useColors` / `makeStyles`; `D14Colors` is gone). Membership card and division banner stay dark in both modes. Dark mode pixel-identical to before on web.
+- [x] **Light mode**: Profile › Appearance: Dark / Light / Match phone (default since 2026-11-21), applies instantly ([theme.tsx](src/lib/theme.tsx), `useColors` / `makeStyles`; `D14Colors` is gone). Membership card and division banner stay dark in both modes. Dark mode pixel-identical to before on web.
   - [ ] Check on a device (next build): Match phone (`userInterfaceStyle` is now `automatic`, native setting), alerts/pickers/keyboard follow the choice, status bar, lock screen, scanner, wallet documents.
 - [x] **Crop wallet photos**: camera, library and image files open [Crop Photo](src/app/document/crop.tsx) (drag corners/box, Rotate, Reset) before Add Document. expo-image-manipulator (new native module: needs the next build; also in Expo Go).
   - [ ] Check on a device: a real camera photo isn't sideways (Android EXIF), dragging feels right.

@@ -15,7 +15,7 @@ const OPTIONS: {
   { value: 'system', label: 'Match phone', icon: 'phone-portrait-outline' },
 ];
 
-/** Profile → Appearance: Dark (default) / Light / Match phone. Applies immediately. */
+/** Profile → Appearance: Dark / Light / Match phone (default). Applies immediately. */
 export function AppearanceSection() {
   const c = useColors();
   const styles = useStyles();

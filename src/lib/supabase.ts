@@ -6,11 +6,14 @@ import type { Database } from './database.types';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
+// Web pages are pre-rendered in Node (no window, so no saved session there)
+const isServer = typeof window === 'undefined';
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
+    storage: isServer ? undefined : AsyncStorage,
+    autoRefreshToken: !isServer,
+    persistSession: !isServer,
     // No URL-based session detection in native apps
     detectSessionInUrl: false,
   },

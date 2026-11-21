@@ -10,8 +10,8 @@ export type AppearancePreference = 'dark' | 'light' | 'system';
 export type ColorScheme = 'dark' | 'light';
 
 const STORAGE_KEY = 'd14.appearance';
-/** D14 is dark-first: new installs get the original dark look. */
-const DEFAULT_PREFERENCE: AppearancePreference = 'dark';
+/** New installs (and anyone who hasn't picked one) follow the phone's setting. */
+const DEFAULT_PREFERENCE: AppearancePreference = 'system';
 
 const PREFERENCES: readonly AppearancePreference[] = ['dark', 'light', 'system'];
 const isPreference = (v: unknown): v is AppearancePreference =>
