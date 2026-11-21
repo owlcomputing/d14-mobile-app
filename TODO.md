@@ -68,7 +68,7 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 
 ## Performance
 
-- [ ] **Division page content embeds photos as base64.** The website's CMS editor saved images inline in `division_cms_content.content` (prod: division 18 = 5.1 MB, 41 = 2.8 MB, 16 = 1.0 MB, 15, 20; 9.75 MB in all). Fix (2026-11-21), d14-angular PR #24: the division and rules editors upload photos to the `Images` bucket (`cms/divisions/<id>`, `cms/rules/<id>`) and store links; base64 pasted as HTML is uploaded on save; photos over 1600 px are scaled down. `scripts/migrate-cms-images.mjs` moved the existing photos: **staging done** (42 photos, 9.75 MB → 28 KB). Remaining: merge PR #24, then run the migration on prod. The app saves division pages for offline use again (pages under 200K characters).
+- [x] **Division page content embeds photos as base64.** The website's CMS editor saved images inline in `division_cms_content.content` (prod: division 18 = 5.1 MB, 41 = 2.8 MB, 16 = 1.0 MB, 15, 20; 9.75 MB in all). Fix (2026-11-21), d14-angular PR #24: the division and rules editors upload photos to the `Images` bucket (`cms/divisions/<id>`, `cms/rules/<id>`) and store links; base64 pasted as HTML is uploaded on save; photos over 1600 px are scaled down. `scripts/migrate-cms-images.mjs` moved the existing photos: **staging and prod done** (42 photos, 9.75 MB → 28 KB each; PR #24 merged, prod run 2026-11-21, all 42 links load). Division 20's Flat Track schedule image points at a dead old-site URL (the app hides it): ask the chair to re-upload. The app saves division pages for offline use again (pages under 200K characters).
   - [x] App: division photos show at their own size (or width attribute), scaled down to fit, centered when the paragraph is, like the website. Small logos were stretched to full width before. Broken images are hidden (division 20 links an old-site image that now returns a web page; the division chair should re-upload it).
 
 ## Security follow-ups (shared database)
@@ -90,8 +90,14 @@ Still open:
 - [x] **The website's `emails` edge function was an open email relay.** Fixed in d14-angular PR #21: only signed-in admins and our own functions (service-role key) choose recipients and HTML. Everyone else can only send an escaped contact-form message to the secretary (Reply-To = submitter, no CC copy). Live on prod 2026-11-20; smoke-tested (a relay attempt gets 400, `createUser` with no sign-in gets 401).
   - Also fixed on prod: the live contact form was sending messages to the **submitter** instead of the secretary, and the app's member "Delete my account" request was failing.
   - Note: the website's GitHub deploy does **not** deploy Supabase functions. Deploy them by hand (`supabase functions deploy <name> --project-ref …`) **before** merging website changes that depend on them.
-- [ ] `renewals` insert policy is `WITH CHECK (true)`; tighten to own/family rows after checking the website renewal flow.
-- [ ] Review the other RLS-enabled tables for UPDATE policies with no `USING` clause (same bug fixed in `20261112_rls_remaining_tables.sql`).
+- [x] **2026-11-21 audit, [20261121_security_fixes.sql](supabase/migrations/20261121_security_fixes.sql): applied on staging and prod (2026-11-21) and verified on both (rolled-back tests as signed-out, member, parent, chairman, admin and service role; all 26 checks pass).** Found with the same policies on prod:
+  - `events` had an `ALL … USING (true)` policy: **anyone, even signed out, could edit or delete events.** Now everyone reads; admins and the division's chairman write (the website calendar editor lets chairmen manage their own division's events).
+  - **Any signed-in user (including race-reminder sign-ups) could make themselves admin** by updating their own `profiles.role`, or set `parent_id` to join another family and read its profiles. A trigger now lets only admins and server code change `role`, `parent_id`, `d14_number` and `organization_id`.
+  - Every signed-in user could read all ~11,000 `memberships`. Now admins, the member and their family (gate lookups use `member_directory`).
+  - `renewals` (was `WITH CHECK (true)`): only for yourself or your family, and `parent_id` must be you or the member's real parent.
+  - Storage: any signed-in user could upload, overwrite or delete any file in `Images` / `media`. Now only admins and chairmen.
+  - [x] UPDATE policies with no `USING`: none left in `public` (checked 2026-11-21).
+- [ ] **`supabase/functions/.env.staging` was committed to d14-angular in 2024** (staging service-role key and database URL; a Stripe test key; the old SendGrid key `J46s…`). d14-angular PR #25 stops tracking it, but it's still in git history (private repo, 8 collaborators). Dan: reset the staging database password, roll the staging service-role key, delete the old SendGrid key.
 
 ## Tester feedback (2026-11-20)
 
@@ -122,7 +128,7 @@ Built 2026-11-20, tested on staging, **live on prod 2026-11-20** with email in t
   - Volume on prod: a district-wide members email ≈ 3,300 people.
   - [ ] Later: handle SendGrid bounces/spam reports (event webhook → mark the address).
 - [x] 👤 **SendGrid keys were revoked on staging AND prod** (SendGrid 401 "authorization grant is invalid, expired, or revoked"; prod found 2026-11-20 by Dan's Send Test to Me). Everything that sends through `SENDGRID_API_KEY` is failing on prod: the website's `emails` function (contact form, admin emails) and the app's notification emails. **Prod fixed 2026-11-20** (Dan set a new key). [ ] Staging still has the old key `J46sz2eIQs-NY_XkTZihvQ` (the one committed to git); set a separate staging key if staging email is needed. [ ] Delete old keys `J46sz2eIQs-NY_XkTZihvQ` and `ZWMHLUALRIqMk6UTjXndww` from SendGrid if still listed. Also check Supabase Auth → SMTP on both projects in case it uses a SendGrid key (sign-in codes, password resets).
-  - Likely cause: SendGrid keys were committed to d14-angular in 2024 (`supabase/functions/.env.staging`, still on main and staging; earlier in `emails/index.ts`). [ ] Remove `.env.staging` from the repo and add `.env*` to `.gitignore`.
+  - Likely cause: SendGrid keys were committed to d14-angular in 2024 (`supabase/functions/.env.staging`, still on main and staging; earlier in `emails/index.ts`). [x] Removed from tracking in d14-angular PR #25 (`.gitignore` already covered it); see the security section for key rotation.
 - **Rollout to prod** (Dan OK'd 2026-11-20):
   1. [x] Applied [20261120_notifications.sql](supabase/migrations/20261120_notifications.sql) (additive: two tables, two service-role-only functions).
   2. [x] Deployed `send-push`, `event-notifications`, `email-unsubscribe` (smoke-tested: no-auth/no-secret 401, bad unsubscribe link 400).
