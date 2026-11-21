@@ -46,14 +46,36 @@ function tagsStylesFor(c: Palette): MixedStyleRecord {
   return styles;
 }
 
-/** Pixel size from an <img> width/height attribute ("354" or "354px"). */
-function sizeAttr(value: string | undefined) {
+type Alignment = 'flex-start' | 'center' | 'flex-end';
+/** A photo's width: pixels, or a percentage of the content width. */
+type Size = { px: number } | { percent: number };
+
+/** Size from a width/height attribute or style value ("354", "354px", "50%"). */
+function parseSize(value: string | undefined): Size | null {
   const n = value ? parseFloat(value) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : null;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return value!.trim().endsWith('%') ? { percent: n } : { px: n };
 }
 
-/** Horizontal alignment from the editor's ql-align-* class on the image's paragraph. */
-function imageAlignment(tnode: TNode): 'flex-start' | 'center' | 'flex-end' {
+/** One property from an inline style attribute ("width: 50%; display: block"). */
+function styleValue(style: string | undefined, property: string) {
+  const match = style?.match(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+)`, 'i'));
+  return match?.[1].trim().toLowerCase();
+}
+
+/**
+ * Horizontal alignment. The website editors' photo toolbar saves it on the
+ * image (float left/right, or display: block + margin: auto to center); older
+ * pages use a ql-align-* class on the image's paragraph.
+ */
+function imageAlignment(tnode: TNode): Alignment {
+  const style = tnode.attributes.style;
+  const float = styleValue(style, 'float');
+  if (float === 'left') return 'flex-start';
+  if (float === 'right') return 'flex-end';
+  if (styleValue(style, 'display') === 'block' && styleValue(style, 'margin')?.startsWith('auto')) {
+    return 'center';
+  }
   for (let node: TNode | null = tnode; node; node = node.parent) {
     if (node.classes.includes('ql-align-center')) return 'center';
     if (node.classes.includes('ql-align-right')) return 'flex-end';
@@ -62,28 +84,35 @@ function imageAlignment(tnode: TNode): 'flex-start' | 'center' | 'flex-end' {
 }
 
 /**
- * Replaces the default <img> renderer. Like the website, a photo shows at its
- * own size (or its width attribute) and is scaled down to fit the screen, so
- * small logos aren't stretched to full width. Images that fail to load are
- * hidden.
+ * Replaces the default <img> renderer. Like the website, a photo shows at the
+ * size set in the editor (style width, e.g. "50%" of the page width) or its
+ * width attribute, else at its own size, and is scaled down to fit the
+ * screen, so small logos aren't stretched to full width. The height follows
+ * the photo's shape. Images that fail to load are hidden.
  */
 const HtmlImage: CustomBlockRenderer = ({ tnode }) => {
   const c = useColors();
   const contentWidth = useContentWidth();
   const src = tnode.attributes.src ?? '';
-  const attrWidth = sizeAttr(tnode.attributes.width);
-  const attrHeight = sizeAttr(tnode.attributes.height);
+  const size =
+    parseSize(styleValue(tnode.attributes.style, 'width')) ?? parseSize(tnode.attributes.width);
+  const attrWidth = parseSize(tnode.attributes.width);
+  const attrHeight = parseSize(tnode.attributes.height);
   const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) return null;
 
-  // Before the photo loads: its width attribute, else full width at 16:9
-  const width = Math.min(attrWidth ?? natural?.width ?? contentWidth, contentWidth);
+  // Before the photo loads (no size set): full width at 16:9
+  const sized =
+    size && 'percent' in size
+      ? (contentWidth * Math.min(size.percent, 100)) / 100
+      : (size?.px ?? natural?.width ?? contentWidth);
+  const width = Math.min(sized, contentWidth);
   const aspectRatio = natural
     ? natural.width / natural.height
-    : attrWidth && attrHeight
-      ? attrWidth / attrHeight
+    : attrWidth && 'px' in attrWidth && attrHeight && 'px' in attrHeight
+      ? attrWidth.px / attrHeight.px
       : 16 / 9;
 
   return (

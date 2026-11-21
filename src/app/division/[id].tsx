@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DivisionIcon } from '@/components/division-icon';
@@ -51,28 +52,11 @@ export default function DivisionDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Division hero — main_img as background, logo in place of the title. Always
-          dark (both appearances): division logos from the website are made for it. */}
+      {/* Division header, like the website's: logo in place of the title, links,
+          then the main image. Always dark (both appearances): division logos
+          from the website are made for it. */}
       <View style={styles.hero}>
-        {d.main_img ? (
-          <>
-            <Image source={{ uri: d.main_img }} style={styles.heroBackground} contentFit="cover" />
-            <View style={styles.heroOverlay} />
-          </>
-        ) : null}
-        {d.logo ? (
-          <Image
-            source={{ uri: d.logo }}
-            style={styles.heroLogo}
-            contentFit="contain"
-            accessibilityLabel={d.name ?? 'Division logo'}
-          />
-        ) : (
-          <>
-            <DivisionIcon name={d.name} size={44} />
-            <Text style={styles.heroTitle}>{d.name}</Text>
-          </>
-        )}
+        <DivisionLogo uri={d.logo} name={d.name} />
         <Text style={styles.heroSub}>AMA District 14</Text>
         {d.cms?.facebook || d.cms?.instagram ? (
           <View style={styles.socialRow}>
@@ -88,6 +72,7 @@ export default function DivisionDetailScreen() {
             ) : null}
           </View>
         ) : null}
+        {d.main_img ? <MainImage key={d.main_img} uri={d.main_img} widthPercent={d.main_img_width} /> : null}
       </View>
 
       {/* Quick links */}
@@ -145,6 +130,60 @@ export default function DivisionDetailScreen() {
   );
 }
 
+/** The division's logo, or its icon and name when it has none (or it won't load). */
+function DivisionLogo({ uri, name }: { uri: string | null; name: string | null }) {
+  const styles = useStyles();
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  if (uri && uri !== failedUri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={styles.heroLogo}
+        contentFit="contain"
+        onError={() => setFailedUri(uri)}
+        accessibilityLabel={name ?? 'Division logo'}
+      />
+    );
+  }
+  return (
+    <>
+      <DivisionIcon name={name} size={44} />
+      <Text style={styles.heroTitle}>{name}</Text>
+    </>
+  );
+}
+
+/**
+ * The division's main image, at the size the chairman set on the website (% of
+ * the header width), else its own size; never wider than the header.
+ */
+function MainImage({ uri, widthPercent }: { uri: string; widthPercent: number | null }) {
+  const styles = useStyles();
+  const [natural, setNatural] = useState<{ width: number; height: number } | null>(null);
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <Image
+      source={{ uri }}
+      onLoad={(e) => {
+        const { width, height } = e.source;
+        if (width > 0 && height > 0) setNatural({ width, height });
+      }}
+      onError={() => setFailed(true)}
+      style={[
+        styles.mainImage,
+        {
+          width: widthPercent ? `${widthPercent}%` : (natural?.width ?? '100%'),
+          aspectRatio: natural ? natural.width / natural.height : 16 / 9,
+        },
+      ]}
+      contentFit="contain"
+      cachePolicy="memory-disk"
+      accessibilityLabel="Division photo"
+    />
+  );
+}
+
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.background },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
@@ -162,22 +201,8 @@ const useStyles = makeStyles((c) => ({
     marginBottom: Spacing.three,
     overflow: 'hidden',
   },
-  heroBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  heroOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(10,10,10,0.72)',
-  },
   heroLogo: { width: 240, height: 96, borderRadius: Radius.sm },
+  mainImage: { maxWidth: '100%', marginTop: Spacing.three, borderRadius: Radius.sm },
   heroTitle: { color: hero.text, fontSize: 22, fontWeight: '800', marginTop: Spacing.two },
   heroSub: { color: hero.textSecondary, fontSize: 12, marginTop: 2 },
   socialRow: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.three },

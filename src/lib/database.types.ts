@@ -198,6 +198,7 @@ export type Database = {
           id: number
           logo: string | null
           main_img: string | null
+          main_img_width: number | null
           name: string | null
           points_link: string | null
           results_link: string | null
@@ -208,6 +209,7 @@ export type Database = {
           id?: number
           logo?: string | null
           main_img?: string | null
+          main_img_width?: number | null
           name?: string | null
           points_link?: string | null
           results_link?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           id?: number
           logo?: string | null
           main_img?: string | null
+          main_img_width?: number | null
           name?: string | null
           points_link?: string | null
           results_link?: string | null
