@@ -7,6 +7,7 @@ import {
   takePendingSignup,
   type PendingSignup,
 } from '@/lib/prospect-signup';
+import { isNotificationSetupDone, markNotificationSetupDone } from '@/lib/notification-prefs';
 import { registerPushToken, unregisterPushToken } from '@/lib/push';
 import { supabase, type Membership, type Profile } from '@/lib/supabase';
 
@@ -83,14 +84,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (event: AuthChangeEvent, s: Session) => {
       const userId = s.user.id;
       let signup: PendingSignup | null = null;
+      // Checked before the profile loads: the first-sign-in walkthrough opens
+      // once it has, and marks itself done.
+      let setupDone = true;
       if (event === 'SIGNED_IN') {
         signup = takePendingSignup(s.user.email);
         if (signup) {
+          // They just chose all of this while signing up: no walkthrough
+          await markNotificationSetupDone(userId);
           try {
             await completeSignup(userId, signup);
           } catch (e) {
             console.warn('Prospect sign-up could not be completed', e);
           }
+        } else {
+          setupDone = await isNotificationSetupDone(userId);
         }
       }
       await loadProfile(userId);
@@ -98,6 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_IN') {
         if (signup) {
           if (signup.push) await registerPushToken(userId, signup.divisions);
+        } else if (!setupDone) {
+          // The notification walkthrough asks about push (and the phone's
+          // permission prompt) itself
         } else {
           // Respect an earlier push opt-out; members who never chose keep the default (on).
           const consents = await fetchMyConsents(userId);

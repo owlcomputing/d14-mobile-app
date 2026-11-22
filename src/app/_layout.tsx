@@ -17,6 +17,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LockScreen } from '@/components/lock-screen';
+import { isNotificationSetupDone } from '@/lib/notification-prefs';
 import { onNotificationTap } from '@/lib/push';
 import { ThemeProvider, useAppearance, useColors } from '@/lib/theme';
 import { AppLockProvider, useAppLock } from '@/providers/app-lock-provider';
@@ -103,6 +104,27 @@ function useNotificationLinks(ready: boolean) {
   }, [ready, pending, router]);
 }
 
+/**
+ * First sign-in on this phone: walk through notification preferences once
+ * (members may have set some up on the website; this is their chance to
+ * review them). Waits until the profile has loaded and the app is showing
+ * its screens.
+ */
+function useNotificationSetup(ready: boolean) {
+  const router = useRouter();
+  const { session, profile, profileReady } = useAuth();
+  const userId = session?.user.id;
+  const checked = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!ready || !userId || !profileReady || !profile || checked.current === userId) return;
+    checked.current = userId;
+    isNotificationSetupDone(userId).then((done) => {
+      if (!done) router.push('/notification-setup');
+    });
+  }, [ready, userId, profileReady, profile, router]);
+}
+
 function RootNavigator() {
   const { session, loading } = useAuth();
   const { locked } = useAppLock();
@@ -115,6 +137,7 @@ function RootNavigator() {
   }, [starting]);
 
   useNotificationLinks(!starting && !(locked && session));
+  useNotificationSetup(!starting && !(locked && session));
 
   if (starting) return null;
   // App Lock protects a signed-in member's data; guests have nothing to lock.
@@ -220,6 +243,10 @@ function RootNavigator() {
         <Stack.Screen
           name="notification-settings"
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="notification-setup"
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
         />
         <Stack.Screen
           name="notification-history"

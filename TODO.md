@@ -35,6 +35,20 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Not done (website can't either): editing a family member's details (AMA number, disciplines). Would need a profiles RLS change so a parent can update their family's rows.
   - Staging test family: claude-family@owlcomputing.com (non-admin parent, kids Riley active / Jordan expired).
 
+- [ ] **Notification setup on first sign-in** (Dan, 2026-11-22). Built, tested on staging (web); needs the next build and a device test.
+  - After someone signs in on a phone for the first time, [notification-setup.tsx](src/app/notification-setup.tsx) walks through 3 steps: **push notifications** (asks for the phone's permission), **divisions**, **email updates**. Skip any time; everything stays editable in Profile.
+  - Starts from what they already chose (website email unsubscribe, another phone, app sign-up) with a "you've set some of this up before" note. Each choice is saved to the consent log (source `app:first-sign-in`), and the division choice goes to `communication_preferences` and this phone's push registration.
+  - Shown once per person per phone (AsyncStorage flag), including testers already signed in when they update. Not shown after "Get race reminders" sign-up (they just chose). Sign-in no longer pops the phone's permission prompt before the walkthrough.
+  - Website: it doesn't store division or push choices (only email unsubscribe), so there was nothing more to import. On prod only 1 account had saved preferences.
+  - [ ] Test on device: permission prompt (Android 13+ / iOS), "Turn Them Off", denied → "Open Phone Settings", hardware back on Android, a test push respects the divisions picked.
+
+- [ ] **Media page on the website; magazine back issues** (Dan, 2026-11-22).
+  - Website Magazine page replaced by **Media** (podcast, YouTube, magazine archive), same as the app: d14-angular **PR #28** (`media-page`). `/secure/magazine` redirects.
+  - The old magazine links were all dead: the 3 FlippingBook issues (Jan–Mar 2024) return 404 and their files are gone from FlippingBook's CDN (403); heyzip.com is a parked domain; the other "previous/archived" links on the website were placeholders. The Wayback Machine has none of them (only the Jan 2024 viewer page, without its pages).
+  - App and website now list back issues from `magazine_issues` (PDFs in the public `media` bucket, e.g. `media/magazine/2024-03.pdf`); the section is hidden while the table is empty (it is, on prod). Adding an issue needs no app update.
+  - [ ] 👤 Find the PDFs: whoever ran the FlippingBook account (lapsed accounts can often be reactivated to download the PDFs; ask FlippingBook support), the magazine's editor/designer (Olivia Gallt), the content Dropbox. Then upload them and add rows (Claude can do it).
+  - [ ] Merge PR #28 (deploys the website).
+
 - [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
   - "Become a Member" ([join.tsx](src/app/join.tsx)) for signed-in non-members: who's joining (just me / me + family / family only) → details → family members → review → Stripe hosted checkout → membership active, Wallet unlocks. Guests create a free account first.
   - Same data as the website's form ([new-membership.ts](src/lib/new-membership.ts)): stages `temp_membership_form_data`, creates family accounts through `createUser` (now with random passwords instead of `password`), and uses the website's `create-checkout-session` / `fulfill-checkout` unchanged. Checkout shared with renewals ([checkout.ts](src/lib/checkout.ts)).

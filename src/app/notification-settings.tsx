@@ -1,19 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { DivisionChecklist } from '@/components/division-checklist';
 import { Widget } from '@/components/widget';
 import { Radius, Spacing } from '@/constants/theme';
+import { loadDivisionChoice, saveDivisionChoice } from '@/lib/notification-prefs';
 import { getDevicePushToken } from '@/lib/push';
-import { useDivisions } from '@/lib/queries';
-import { supabase } from '@/lib/supabase';
 import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -21,7 +14,6 @@ export default function NotificationSettingsScreen() {
   const c = useColors();
   const styles = useStyles();
   const { profile } = useAuth();
-  const divisions = useDivisions();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   // null = all divisions
@@ -29,53 +21,27 @@ export default function NotificationSettingsScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!profile) return;
     (async () => {
       const t = await getDevicePushToken();
       setToken(t);
-      // This phone's push setting wins; otherwise use the account-level choice
-      // (set at sign-up, used for email and new devices).
-      const [{ data: device }, { data: account }] = await Promise.all([
-        t
-          ? supabase.from('push_tokens').select('divisions').eq('token', t).maybeSingle()
-          : Promise.resolve({ data: null }),
-        profile
-          ? supabase
-              .from('communication_preferences')
-              .select('divisions')
-              .eq('profile_id', profile.id)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ]);
-      setSelected(device ? device.divisions : (account?.divisions ?? null));
+      const choice = await loadDivisionChoice(profile.id, t);
+      setSelected(choice.divisions);
       setLoading(false);
     })();
   }, [profile]);
 
-  const toggle = (name: string) => {
-    const all = divisions.data?.map((d) => d.name).filter((n): n is string => !!n) ?? [];
-    setSelected((prev) => {
-      const current = prev ?? all; // "all" expands to every division when narrowing
-      const next = current.includes(name)
-        ? current.filter((n) => n !== name)
-        : [...current, name];
-      return next.length === all.length ? null : next;
-    });
-  };
-
   const save = async () => {
     if (!profile || saving) return;
     setSaving(true);
-    const { error: accountError } = await supabase.from('communication_preferences').upsert({
-      profile_id: profile.id,
-      divisions: selected,
-      updated_at: new Date().toISOString(),
-    });
-    const { error: deviceError } = token
-      ? await supabase.from('push_tokens').update({ divisions: selected }).eq('token', token)
-      : { error: null };
-    const error = accountError ?? deviceError;
-    setSaving(false);
-    Alert.alert(error ? 'Save failed' : 'Saved', error ? error.message : 'Notification preferences updated.');
+    try {
+      await saveDivisionChoice(profile.id, token, selected);
+      Alert.alert('Saved', 'Notification preferences updated.');
+    } catch (e) {
+      Alert.alert('Save failed', e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -85,8 +51,6 @@ export default function NotificationSettingsScreen() {
       </View>
     );
   }
-
-  const allSelected = selected === null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -104,28 +68,7 @@ export default function NotificationSettingsScreen() {
         </View>
       ) : null}
       <Widget header="Divisions">
-        <Pressable style={styles.row} onPress={() => setSelected(null)}>
-          <Ionicons
-            name={allSelected ? 'checkbox' : 'square-outline'}
-            size={22}
-            color={allSelected ? c.red : c.textTertiary}
-          />
-          <Text style={styles.rowText}>All Divisions</Text>
-        </Pressable>
-        {divisions.data?.map((d) => {
-          if (!d.name) return null;
-          const checked = allSelected || (selected?.includes(d.name) ?? false);
-          return (
-            <Pressable key={d.id} style={styles.row} onPress={() => toggle(d.name!)}>
-              <Ionicons
-                name={checked ? 'checkbox' : 'square-outline'}
-                size={22}
-                color={checked ? c.red : c.textTertiary}
-              />
-              <Text style={styles.rowText}>{d.name}</Text>
-            </Pressable>
-          );
-        })}
+        <DivisionChecklist value={selected} onChange={setSelected} />
       </Widget>
       <Pressable
         style={({ pressed }) => [styles.button, pressed && { backgroundColor: c.redDark }]}
@@ -161,15 +104,7 @@ const useStyles = makeStyles((c) => ({
     padding: Spacing.four,
     gap: Spacing.three,
   },
-  unavailable: { color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
   intro: { color: c.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: Spacing.three },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingVertical: 11,
-  },
-  rowText: { color: c.text, fontSize: 14 },
   button: {
     backgroundColor: c.red,
     borderRadius: Radius.md,

@@ -21,22 +21,30 @@ const isCurrent = (expiration: string | null | undefined) =>
 type MembershipJoin = { expiration: string } | { expiration: string }[] | null;
 
 /**
- * Push / marketing-email opt-ins for the signed-in user. Every change is a
- * new row in the consent log (communication_consents), with this wording.
+ * Whether marketing email is on for someone who has never chosen. Same rule
+ * as the server (notification_email_targets): a household with a current
+ * membership gets email unless they opt out; everyone else only if they opt
+ * in. (Push defaults to on.)
  */
-export function CommunicationsSection({ profileId }: { profileId: string }) {
+export function useEmailDefault(profileId: string): boolean {
   const { membership } = useAuth();
   const family = useFamilyMembers(profileId);
-  // Same rule as the server (notification_email_targets): a household with a
-  // current membership gets email unless they opt out; everyone else only if
-  // they opt in. Push defaults to on.
-  const householdMember =
+  return (
     isCurrent(membership?.expiration) ||
     (family.data ?? []).some((m) => {
       const joined = m.memberships as MembershipJoin;
       const rows = Array.isArray(joined) ? joined : joined ? [joined] : [];
       return rows.some((r) => isCurrent(r.expiration));
-    });
+    })
+  );
+}
+
+/**
+ * Push / marketing-email opt-ins for the signed-in user. Every change is a
+ * new row in the consent log (communication_consents), with this wording.
+ */
+export function CommunicationsSection({ profileId }: { profileId: string }) {
+  const householdMember = useEmailDefault(profileId);
   const [push, setPush] = useState(true);
   // undefined = never chosen: show the default for their membership status
   const [emailChoice, setEmail] = useState<boolean | undefined>(undefined);

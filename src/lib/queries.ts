@@ -88,6 +88,25 @@ export function useDivision(id: number) {
   });
 }
 
+/**
+ * Back issues of the D14 Magazine (no longer published). PDFs hosted in the
+ * public "media" Storage bucket; the website's Media page shows the same list.
+ */
+export function useMagazineIssues() {
+  return useQuery({
+    queryKey: ['magazine-issues'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('magazine_issues')
+        .select('id, issue_name, magazine_storage_url, date_created')
+        .not('magazine_storage_url', 'is', null)
+        .order('date_created', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useContacts() {
   return useQuery({
     queryKey: ['contacts'],

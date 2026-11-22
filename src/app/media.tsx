@@ -5,6 +5,7 @@ import WebView from 'react-native-webview';
 
 import { Widget } from '@/components/widget';
 import { Radius, Spacing } from '@/constants/theme';
+import { useMagazineIssues } from '@/lib/queries';
 import { makeStyles, useColors } from '@/lib/theme';
 
 const SPOTIFY_SHOW_ID = '2FGA4qJb5k1Zbx5QA4DgJ0';
@@ -15,16 +16,11 @@ const YOUTUBE_PLAYLIST_ID = 'UUaENMUV8qyblQwBLhxnxNzA';
 const YOUTUBE_EMBED_URL = `https://www.youtube.com/embed/videoseries?list=${YOUTUBE_PLAYLIST_ID}`;
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@TheDirtbikeDownload';
 
-// Archived issues are hosted externally (flipbook services)
-const MAGAZINE_ARCHIVE: { label: string; url: string }[] = [
-  { label: 'March 2024', url: 'https://online.flippingbook.com/view/567529744/' },
-  { label: 'February 2024', url: 'https://online.flippingbook.com/view/627429942/' },
-  { label: 'January 2024', url: 'https://online.flippingbook.com/view/59305815/' },
-];
-
 export default function MediaScreen() {
   const c = useColors();
   const styles = useStyles();
+  // Back issues (PDFs we host); the section is hidden until there are any
+  const issues = useMagazineIssues().data ?? [];
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>The Dirtbike Download</Text>
@@ -56,25 +52,27 @@ export default function MediaScreen() {
         <OpenLink label="Open YouTube Channel" url={YOUTUBE_CHANNEL_URL} icon="logo-youtube" />
       </Widget>
 
-      <Widget header="D14 Magazine Archive">
-        <Text style={styles.archiveNote}>
-          The D14 Magazine is no longer published — browse past issues below.
-        </Text>
-        {MAGAZINE_ARCHIVE.map((issue, i) => (
-          <Pressable
-            key={issue.url}
-            style={({ pressed }) => [
-              styles.issueRow,
-              i < MAGAZINE_ARCHIVE.length - 1 && styles.issueRowBorder,
-              pressed && { opacity: 0.7 },
-            ]}
-            onPress={() => WebBrowser.openBrowserAsync(issue.url)}>
-            <Ionicons name="book" size={15} color={c.textTertiary} />
-            <Text style={styles.issueLabel}>{issue.label}</Text>
-            <Ionicons name="open-outline" size={14} color={c.textTertiary} />
-          </Pressable>
-        ))}
-      </Widget>
+      {issues.length ? (
+        <Widget header="D14 Magazine Archive">
+          <Text style={styles.archiveNote}>
+            The D14 Magazine is no longer published — browse past issues below.
+          </Text>
+          {issues.map((issue, i) => (
+            <Pressable
+              key={issue.id}
+              style={({ pressed }) => [
+                styles.issueRow,
+                i < issues.length - 1 && styles.issueRowBorder,
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => WebBrowser.openBrowserAsync(issue.magazine_storage_url!)}>
+              <Ionicons name="book" size={15} color={c.textTertiary} />
+              <Text style={styles.issueLabel}>{issue.issue_name ?? 'Issue'}</Text>
+              <Ionicons name="open-outline" size={14} color={c.textTertiary} />
+            </Pressable>
+          ))}
+        </Widget>
+      ) : null}
     </ScrollView>
   );
 }

@@ -53,7 +53,7 @@ function GuestProfile() {
           <MenuRow
             icon="mic"
             label="Podcast & Media"
-            hint="The Dirtbike Download and magazine archive"
+            hint="The Dirtbike Download podcast and videos"
             onPress={() => router.push('/media')}
           />
           <MenuRow
@@ -243,7 +243,7 @@ function MemberProfile() {
           <MenuRow
             icon="mic"
             label="Podcast & Media"
-            hint="The Dirtbike Download and magazine archive"
+            hint="The Dirtbike Download podcast and videos"
             onPress={() => router.push('/media')}
           />
           <View style={[styles.row]}>

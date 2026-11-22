@@ -12,7 +12,8 @@ import { supabase } from './supabase';
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
 function canUsePush(): boolean {
-  return Device.isDevice && !isExpoGo;
+  // The app's notifications are Expo push to phones; the web build has none
+  return Platform.OS !== 'web' && Device.isDevice && !isExpoGo;
 }
 
 async function loadNotifications() {
@@ -28,6 +29,53 @@ async function loadNotifications() {
   return Notifications;
 }
 
+/** Android 13+ shows the permission prompt only once a channel exists. */
+async function ensureChannel(Notifications: Awaited<ReturnType<typeof loadNotifications>>) {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync('default', {
+    name: 'D14 Notifications',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: BrandColors.red,
+  });
+}
+
+/**
+ * This device's notification permission. 'blocked' = turned off and the
+ * phone won't ask again (only the phone's Settings can turn it back on).
+ */
+export type PushPermission = 'granted' | 'undetermined' | 'denied' | 'blocked' | 'unavailable';
+
+function toPushPermission(p: { status: string; canAskAgain: boolean }): PushPermission {
+  if (p.status === 'granted') return 'granted';
+  if (!p.canAskAgain) return 'blocked';
+  return p.status === 'denied' ? 'denied' : 'undetermined';
+}
+
+export async function getPushPermission(): Promise<PushPermission> {
+  try {
+    if (!canUsePush()) return 'unavailable';
+    const Notifications = await loadNotifications();
+    return toPushPermission(await Notifications.getPermissionsAsync());
+  } catch {
+    return 'unavailable';
+  }
+}
+
+/** Show the phone's "Allow notifications?" prompt (if it still can). */
+export async function requestPushPermission(): Promise<PushPermission> {
+  try {
+    if (!canUsePush()) return 'unavailable';
+    const Notifications = await loadNotifications();
+    await ensureChannel(Notifications);
+    const current = await Notifications.getPermissionsAsync();
+    if (current.status === 'granted' || !current.canAskAgain) return toPushPermission(current);
+    return toPushPermission(await Notifications.requestPermissionsAsync());
+  } catch {
+    return 'unavailable';
+  }
+}
+
 /**
  * Register this device for push notifications and store the Expo push token.
  * Silently no-ops where push isn't available (simulator, Expo Go, no EAS
@@ -37,23 +85,17 @@ export async function registerPushToken(
   profileId: string,
   /** Division filter for this device (null = all). Omit to keep the existing setting. */
   divisions?: string[] | null,
+  /** false: register only if notifications are already allowed (no prompt) */
+  { prompt = true }: { prompt?: boolean } = {},
 ): Promise<void> {
   try {
     if (!canUsePush()) return;
     const Notifications = await loadNotifications();
-
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'D14 Notifications',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: BrandColors.red,
-      });
-    }
+    await ensureChannel(Notifications);
 
     const { status: existing } = await Notifications.getPermissionsAsync();
     let status = existing;
-    if (existing !== 'granted') {
+    if (existing !== 'granted' && prompt) {
       ({ status } = await Notifications.requestPermissionsAsync());
     }
     if (status !== 'granted') return;
