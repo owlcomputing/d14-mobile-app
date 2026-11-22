@@ -30,7 +30,7 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - Fixed: Renew offered people with no membership row (unpaid family members, or a family-only holder themselves); paying for them failed in fulfillment after the charge. Renew now lists only existing memberships and preselects whoever is expired or expiring within 90 days.
   - Uses the website's flows unchanged (temp_membership_form_data + `postSignupFamilyMember` checkout; createUser `existing_member` + deleteUser) ([family.ts](src/lib/family.ts)).
   - Website fixes, d14-angular PR #27 (`family-fixes`): (1) converting a family member kept failing silently but **still deleted the family member** (and their membership) when the new login couldn't be created, e.g. email already taken; (2) a converted family member got a **new D14 number**; createUser now keeps it. createUser deployed to staging only.
-  - [ ] 👤 Merge d14-angular PR #27, then deploy `createUser` to prod (`supabase functions deploy createUser --project-ref qxoroicvatularpyltbx`).
+  - [x] d14-angular PR #27 merged; `createUser` deployed to prod (2026-11-21). App changes are in tester build versionCode 6.
   - [ ] Test on device: family list, a family member's card at the scanner, add a family member (Stripe test card on staging), give one their own login.
   - Not done (website can't either): editing a family member's details (AMA number, disciplines). Would need a profiles RLS change so a parent can update their family's rows.
   - Staging test family: claude-family@owlcomputing.com (non-admin parent, kids Riley active / Jordan expired).
@@ -50,7 +50,7 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - [x] Prod rollout for the tester build (2026-11-13): app migrations, app edge functions, sign-in code emails + rate limit, `create-checkout-session` hosted mode (d14-angular PR #20). See [prod-migration-checklist.md](documentation/play-store/prod-migration-checklist.md).
   - [x] `CRON_SECRET` + daily jobs on prod (2026-11-20, `setup-notification-cron.sh`): renewal reminders + event notifications.
   - [x] Dan smoke-tested the tester APK on prod (EAS build e9708de0, versionCode 2), 2026-11-13.
-  - [ ] 👤 Send the install link to the board testers: **versionCode 5** (light mode, wallet crop, Match phone default, division logos / main image size / photo sizes), EAS build ccdee278 (commit ea430fd), 2026-11-21. Supersedes versionCode 4.
+  - [ ] 👤 Send the install link to the board testers: **versionCode 6** (family members: cards, renew, add, own login, family-only holders; plus everything in 5: light mode, wallet crop, Match phone default, division logos / main image size / photo sizes), EAS build 2990b74a (commit 995793f), 2026-11-21. Supersedes versionCode 5.
   - [x] Block `SYSTEM_ALERT_WINDOW` and `DUMP` (added by libraries) in the Android manifest (2026-11-19, `android.blockedPermissions`).
   - Heads-up for testers: Join and Renew on prod are **real charges**.
 - [ ] **Launch on Apple devices (iOS / App Store)**: Android is already deployable; iOS isn't (~14:15). No iOS build has ever been run on EAS.
