@@ -198,6 +198,26 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Renew Membership', headerBackTitle: 'Back' }}
         />
         <Stack.Screen
+          name="family/index"
+          options={{ headerShown: true, title: 'Family Members', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="family/[id]"
+          options={{ headerShown: true, title: 'Family Member', headerBackTitle: 'Family' }}
+        />
+        <Stack.Screen
+          name="family/add"
+          options={{ headerShown: true, title: 'Add a Family Member', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="family/convert"
+          options={{ headerShown: true, title: 'Own Login', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="family/become-member"
+          options={{ headerShown: true, title: 'Become a Member', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
           name="notification-settings"
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
         />

@@ -26,6 +26,11 @@ export type CheckoutSessionBody = {
   renewal?: boolean;
   /** New signup where only family members (not the account holder) join */
   familyOnly?: boolean;
+  /**
+   * Existing account adds a family member, or a family-only holder becomes a
+   * member (staged in temp_membership_form_data)
+   */
+  postSignupFamilyMember?: boolean;
 };
 
 export async function runHostedCheckout(

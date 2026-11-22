@@ -1,35 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { formatCardDate, MembershipCard } from '@/components/membership-card';
 import { SignInPrompt } from '@/components/sign-in-prompt';
 import { WalletDocumentsSection } from '@/components/wallet-documents-section';
 import { Widget } from '@/components/widget';
-import { darkPalette, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useFamilyMembers } from '@/lib/queries';
 import { makeStyles, useColors } from '@/lib/theme';
 import { useAuth } from '@/providers/auth-provider';
-
-/** Membership card colors: the same in Dark and Light. */
-const card = darkPalette;
-
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
 
 export default function WalletScreen() {
   const c = useColors();
@@ -87,70 +69,104 @@ function MemberWallet() {
   const c = useColors();
   const styles = useStyles();
   const router = useRouter();
-  const { profile, membership } = useAuth();
+  const { profile, membership, isFamilyHolder } = useAuth();
   const family = useFamilyMembers(profile?.id);
 
   // The time the screen opened (reading the clock during render isn't allowed)
   const [now] = useState(() => Date.now());
-  const active = membership ? new Date(membership.expiration).getTime() >= now : false;
-  const expiringSoon =
-    active &&
-    membership != null &&
-    new Date(membership.expiration).getTime() - now < 90 * 24 * 60 * 60 * 1000;
+  const soon = now + 90 * 24 * 60 * 60 * 1000;
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
-  // QR payload for gate verification — verified by the lookup/scanner screen
-  const qrValue = JSON.stringify({ v: 1, t: 'd14-member', id: profile?.id, d14: profile?.d14_number });
+
+  // Renew button: prominent when anything (yours or a family member's) has
+  // expired or expires within 90 days
+  const expirations = [
+    ...(membership ? [membership.expiration] : []),
+    ...(family.data ?? []).flatMap((f) => (f.memberships ? [f.memberships.expiration] : [])),
+  ].map((e) => new Date(e).getTime());
+  const active = membership ? new Date(membership.expiration).getTime() >= now : false;
+  const needsRenewal = expirations.some((t) => t < soon);
+  const anyExpired = expirations.some((t) => t < now);
+  const renewable = expirations.length > 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Membership Card</Text>
+        <Text style={styles.title}>{isFamilyHolder ? 'Family Cards' : 'Membership Card'}</Text>
         <Text style={styles.subtitle}>Present at the gate for verification</Text>
 
-        {/* The card */}
-        <View style={styles.card}>
-          <View style={styles.cardDecorCircle} />
-          <View style={styles.cardDecorCircle2} />
-          <Text style={styles.cardLogo}>AMA DISTRICT 14</Text>
-          <Text style={styles.cardName}>{fullName || 'Member'}</Text>
-          <Text style={styles.cardNumber}>
-            D14 #{profile?.d14_number ?? '—'}
-            {profile?.ama_number ? `  •  AMA #${profile.ama_number}` : ''}
-          </Text>
-          <View style={styles.cardRow}>
-            <View style={styles.cardDetails}>
-              <View style={styles.cardDetail}>
-                <Text style={styles.cardDetailLabel}>Type</Text>
-                <Text style={styles.cardDetailValue}>{profile?.member_type ?? '—'}</Text>
-              </View>
-              <View style={styles.cardDetail}>
-                <Text style={styles.cardDetailLabel}>Expires</Text>
-                <Text style={styles.cardDetailValue}>{formatDate(membership?.expiration)}</Text>
-              </View>
-              <View style={styles.cardDetail}>
-                <Text style={styles.cardDetailLabel}>Status</Text>
-                <Text
-                  style={[
-                    styles.cardDetailValue,
-                    { color: active ? card.success : card.error },
-                  ]}>
-                  {active ? 'Active' : 'Expired'}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.qrBox}>
-              {profile ? <QRCode value={qrValue} size={92} backgroundColor="#FFFFFF" /> : null}
-            </View>
-          </View>
-        </View>
+        {profile && !isFamilyHolder ? (
+          <>
+            <MembershipCard
+              profileId={profile.id}
+              name={fullName}
+              d14Number={profile.d14_number}
+              amaNumber={profile.ama_number}
+              memberType={profile.member_type}
+              expiration={membership?.expiration}
+              now={now}
+            />
 
-        {/* Member details */}
-        <Widget header="Member Details">
-          <DetailRow label="Disciplines" value={profile?.disciplines?.join(', ') || '—'} />
-          <DetailRow label="Member Type" value={profile?.member_type ?? '—'} />
-          <DetailRow label="D14 Number" value={profile?.d14_number?.toString() ?? '—'} />
-          <DetailRow label="AMA Number" value={profile?.ama_number?.toString() ?? '—'} last />
-        </Widget>
+            {/* Member details */}
+            <Widget header="Member Details">
+              <DetailRow label="Disciplines" value={profile.disciplines?.join(', ') || '—'} />
+              <DetailRow label="Member Type" value={profile.member_type ?? '—'} />
+              <DetailRow label="D14 Number" value={profile.d14_number?.toString() ?? '—'} />
+              <DetailRow label="AMA Number" value={profile.ama_number?.toString() ?? '—'} last />
+            </Widget>
+          </>
+        ) : null}
+
+        {/* Family members: tap one to show their card */}
+        {family.data?.length ? (
+          <Widget header={isFamilyHolder ? 'Your Family' : 'Family Members'}>
+            {family.data.map((f) => {
+              const exp = f.memberships?.expiration;
+              const fActive = exp ? new Date(exp).getTime() >= now : false;
+              return (
+                <Pressable
+                  key={f.id}
+                  style={({ pressed }) => [
+                    styles.detailRow,
+                    styles.detailRowBorder,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  onPress={() => router.push(`/family/${f.id}`)}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.familyName}>
+                      {[f.first_name, f.last_name].filter(Boolean).join(' ')}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.familyStatus,
+                        {
+                          color: !exp ? c.textTertiary : fActive ? c.success : c.error,
+                        },
+                      ]}>
+                      {!exp
+                        ? 'Membership not paid'
+                        : fActive
+                          ? `Active thru ${formatCardDate(exp)}`
+                          : `Expired ${formatCardDate(exp)}`}
+                    </Text>
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              style={({ pressed }) => [styles.manageRow, pressed && { opacity: 0.7 }]}
+              onPress={() => router.push('/family')}>
+              <Ionicons name="people-circle" size={18} color={c.red} />
+              <Text style={styles.manageText}>Manage family</Text>
+            </Pressable>
+          </Widget>
+        ) : isFamilyHolder ? (
+          <Widget header="Your Family">
+            <Text style={styles.detailLabel}>
+              {family.isPending ? 'Loading…' : 'No family members yet.'}
+            </Text>
+          </Widget>
+        ) : null}
 
         {/* AMA card, minor release, etc. stored on this device (works offline).
             expo-file-system's File/Directory API isn't available on web. */}
@@ -160,39 +176,26 @@ function MemberWallet() {
 
         {/* Renew — always available; early renewals extend from the current
             expiration date, so no time is lost */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.renewButton,
-            active && !expiringSoon && styles.renewButtonQuiet,
-            pressed && { opacity: 0.85 },
-          ]}
-          onPress={() => router.push('/renew')}>
-          <Text style={[styles.renewButtonText, active && !expiringSoon && styles.renewButtonTextQuiet]}>
-            {!active
-              ? 'Renew Membership'
-              : expiringSoon
-                ? 'Renew Membership — Expiring Soon'
-                : 'Renew Early'}
-          </Text>
-        </Pressable>
-
-        {/* Family members */}
-        {family.data?.length ? (
-          <Widget header="Family Members">
-            {family.data.map((f, i) => {
-              const exp = f.memberships?.expiration;
-              const fActive = exp ? new Date(exp) >= new Date() : false;
-              return (
-                <DetailRow
-                  key={f.id}
-                  label={[f.first_name, f.last_name].filter(Boolean).join(' ')}
-                  value={fActive ? `Active thru ${formatDate(exp)}` : 'Expired'}
-                  valueColor={fActive ? c.success : c.error}
-                  last={i === family.data.length - 1}
-                />
-              );
-            })}
-          </Widget>
+        {renewable ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.renewButton,
+              !needsRenewal && styles.renewButtonQuiet,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => router.push('/renew')}>
+            <Text style={[styles.renewButtonText, !needsRenewal && styles.renewButtonTextQuiet]}>
+              {isFamilyHolder
+                ? 'Renew Family Memberships'
+                : !active
+                  ? 'Renew Membership'
+                  : needsRenewal && !anyExpired
+                    ? 'Renew — Expiring Soon'
+                    : needsRenewal
+                      ? 'Renew Memberships'
+                      : 'Renew Early'}
+            </Text>
+          </Pressable>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -223,7 +226,12 @@ const useStyles = makeStyles((c) => ({
   safe: { flex: 1, backgroundColor: c.background },
   loading: { alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.three, paddingBottom: Spacing.five },
-  title: { color: c.text, fontSize: 22, fontWeight: '700', textAlign: 'center' },
+  title: {
+    color: c.text,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   subtitle: {
     color: c.textSecondary,
     fontSize: 12,
@@ -231,62 +239,6 @@ const useStyles = makeStyles((c) => ({
     marginTop: 4,
     marginBottom: Spacing.four,
   },
-  // The membership card keeps its dark, branded look in both appearances
-  card: {
-    backgroundColor: card.surfaceRaised,
-    borderRadius: Radius.xl,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    marginBottom: Spacing.four,
-    borderWidth: 1,
-    borderColor: card.border,
-  },
-  cardDecorCircle: {
-    position: 'absolute',
-    top: -30,
-    right: -30,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 2,
-    borderColor: withAlpha(card.red, 0.35),
-  },
-  cardDecorCircle2: {
-    position: 'absolute',
-    bottom: -40,
-    right: -20,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 2,
-    borderColor: withAlpha(card.red, 0.18),
-  },
-  cardLogo: {
-    color: card.red,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 3,
-    marginBottom: Spacing.three,
-  },
-  cardName: { color: card.text, fontSize: 20, fontWeight: '700' },
-  cardNumber: {
-    color: card.textSecondary,
-    fontSize: 12,
-    fontVariant: ['tabular-nums'],
-    marginTop: 4,
-    marginBottom: Spacing.three,
-  },
-  cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  cardDetails: { gap: Spacing.two },
-  cardDetail: {},
-  cardDetailLabel: {
-    color: card.textTertiary,
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  cardDetailValue: { color: card.text, fontSize: 13, fontWeight: '600', marginTop: 1 },
-  qrBox: { backgroundColor: '#FFFFFF', borderRadius: Radius.md, padding: 8 },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -309,5 +261,25 @@ const useStyles = makeStyles((c) => ({
   renewButtonText: { color: c.onAccent, fontSize: 14, fontWeight: '700' },
   renewButtonTextQuiet: { color: c.text },
   detailLabel: { color: c.textSecondary, fontSize: 13 },
-  detailValue: { color: c.text, fontSize: 13, fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
+  detailValue: {
+    color: c.text,
+    fontSize: 13,
+    fontWeight: '600',
+    maxWidth: '60%',
+    textAlign: 'right',
+  },
+  familyName: { color: c.text, fontWeight: '600', flex: 1 },
+  familyStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  chevron: { color: c.textTertiary, fontSize: 20, fontWeight: '300' },
+  manageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingTop: 12,
+  },
+  manageText: { color: c.text, fontSize: 13, fontWeight: '600' },
 }));

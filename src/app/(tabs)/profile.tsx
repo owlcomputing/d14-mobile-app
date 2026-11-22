@@ -75,13 +75,17 @@ function MemberProfile() {
   const c = useColors();
   const styles = useStyles();
   const router = useRouter();
-  const { session, profile, signOut, isAdmin, isChairman, isMember, profileReady } = useAuth();
+  const { session, profile, membership, signOut, isAdmin, isChairman, isMember, profileReady } =
+    useAuth();
   const appLock = useAppLock();
   const [deleting, setDeleting] = useState(false);
   // Gate tools (member lookup, QR scanner) read member_directory, which only
-  // members, chairmen and admins can see.
-  const canCheckMembers = isMember || isAdmin || isChairman;
-  const isProspect = profileReady && !canCheckMembers;
+  // people with a membership of their own, chairmen and admins can see.
+  const canCheckMembers = membership != null || isAdmin || isChairman;
+  const isProspect = profileReady && !isMember && !isAdmin && !isChairman;
+  // Account holders manage family members; a family member's own login
+  // doesn't (their parent does). Clubs (Charter) manage on the website.
+  const canManageFamily = isMember && !profile?.parent_id && profile?.member_type !== 'Charter';
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
   const initials = [profile?.first_name?.[0], profile?.last_name?.[0]].filter(Boolean).join('');
@@ -183,6 +187,14 @@ function MemberProfile() {
             hint="Update contact and address info"
             onPress={() => router.push('/edit-profile')}
           />
+          {canManageFamily ? (
+            <MenuRow
+              icon="people-circle"
+              label="Family Members"
+              hint="Cards, renewals, add a family member"
+              onPress={() => router.push('/family')}
+            />
+          ) : null}
           {canCheckMembers ? (
             <>
               <MenuRow
@@ -363,5 +375,9 @@ const useStyles = makeStyles((c) => ({
   signOut: { alignItems: 'center', paddingVertical: Spacing.three },
   signOutText: { color: c.error, fontSize: 14, fontWeight: '600' },
   deleteAccount: { alignItems: 'center', paddingBottom: Spacing.three },
-  deleteAccountText: { color: c.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
+  deleteAccountText: {
+    color: c.textTertiary,
+    fontSize: 12,
+    textDecorationLine: 'underline',
+  },
 }));

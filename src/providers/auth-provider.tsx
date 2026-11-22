@@ -18,8 +18,14 @@ type AuthState = {
   loading: boolean;
   isAdmin: boolean;
   isChairman: boolean;
-  /** Has a D14 membership row (active or expired). Signed-in non-members are prospects. */
+  /**
+   * Has a D14 membership row (active or expired), or is a family-only account
+   * holder (pays for family members' memberships, has none of their own).
+   * Signed-in non-members are prospects.
+   */
   isMember: boolean;
+  /** Family-only account holder: manages family memberships, no membership of their own */
+  isFamilyHolder: boolean;
   /** False while the signed-in user's profile/membership are still loading (isMember not yet known). */
   profileReady: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -127,7 +133,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadProfile, handleSession]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
     return { error: friendlyAuthError(error?.message) };
   }, []);
 
@@ -165,7 +174,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isAdmin: profile?.role === 'admin',
       isChairman: profile?.role === 'chairman',
-      isMember: membership != null,
+      isMember: membership != null || profile?.member_type === 'Family',
+      isFamilyHolder: membership == null && profile?.member_type === 'Family',
       profileReady: !session || loadedUserId === session.user.id,
       signIn,
       sendSignInCode,

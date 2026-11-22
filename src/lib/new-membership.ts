@@ -60,7 +60,7 @@ const blank = (s: string) => (s.trim() ? s.trim() : null);
  * website: supabase.functions.invoke() adds x-client-info/apikey headers that
  * their CORS preflight rejects (matters on web; harmless on native).
  */
-async function callUserFunction(
+export async function callUserFunction(
   name: 'createUser' | 'deleteUser',
   method: 'POST' | 'DELETE',
   body: unknown,

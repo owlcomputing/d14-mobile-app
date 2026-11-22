@@ -138,7 +138,7 @@ export default function JoinScreen() {
         <Ionicons name="checkmark-circle" size={48} color={c.success} />
         <Text style={styles.doneTitle}>You&apos;re already a member</Text>
         <Text style={styles.doneText}>
-          To add family members or renew, use the Wallet or the D14 website.
+          To add family members or renew, open Family Members in your Profile, or the Wallet.
         </Text>
       </View>
     );

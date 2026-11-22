@@ -24,6 +24,17 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 - [ ] **Capture guest contact info / sign-up prompts** (~8:05–8:32). Built on staging 2026-11-12 as "Get race reminders" (see Prospects under Push notifications); needs device testing, then prod.
   - Calls to action: Home card for guests, event pages, login screen. Prospects see "Become a D14 member" on Home, Wallet and Profile.
 
+- [ ] **Manage family members in the app** (member feedback, 2026-11-21). Built 2026-11-21, tested on staging (web); needs device testing and a website PR.
+  - Profile → **Family Members** ([family/](src/app/family/)), and tappable family rows on the Wallet. Same abilities as the website's profile page: show each family member's card with gate QR (works offline), renew one or several, **add a family member** (Stripe, one per checkout, as on the website), **give a family member their own login** (website: "Convert to non-linked account"), remove a family member who was never paid for, and **Become a Member Yourself** for family-only account holders.
+  - Fixed: **family-only account holders** (`member_type` 'Family', no membership of their own; 259 on prod) were treated as non-members: Wallet said "members only" and they couldn't see or renew their kids. Now they get a Family Cards wallet. Member Lookup / QR scan still need a membership of your own (`can_use_member_directory`).
+  - Fixed: Renew offered people with no membership row (unpaid family members, or a family-only holder themselves); paying for them failed in fulfillment after the charge. Renew now lists only existing memberships and preselects whoever is expired or expiring within 90 days.
+  - Uses the website's flows unchanged (temp_membership_form_data + `postSignupFamilyMember` checkout; createUser `existing_member` + deleteUser) ([family.ts](src/lib/family.ts)).
+  - Website fixes, d14-angular branch `family-fixes`: (1) converting a family member kept failing silently but **still deleted the family member** (and their membership) when the new login couldn't be created, e.g. email already taken; (2) a converted family member got a **new D14 number**; createUser now keeps it. createUser deployed to staging only.
+  - [ ] 👤 Merge the website PR, then deploy `createUser` to prod (`supabase functions deploy createUser --project-ref qxoroicvatularpyltbx`).
+  - [ ] Test on device: family list, a family member's card at the scanner, add a family member (Stripe test card on staging), give one their own login.
+  - Not done (website can't either): editing a family member's details (AMA number, disciplines). Would need a profiles RLS change so a parent can update their family's rows.
+  - Staging test family: claude-family@owlcomputing.com (non-admin parent, kids Riley active / Jordan expired).
+
 - [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
   - "Become a Member" ([join.tsx](src/app/join.tsx)) for signed-in non-members: who's joining (just me / me + family / family only) → details → family members → review → Stripe hosted checkout → membership active, Wallet unlocks. Guests create a free account first.
   - Same data as the website's form ([new-membership.ts](src/lib/new-membership.ts)): stages `temp_membership_form_data`, creates family accounts through `createUser` (now with random passwords instead of `password`), and uses the website's `create-checkout-session` / `fulfill-checkout` unchanged. Checkout shared with renewals ([checkout.ts](src/lib/checkout.ts)).
