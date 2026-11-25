@@ -52,8 +52,9 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
 - [ ] **Social links and division quick buttons** (tester feedback, 2026-11-25). Built; needs the next build.
   - Home: "Follow District 14" under Divisions with the district's Facebook and TikTok ([district.ts](src/constants/district.ts); no district Instagram found). Changing them needs an app build.
   - Division page: the division's Facebook/Instagram buttons at the top of the header (blank or placeholder links such as Enduro's "www.instagram.com" are hidden). Quick buttons now Rules, Contacts, Results, Points (then Shop). Rules opens the division's rules document (or scrolls to the list if there are several); Contacts opens that division's chair, then the district officers.
-  - New `contacts.division_id` ([migration](supabase/migrations/20261125_contacts_division.sql)) links each chair to their division. Applied on staging. Until it's on prod, the Contacts button shows the full list.
-  - [ ] 👤 OK to run the migration on prod, then merge d14-angular **PR #29** (Division field in Contact Management; merge only after the migration, or saving a contact fails).
+  - New `contacts.division_id` ([migration](supabase/migrations/20261125_contacts_division.sql)) links each chair to their division. Applied on staging and prod.
+  - [x] d14-angular **PR #29** merged 2026-11-25 (Division field in Contact Management).
+  - [x] Migration run on prod 2026-11-25; all 10 chairs linked.
   - [ ] 👤 Confirm the district socials (Facebook page id 100064832676966, TikTok @amadistrict14) and whether there's an Instagram. Enduro's division page has no Facebook link set although facebook.com/D14Enduro exists.
 
 - [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
@@ -71,7 +72,8 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - [x] Prod rollout for the tester build (2026-11-13): app migrations, app edge functions, sign-in code emails + rate limit, `create-checkout-session` hosted mode (d14-angular PR #20). See [prod-migration-checklist.md](documentation/play-store/prod-migration-checklist.md).
   - [x] `CRON_SECRET` + daily jobs on prod (2026-11-20, `setup-notification-cron.sh`): renewal reminders + event notifications.
   - [x] Dan smoke-tested the tester APK on prod (EAS build e9708de0, versionCode 2), 2026-11-13.
-  - [ ] 👤 Send the install link to the board testers: **versionCode 6** (family members: cards, renew, add, own login, family-only holders; plus everything in 5: light mode, wallet crop, Match phone default, division logos / main image size / photo sizes), EAS build 2990b74a (commit 995793f), 2026-11-21. Supersedes versionCode 5.
+  - [ ] 👤 Send the install link to the board testers: **versionCode 7** (notification setup on first sign-in, Media archive from the database, social links, division Rules/Contacts buttons; plus everything in 6), EAS build b0844f00 (commit 789e589), 2026-11-25. Supersedes versionCode 6.
+  - [x] ~~versionCode 6 (family members: cards, renew, add, own login, family-only holders; plus everything in 5: light mode, wallet crop, Match phone default, division logos / main image size / photo sizes), EAS build 2990b74a (commit 995793f), 2026-11-21.~~
   - [x] Block `SYSTEM_ALERT_WINDOW` and `DUMP` (added by libraries) in the Android manifest (2026-11-19, `android.blockedPermissions`).
   - Heads-up for testers: Join and Renew on prod are **real charges**.
 - [ ] **Launch on Apple devices (iOS / App Store)**: Android is already deployable; iOS isn't (~14:15). No iOS build has ever been run on EAS.
