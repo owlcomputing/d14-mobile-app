@@ -101,6 +101,7 @@ export type Database = {
       contacts: {
         Row: {
           address: string | null
+          division_id: number | null
           email: string | null
           id: number
           name: string | null
@@ -110,6 +111,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          division_id?: number | null
           email?: string | null
           id?: number
           name?: string | null
@@ -119,6 +121,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          division_id?: number | null
           email?: string | null
           id?: number
           name?: string | null
@@ -126,7 +129,15 @@ export type Database = {
           title?: string | null
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       division_cms_content: {
         Row: {

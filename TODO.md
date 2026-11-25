@@ -49,6 +49,13 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - [ ] 👤 Find the PDFs: whoever ran the FlippingBook account (lapsed accounts can often be reactivated to download the PDFs; ask FlippingBook support), the magazine's editor/designer (Olivia Gallt), the content Dropbox. Then upload them and add rows (Claude can do it).
   - [ ] Merge PR #28 (deploys the website).
 
+- [ ] **Social links and division quick buttons** (tester feedback, 2026-11-25). Built; needs the next build.
+  - Home: "Follow District 14" under Divisions with the district's Facebook and TikTok ([district.ts](src/constants/district.ts); no district Instagram found). Changing them needs an app build.
+  - Division page: the division's Facebook/Instagram buttons at the top of the header (blank or placeholder links such as Enduro's "www.instagram.com" are hidden). Quick buttons now Rules, Contacts, Results, Points (then Shop). Rules opens the division's rules document (or scrolls to the list if there are several); Contacts opens that division's chair, then the district officers.
+  - New `contacts.division_id` ([migration](supabase/migrations/20261125_contacts_division.sql)) links each chair to their division. Applied on staging. Until it's on prod, the Contacts button shows the full list.
+  - [ ] 👤 OK to run the migration on prod, then merge d14-angular **PR #29** (Division field in Contact Management; merge only after the migration, or saving a contact fails).
+  - [ ] 👤 Confirm the district socials (Facebook page id 100064832676966, TikTok @amadistrict14) and whether there's an Instagram. Enduro's division page has no Facebook link set although facebook.com/D14Enduro exists.
+
 - [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
   - "Become a Member" ([join.tsx](src/app/join.tsx)) for signed-in non-members: who's joining (just me / me + family / family only) → details → family members → review → Stripe hosted checkout → membership active, Wallet unlocks. Guests create a free account first.
   - Same data as the website's form ([new-membership.ts](src/lib/new-membership.ts)): stages `temp_membership_form_data`, creates family accounts through `createUser` (now with random passwords instead of `password`), and uses the website's `create-checkout-session` / `fulfill-checkout` unchanged. Checkout shared with renewals ([checkout.ts](src/lib/checkout.ts)).

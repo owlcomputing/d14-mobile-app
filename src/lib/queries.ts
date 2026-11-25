@@ -67,9 +67,10 @@ export function useEvent(id: number) {
   });
 }
 
-export function useDivision(id: number) {
+export function useDivision(id: number, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['divisions', id],
+    enabled,
     queryFn: async () => {
       const [division, cms, media, rules] = await Promise.all([
         supabase.from('divisions').select('*').eq('id', id).single(),
@@ -111,7 +112,7 @@ export function useContacts() {
   return useQuery({
     queryKey: ['contacts'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contacts').select('*');
+      const { data, error } = await supabase.from('contacts').select('*').order('id');
       if (error) throw error;
       return data;
     },

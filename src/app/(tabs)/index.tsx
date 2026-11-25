@@ -6,7 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
+import { SocialLinks } from '@/components/social-links';
 import { Widget } from '@/components/widget';
+import { DISTRICT_SOCIALS } from '@/constants/district';
 import { Radius, Spacing } from '@/constants/theme';
 import { useDivisions, useUpcomingEvents } from '@/lib/queries';
 import { makeStyles, useColors } from '@/lib/theme';
@@ -170,6 +172,11 @@ export default function HomeScreen() {
               </Pressable>
             ))}
           </View>
+        </Widget>
+
+        {/* District socials */}
+        <Widget header="Follow District 14">
+          <SocialLinks links={DISTRICT_SOCIALS} />
         </Widget>
       </ScrollView>
     </SafeAreaView>

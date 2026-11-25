@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DivisionIcon } from '@/components/division-icon';
 import { EventRow } from '@/components/event-row';
+import { SocialLinks } from '@/components/social-links';
 import { HtmlContent } from '@/components/html-content';
 import { Widget } from '@/components/widget';
 import { darkPalette, Radius, Spacing } from '@/constants/theme';
@@ -24,6 +25,8 @@ export default function DivisionDetailScreen() {
   const divisionId = Number(id);
   const division = useDivision(divisionId);
   const events = useUpcomingEvents(5, divisionId);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const rulesY = useRef(0);
 
   if (division.isLoading) {
     return (
@@ -45,44 +48,55 @@ export default function DivisionDetailScreen() {
   const open = (url: string) => WebBrowser.openBrowserAsync(url);
 
   const quickLinks = [
-    d.results_link ? { icon: 'trophy' as const, label: 'Results', url: d.results_link } : null,
-    d.points_link ? { icon: 'stats-chart' as const, label: 'Points', url: d.points_link } : null,
-    d.shop_link ? { icon: 'cart' as const, label: 'Shop', url: d.shop_link } : null,
-  ].filter((l): l is NonNullable<typeof l> => l !== null);
+    d.rules.length ? { key: 'rules', icon: 'document-text' as const, label: 'Rules' } : null,
+    { key: 'contacts', icon: 'people' as const, label: 'Contacts' },
+    d.results_link ? { key: 'results', icon: 'trophy' as const, label: 'Results' } : null,
+    d.points_link ? { key: 'points', icon: 'stats-chart' as const, label: 'Points' } : null,
+    d.shop_link ? { key: 'shop', icon: 'cart' as const, label: 'Shop' } : null,
+  ].filter((l) => l !== null);
+
+  const onQuickLink = (key: string) => {
+    if (key === 'rules') {
+      // One rules document (the usual case) opens straight away; several
+      // scroll down to the list.
+      if (d.rules.length === 1) router.push(`/rules/${d.rules[0].id}`);
+      else scrollRef.current?.scrollTo({ y: rulesY.current, animated: true });
+    } else if (key === 'contacts') {
+      router.push({ pathname: '/contacts', params: { division: String(d.id) } });
+    } else if (key === 'results' && d.results_link) open(d.results_link);
+    else if (key === 'points' && d.points_link) open(d.points_link);
+    else if (key === 'shop' && d.shop_link) open(d.shop_link);
+  };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Division header, like the website's: logo in place of the title, links,
-          then the main image. Always dark (both appearances): division logos
-          from the website are made for it. */}
+    <ScrollView ref={scrollRef} style={styles.container} contentContainerStyle={styles.content}>
+      {/* Division header: social links first, then the logo in place of the
+          title and the main image. Always dark (both appearances): division
+          logos from the website are made for it. */}
       <View style={styles.hero}>
+        <View style={styles.socialRow}>
+          <SocialLinks
+            tone="hero"
+            links={[
+              { network: 'facebook', url: d.cms?.facebook },
+              { network: 'instagram', url: d.cms?.instagram },
+            ]}
+          />
+        </View>
         <DivisionLogo uri={d.logo} name={d.name} />
         <Text style={styles.heroSub}>AMA District 14</Text>
-        {d.cms?.facebook || d.cms?.instagram ? (
-          <View style={styles.socialRow}>
-            {d.cms?.facebook ? (
-              <Pressable onPress={() => open(d.cms!.facebook!)} hitSlop={8}>
-                <Ionicons name="logo-facebook" size={22} color={hero.textSecondary} />
-              </Pressable>
-            ) : null}
-            {d.cms?.instagram ? (
-              <Pressable onPress={() => open(d.cms!.instagram!)} hitSlop={8}>
-                <Ionicons name="logo-instagram" size={22} color={hero.textSecondary} />
-              </Pressable>
-            ) : null}
-          </View>
-        ) : null}
         {d.main_img ? <MainImage key={d.main_img} uri={d.main_img} widthPercent={d.main_img_width} /> : null}
       </View>
 
-      {/* Quick links */}
+      {/* Quick links: Rules, Contacts, Results, Points */}
       {quickLinks.length ? (
         <View style={styles.quickGrid}>
           {quickLinks.map((l) => (
             <Pressable
               key={l.label}
               style={({ pressed }) => [styles.quickItem, pressed && { opacity: 0.7 }]}
-              onPress={() => open(l.url)}>
+              onPress={() => onQuickLink(l.key)}
+              accessibilityRole="button">
               <Ionicons name={l.icon} size={20} color={c.red} />
               <Text style={styles.quickLabel}>{l.label}</Text>
             </Pressable>
@@ -108,8 +122,8 @@ export default function DivisionDetailScreen() {
         )}
       </Widget>
 
-      {d.rules.length ? (
-        <Widget header="Rules">
+      {d.rules.length > 1 ? (
+        <Widget header="Rules" onLayout={(e) => (rulesY.current = e.nativeEvent.layout.y)}>
           {d.rules.map((r, i) => (
             <Pressable
               key={r.id}
@@ -205,7 +219,7 @@ const useStyles = makeStyles((c) => ({
   mainImage: { maxWidth: '100%', marginTop: Spacing.three, borderRadius: Radius.sm },
   heroTitle: { color: hero.text, fontSize: 22, fontWeight: '800', marginTop: Spacing.two },
   heroSub: { color: hero.textSecondary, fontSize: 12, marginTop: 2 },
-  socialRow: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.three },
+  socialRow: { marginBottom: Spacing.three },
   quickGrid: { flexDirection: 'row', gap: Spacing.two, marginBottom: Spacing.three },
   quickItem: {
     flex: 1,
