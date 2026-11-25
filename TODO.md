@@ -47,7 +47,7 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - The old magazine links were all dead: the 3 FlippingBook issues (Jan–Mar 2024) return 404 and their files are gone from FlippingBook's CDN (403); heyzip.com is a parked domain; the other "previous/archived" links on the website were placeholders. The Wayback Machine has none of them (only the Jan 2024 viewer page, without its pages).
   - App and website now list back issues from `magazine_issues` (PDFs in the public `media` bucket, e.g. `media/magazine/2024-03.pdf`); the section is hidden while the table is empty (it is, on prod). Adding an issue needs no app update.
   - [ ] 👤 Find the PDFs: whoever ran the FlippingBook account (lapsed accounts can often be reactivated to download the PDFs; ask FlippingBook support), the magazine's editor/designer (Olivia Gallt), the content Dropbox. Then upload them and add rows (Claude can do it).
-  - [ ] Merge PR #28 (deploys the website).
+  - [x] PR #28 merged 2026-11-25.
 
 - [ ] **Social links and division quick buttons** (tester feedback, 2026-11-25). Built; needs the next build.
   - Home: "Follow District 14" under Divisions with the district's Facebook and TikTok ([district.ts](src/constants/district.ts); no district Instagram found). Changing them needs an app build.
@@ -55,6 +55,7 @@ Source: [documentation/meetings/q3-board-meeting-feedback.txt](documentation/mee
   - New `contacts.division_id` ([migration](supabase/migrations/20261125_contacts_division.sql)) links each chair to their division. Applied on staging and prod.
   - [x] d14-angular **PR #29** merged 2026-11-25 (Division field in Contact Management).
   - [x] Migration run on prod 2026-11-25; all 10 chairs linked.
+  - [ ] Website version of the same (Rules/Contacts buttons, socials at the top of division pages, district socials on the home page): d14-angular **PR #30**; merging deploys it.
   - [ ] 👤 Confirm the district socials (Facebook page id 100064832676966, TikTok @amadistrict14) and whether there's an Instagram. Enduro's division page has no Facebook link set although facebook.com/D14Enduro exists.
 
 - [ ] **In-app membership signup (individual / family)**. Built 2026-11-12 on staging; needs a real test payment.
